@@ -15,7 +15,7 @@ export default function Header() {
             <div className="header-container">
                 <div className="header-left">
                     <Link to="/" className="logo-link">
-                        <img src="/logo.png" alt="Ticketbox Logo" className="logo" />
+                        <img src="/logo.png" alt="Ticket Concert Logo" className="logo" />
                     </Link>
                     
                     <div className="search-box">
