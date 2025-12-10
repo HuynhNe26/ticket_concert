@@ -1,26 +1,10 @@
-import "dotenv/config";
 import express from "express";
-import { database } from "./config/database.js";
-import cors from "cors";
-
-const PORT = process.env.PORT
+import { connectDB, pool } from "./database.js";
 
 const app = express();
 
-app.use(express.json());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "*", 
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  credentials: true,
-}));
+await connectDB();
 
-database()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server đang chạy trên cổng ${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error("Failed to connect to database:", error);
-    process.exit(1); 
-  });
+app.listen(PORT, () => 
+  console.log(`Server chạy trên cổng ${{PORT}}`)
+);

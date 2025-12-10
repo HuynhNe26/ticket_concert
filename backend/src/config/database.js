@@ -1,11 +1,19 @@
-import mongoose from "mongoose";
+import pkg from 'pg';
+const { Pool } = pkg;
 
-export async function database() {
-  const uri = process.env.MONGODB_URI;
+export const pool = new Pool({
+  user: process.env.PG_USER,
+  host: process.env.PG_HOST,
+  database: process.env.PG_DB,
+  password: process.env.PG_PASSWORD,
+  port: process.env.PG_PORT,
+});
 
-  if (!uri) throw new Error("Lỗi đường dẫn kết nối Mongo");
-
-  mongoose.set("strictQuery", true);
-  await mongoose.connect(uri);
-  console.log("Kết nối thành công với Mongo Atlas!");
+export async function connectDB() {
+  try {
+    await pool.connect();
+    console.log("Kết nối PostgreSQL thành công!");
+  } catch (err) {
+    console.error("Lỗi kết nối PostgreSQL:", err);
+  }
 }
