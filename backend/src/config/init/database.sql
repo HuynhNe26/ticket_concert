@@ -2,13 +2,13 @@ CREATE TABLE members (
     member_id SERIAL PRIMARY KEY,
     membership VARCHAR(50),
     member_point INT
-)
+);
 
 INSERT INTO members (membership, member_point) VALUES 
-("Đồng", 10),
-("Bạc", 500),
-("Vàng", 1200),
-("Kim Cương", 2000)
+('Đồng', 10),
+('Bạc', 500),
+('Vàng', 1200),
+('Kim Cương', 2000);
 
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
@@ -27,18 +27,18 @@ CREATE TABLE users (
     CONSTRAINT fk_member
         FOREIGN KEY (member_id)
         REFERENCES members(member_id)
-)
+);
 
 INSERT INTO users 
 (fullName, birthOfDay, email, password, phoneNumber, gender, status, member_id)
 VALUES
-('Nguyễn Văn A', '2002-09-12', 'nguyenvana@gmail.com', '123456', '0123456789', 'Nam', 'Tài khoản mới', 1)
+('Nguyễn Văn A', '2002-09-12', 'nguyenvana@gmail.com', '123456', '0123456789', 'Nam', 'Tài khoản mới', 1);
 
 CREATE TABLE admins (
     admin_id SERIAL PRIMARY KEY,
     fullName VARCHAR(255) NOT NULL,
     birthOfDay DATE NOT NULL,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     phoneNumber VARCHAR(11) NOT NULL,
     gender VARCHAR(10) NOT NULL,
@@ -48,15 +48,15 @@ CREATE TABLE admins (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(50),
     login_time TIMESTAMP,
-    logout_time TIMESTAMP,
-)
+    logout_time TIMESTAMP
+);
 
 INSERT INTO admins 
 (fullName, birthOfDay, email, password, phoneNumber, gender, address, level, role, status)
 VALUES
-('Nguyễn Hoàng Huynh', '2005-08-26', 'hoanghuynh@gmail.com', '123456', '0937569205', 'Nam', "1322/768, Tổ 5, Khu Phố Ông Hường, Phường Trảng Dài, Tỉnh Đồng Nai", 1, "Quản trị viên cấp cao", "Tài khoản mới"),
-('Trần Diệp Anh Kiệt', '2005-01-01', 'anhkiet@gmail.com', '123456', '0123456789', 'Nam', "TP. Hồ Chí Minh", 1, "Quản trị viên cấp cao", "Tài khoản mới"),
-('Phùng Minh Vũ', '2005-01-01', 'minhvu@gmail.com', '123456', '0123456789', 'Nam', "TP. Hồ Chí Minh", 1, "Quản trị viên cấp cao", "Tài khoản mới");
+('Nguyễn Hoàng Huynh', '2005-08-26', 'hoanghuynh@gmail.com', '123456', '0937569205', 'Nam', '1322/768, Tổ 5, Khu Phố Ông Hường, Phường Trảng Dài, Tỉnh Đồng Nai', 1, 'Quản trị viên cấp cao', 'Tài khoản mới'),
+('Trần Diệp Anh Kiệt', '2005-01-01', 'anhkiet@gmail.com', '123456', '0123456789', 'Nam', 'TP. Hồ Chí Minh', 1, 'Quản trị viên cấp cao', 'Tài khoản mới'),
+('Phùng Minh Vũ', '2005-01-01', 'minhvu@gmail.com', '123456', '0123456789', 'Nam', 'TP. Hồ Chí Minh', 1, 'Quản trị viên cấp cao', 'Tài khoản mới');
 
 CREATE TABLE events (
     event_id SERIAL PRIMARY KEY,
@@ -67,12 +67,12 @@ CREATE TABLE events (
     banner_url VARCHAR(255) NOT NULL,
     event_layout VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    event_start TIMESTAMP NOT NULL,
-    event_end TIMESTAMP NOT NULL,
-    event_status BOOLEAN DEFAULT 0
-)
+    event_start TIMESTAMP,
+    event_end TIMESTAMP,
+    event_status BOOLEAN DEFAULT false
+);
 
-INSERT INTO events (event_name, event_description, event_location, event_age, banner_url, event_layout, event_start)
+INSERT INTO events (event_name, event_description, event_location, event_age, banner_url, event_layout, event_start, event_end)
 VALUES
 ('ANH TRAI "SAY HI" 2025 CONCERT', 'I. ĐIỀU KIỆN VÀ ĐIỀU KHOẢN MUA VÉ:
 ●      Khi mua vé, tức là người mua đã đồng ý với các Điều Kiện và Điều Khoản của BTC và Quy Định Tham Gia Chương Trình được ghi rõ tại ticketbox.vn.
@@ -309,7 +309,7 @@ Người sở hữu Vé Điện Tử và Mã Vé Điện Tử được mặc đ�
 
 Người sở hữu Vé Điện Tử, Mã Vé Điện Tử đồng ý rằng BTC có toàn quyền áp dụng mọi biện pháp cần thiết khác không được quy định tại đây nhằm đảm bảo an ninh, an toàn và chất lượng của buổi biểu diễn',
 'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'DHFI', 'IWP', '2025-12-27 12:00:00', '2025-12-27 23:00:00'),
-('EM XINH "SAY HI" 2025', 'Sở hữu vé sớm để hưởng các đặc quyền đặc biệt', 'HIDW', 16, 'JBUWF', '2026-01-27 12:00:00', '2026-01-27 23:00:00');
+('EM XINH "SAY HI" 2025', 'Sở hữu vé sớm để hưởng các đặc quyền đặc biệt', 'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'HIDW', 'JBUWF', '2026-01-27 12:00:00', '2026-01-27 23:00:00');
 
 CREATE TABLE layout (
     layout_id SERIAL PRIMARY KEY,
@@ -318,9 +318,9 @@ CREATE TABLE layout (
     CONSTRAINT fk_event
         FOREIGN KEY (event_id)
         REFERENCES events(event_id)
-)
+);
 
-INSERT INTO layout (layout_json) VALUES 
+INSERT INTO layout (layout_json, event_id) VALUES 
 ('
     {
         "canvas": {
@@ -363,7 +363,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 260,
             "color": "#00C7D9",
             "price": 2000000,
-            "total_quantity": 800,
+            "total_quantity": 800
             },
             {
             "id": "FANZONE_B",
@@ -376,7 +376,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 260,
             "color": "#00C7D9",
             "price": 2000000,
-            "total_quantity": 800,
+            "total_quantity": 800
             },
 
             {
@@ -390,7 +390,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 260,
             "color": "#00838F",
             "price": 1500000,
-            "total_quantity": 600,
+            "total_quantity": 600
             },
             {
             "id": "GA_1B",
@@ -403,7 +403,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 260,
             "color": "#00838F",
             "price": 1500000,
-            "total_quantity": 600,
+            "total_quantity": 600
             },
 
             {
@@ -417,7 +417,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 60,
             "color": "#2E7D8A",
             "price": 500000,
-            "total_quantity": 100,
+            "total_quantity": 100
             },
             {
             "id": "CAT_3B",
@@ -430,7 +430,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 60,
             "color": "#2E7D8A",
             "price": 500000,
-            "total_quantity": 100,
+            "total_quantity": 100
             },
 
             {
@@ -444,7 +444,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 200,
             "color": "#0D47A1",
             "price": 700000,
-            "total_quantity": 600,
+            "total_quantity": 600
             },
             {
             "id": "CAT_2B",
@@ -457,7 +457,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 200,
             "color": "#0D47A1",
             "price": 700000,
-            "total_quantity": 600,
+            "total_quantity": 600
             },
 
             {
@@ -471,7 +471,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 90,
             "color": "#FFB74D",
             "price": 2500000,
-            "total_quantity": 100,
+            "total_quantity": 100
             },
             {
             "id": "VIP_B",
@@ -484,7 +484,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 90,
             "color": "#FFB74D",
             "price": 2500000,
-            "total_quantity": 100,
+            "total_quantity": 100
             },
             {
             "id": "SVIP_A",
@@ -497,7 +497,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 90,
             "color": "#FF5A4F",
             "price": 3000000,
-            "total_quantity": 150,
+            "total_quantity": 150
             },
             {
             "id": "SVIP_B",
@@ -510,7 +510,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 90,
             "color": "#FF5A4F",
             "price": 3000000,
-            "total_quantity": 150,
+            "total_quantity": 150
             },
             {
             "id": "SKY_LOUNGE",
@@ -523,7 +523,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 90,
             "color": "#FF3B7F",
             "price": 4000000,
-            "total_quantity": 80,
+            "total_quantity": 80
             },
             {
             "id": "CAT_1A",
@@ -536,7 +536,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 90,
             "color": "#1E88E5",
             "price": 1000000,
-            "total_quantity": 500,
+            "total_quantity": 500
             },
             {
             "id": "CAT_1B",
@@ -549,7 +549,7 @@ INSERT INTO layout (layout_json) VALUES
             "height": 90,
             "color": "#1E88E5",
             "price": 1000000,
-            "total_quantity": 500,
+            "total_quantity": 500
             },
             {
             "id": "FOH",
@@ -565,7 +565,7 @@ INSERT INTO layout (layout_json) VALUES
             }
         ]
     }
-')
+', 1);
 
 CREATE TABLE zones (
   zone_id SERIAL PRIMARY KEY,
@@ -576,7 +576,7 @@ CREATE TABLE zones (
   zone_quantity INT NOT NULL,
   sold_quantity INT DEFAULT 0,
   zone_price INT NOT NULL,
-  status BOOLEAN DEFAULT 1
+  status BOOLEAN DEFAULT true
 );
 
 INSERT INTO zones 
@@ -626,7 +626,7 @@ CREATE TABLE payments (
     CONSTRAINT fk_users 
         FOREIGN KEY (user_id)
         REFERENCES users(user_id)
-)
+);
 
 INSERT INTO payments (user_id, method, payment_status, payment_ref)
 VALUES
@@ -650,7 +650,7 @@ CREATE TABLE payment_detail (
     CONSTRAINT fk_payments 
         FOREIGN KEY (payment_id)
         REFERENCES payments(payment_id)
-)
+);
 
 INSERT INTO payment_detail 
 (payment_id, event_id, zone_id, ticket_quantity, ticket_qr)
@@ -677,7 +677,7 @@ CREATE TABLE chat_ai (
     CONSTRAINT fk_events
         FOREIGN KEY (event_id)
         REFERENCES events(event_id)
-)
+);
 
 INSERT INTO chat_ai 
 (user_id, message, intent, ticket_quantity, event_id, meta_json, sender)
@@ -718,7 +718,7 @@ CREATE TABLE user_behavior_log (
     device_info VARCHAR(100),
     user_agent TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 INSERT INTO user_behavior_log
 (user_id, action, object_id, value, ip_address, device_info, user_agent)
