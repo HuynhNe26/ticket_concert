@@ -1,11 +1,13 @@
+import dotenv from "dotenv";
+dotenv.config();
 import pkg from 'pg';
 const { Pool } = pkg;
 
 export const pool = new Pool({
-  user: process.env.PG_USER,
   host: process.env.PG_HOST,
+  user: process.env.PG_USER,
   database: process.env.PG_DB,
-  password: process.env.PG_PASSWORD,
+  password: process.env.PG_PS,
   port: process.env.PG_PORT,
 });
 
