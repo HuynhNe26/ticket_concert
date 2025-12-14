@@ -13,7 +13,7 @@ import adminRouter from "./router/admins/admins.js"
 const app = express();
 app.use(express.json());
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || "*", // Cấu hình CORS linh hoạt
+  origin: process.env.CORS_ORIGIN || "*", 
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 }));

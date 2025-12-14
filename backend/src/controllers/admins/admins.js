@@ -45,10 +45,10 @@ export const AdminControllers = {
       });
 
     } catch (err) {
-      console.error("Login admin error:", err);
+      console.error("Đăng nhập thất bại:", err);
       return res.status(500).json({
         success: false,
-        message: "Server error",
+        message: "Lỗi server!",
       });
     }
   },
@@ -67,7 +67,7 @@ export const AdminControllers = {
       const { rows } = await pool.query(query, [adminId]);
 
       if (!rows.length) {
-        return res.status(404).json({ message: "Admin not found" });
+        return res.status(404).json({ message: "Không tìm thấy quản trị viên!" });
       }
 
       return res.json({
@@ -76,8 +76,65 @@ export const AdminControllers = {
       });
 
     } catch (err) {
-      console.error("Profile admin error:", err);
-      return res.status(500).json({ message: "Server error" });
+      console.error("Lỗi:", err);
+      return res.status(500).json({ message: "Lỗi server!" });
     }
   },
+
+  async getAdminById(req, res) {
+    try {
+      const adminId = req.params.id
+
+      const query = `
+        SELECT *
+        FROM admins
+        WHERE admin_id = $1
+      `
+
+      const { rows } = await pool.query(query, [adminId]);
+
+      if (!rows.length) {
+        return res.status(404).json({ message: "Không tìm thấy quản trị viên!" });
+      }
+
+      return res.json({
+        success: true,
+        admin: rows[0],
+      });
+
+    } catch (err) {
+      console.error("Lỗi lấy dữ liệu quản trị viên theo id:", err);
+      return res.status(500).json({ message: "Lỗi server!" });
+    }
+  },
+
+  async create(req, res) {
+    try {
+      const {fullName, birthOfDay, email, password, phoneNumber, gender, address, level, role} = req.body;
+
+      if (!fullName || !birthOfDay || !email || !password || !phoneNumber || !gender || !address || !level || !role) {
+        return res.status(200).json({
+          success: false,
+          message: "Lỗi thiếu thông tin!"
+        })
+      }
+
+      const query = `
+        INSERT INTO admin(fullName, birthOfDay, email, password, phoneNumber, gender, address, level, role, status)
+        VALUES ($1, $2. $3, $4, $5, $6, $7, $8, $9, $10)
+      `
+
+      const { rows } = await pool.query(query, [fullName, birthOfDay, email, password, phoneNumber, gender, address, level, role, 'Tài khoản mới!']);
+
+      return res.status(200).json({
+        success: true,
+        message: "Tạo tài khoản thành công!",
+        data: row[0]
+      });
+
+    } catch (err) {
+      console.error("Lỗi tạo dữ liệu:", err);
+      return res.status(500).json({ message: "Lỗi server!" });
+    }
+  }
 };

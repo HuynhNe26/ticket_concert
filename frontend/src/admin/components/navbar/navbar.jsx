@@ -108,30 +108,7 @@ const MENU = [
     ],
   },
   {
-    label: "Thống kê",
-    allowLevels: [1, 2],
-    icon: (
-      <Icon>
-        <circle cx="9" cy="21" r="1" />
-        <circle cx="20" cy="21" r="1" />
-        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-      </Icon>
-    ),
-    children: [
-      {
-        label: "Quản lý đơn hàng",
-        path: "/admin/orders",
-        allowLevels: [1, 2],
-      },
-      {
-        label: "Thống kê đơn hàng",
-        path: "/admin/orders",
-        allowLevels: [1, 2],
-      },
-    ],
-  },
-  {
-    label: "QR",
+    label: "Quản trị viên",
     allowLevels: [1, 2],
     icon: (
       <Icon>
@@ -312,7 +289,7 @@ export default function Navbar() {
             </div>
             <div className="profile-info">
               <span className="profile-name">{admin.fullname}</span>
-              <span>{admin.level == 1 ? 'Quản trị viên cấp cao' : 'Quản trị viên'}</span>
+              <span>{admin.level === 1 ? 'Quản trị viên cấp cao' : 'Quản trị viên'}</span>
             </div>
             <span className={`profile-arrow ${showProfile ? 'open' : ''}`}>
               ▼
@@ -323,7 +300,7 @@ export default function Navbar() {
             <div className="dropdown-menu">
               <button 
                 onClick={() => {
-                  navigate('/admin/profile');
+                  navigate(`/admin/profile/${admin.admin_id}`);
                   setShowProfile(false);
                 }}
                 className="dropdown-item"
