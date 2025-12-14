@@ -9,7 +9,7 @@ export function UserRoutes() {
     <Route path="/" element={<LayoutUser />}>
       <Route index element={<HomeUser />} />
     </Route>
-    <Route path="login" element={<LoginUser />} />
+    <Route path="/login" element={<LoginUser />} />
     </>
   );
 }

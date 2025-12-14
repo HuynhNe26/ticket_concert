@@ -1,14 +1,37 @@
-import React from "react";
-import './header.css'
+import { useState, useEffect } from "react";
+import './header.css';
+import {jwtDecode} from "jwt-decode";
 import { Link } from "react-router-dom";
+import SessionCountdown from "../Countdown/Countdown";
 // import { useTranslation } from 'react-i18next';
 
 export default function Header() {
+    const [user, setUser] = useState(null);
+
+     useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                const decoded = jwtDecode(token); // giải mã token nếu muốn
+                const storedUser = JSON.parse(localStorage.getItem("user"));
+                setUser(storedUser || decoded);
+            } catch (err) {
+                console.log("Token không hợp lệ:", err);
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+            }
+        }
+    }, []);
     // const { t, i18n } = useTranslation();
 
     // const changeLanguage = (lang) => {
     //     i18n.changeLanguage(lang);
     // };
+     const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setUser(null);
+    };
 
     return (
         <header className="header">
@@ -40,13 +63,15 @@ export default function Header() {
                     </Link>
 
                     <div className="auth-section">
-                        <Link to="/login" className="auth-link">
-                            <span>Đăng nhập</span>
-                        </Link>
-                        <span className="separator">|</span>
-                        <Link to="/register" className="auth-link">
-                            <span>Đăng ký</span>
-                        </Link>
+                         {user ? (
+                        <div>
+                        Xin chào, {user.fullName} | Phiên còn: <SessionCountdown onExpire={() => setUser(null)} />
+                        </div>
+                    ) : (
+                        <div>
+                        <Link to="/login">Đăng nhập</Link> | <Link to="/register">Đăng ký</Link>
+                        </div>
+                    )}
                     </div>
 
                     <div className="language-selector">

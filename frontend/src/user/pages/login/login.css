@@ -1,0 +1,178 @@
+/* login.css */
+.login-wrap {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Arial', sans-serif;
+  background-color: #f5f5f5;
+}
+
+/* Bên trái social login */
+.login-wrap::before {
+  content: '';
+  flex: 1;
+  background: linear-gradient(135deg,#6a11cb,#2575fc);
+  display: block;
+  position: relative;
+}
+
+.login-side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+/* Card form */
+.auth-card {
+  background-color: #fff;
+  padding: 30px;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.brand img {
+  width: 120px;
+}
+
+/* Tabs login/register */
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  color: #555;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+}
+
+.tab.active {
+  color: #2575fc;
+  border-bottom: 2px solid #2575fc;
+}
+
+/* Form inputs */
+.form input,
+.form select {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.input-with-addon {
+  position: relative;
+}
+
+.input-with-addon .addon {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  font-size: 14px;
+}
+
+/* Buttons */
+button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background-color: #2575fc;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+button[type="submit"]:hover {
+  background-color: #1a5ed8;
+}
+
+button[disabled] {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+/* Divider */
+.divider {
+  text-align: center;
+  margin: 15px 0;
+  font-size: 12px;
+  color: #888;
+  position: relative;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #ddd;
+}
+
+.divider::before {
+  left: 0;
+}
+
+.divider::after {
+  right: 0;
+}
+
+/* Google login image */
+.google-login {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.google-login img {
+  cursor: pointer;
+  width: 180px;
+}
+
+/* Message */
+.msg {
+  color: red;
+  text-align: center;
+  margin: 10px 0;
+}
+
+/* Links */
+.muted {
+  font-size: 12px;
+  color: #777;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.muted .link {
+  background: none;
+  border: none;
+  color: #2575fc;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-size: 12px;
+}
