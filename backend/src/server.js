@@ -1,5 +1,6 @@
 import dotenv from 'dotenv'
 import express from "express";
+import cors from "cors";
 import { connectDB, pool } from "./config/database.js";
 dotenv.config()
 
@@ -7,12 +8,19 @@ dotenv.config()
 import userRouter from "./router/users/users.js";
 
 // admins
-
+import adminRouter from "./router/admins/admins.js"
 
 const app = express();
 app.use(express.json());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || "*", // Cấu hình CORS linh hoạt
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
 
 app.use("/api/users", userRouter);
+
+app.use("/api/admin", adminRouter);
 
 await connectDB();
 

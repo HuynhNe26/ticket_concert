@@ -1,0 +1,101 @@
+.success-info-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-width: 320px;
+    max-width: 400px;
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+    border-left: 4px solid #10b981;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.success-info-icon {
+    width: 40px;
+    height: 40px;
+    background: #d1fae5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.success-info-icon svg {
+    width: 24px;
+    height: 24px;
+    color: #10b981;
+}
+
+.success-info-content {
+    flex: 1;
+}
+
+.success-info-content h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+}
+
+.success-info-content p {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.success-info-close {
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+}
+
+.success-info-close svg {
+    width: 18px;
+    height: 18px;
+    color: #9ca3af;
+}
+
+.success-info-close:hover {
+    background: #f3f4f6;
+}
+
+.success-info-close:hover svg {
+    color: #6b7280;
+}
+
+@media (max-width: 480px) {
+    .success-info-container {
+        right: 16px;
+        left: 16px;
+        min-width: auto;
+        max-width: none;
+    }
+}

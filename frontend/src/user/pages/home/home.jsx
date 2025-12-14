@@ -23,7 +23,7 @@ export default function HomeUser() {
         getData()
     }, [])
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
         setLoading(true)
         try {

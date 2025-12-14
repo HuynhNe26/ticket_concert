@@ -6,10 +6,10 @@ import LoginUser from "../user/pages/login/login";
 export function UserRoutes() {
   return (
     <>
-    <Route path="/" element={<LayoutUser />}>
-      <Route index element={<HomeUser />} />
-    </Route>
-    <Route path="login" element={<LoginUser />} />
+      <Route path="/" element={<LayoutUser />}>
+        <Route index element={<HomeUser />} />
+      </Route>
+      <Route path="login" element={<LoginUser />} />
     </>
   );
 }
