@@ -99,7 +99,7 @@ export default function HomeAdmin() {
   // Quick actions
   const quickActions = [
     {
-      title: "Add User",
+      title: "Add Admin",
       description: "Create new user account",
       icon: (
         <Icon size={28}>
@@ -110,7 +110,7 @@ export default function HomeAdmin() {
         </Icon>
       ),
       color: "blue",
-      link: "/admin/user/add",
+      link: "/admin/add",
     },
     {
       title: "Add Product",

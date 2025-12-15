@@ -18,7 +18,7 @@ export function AuthAdminProvider({ children }) {
 
   const verifyToken = async (token) => {
     try {
-      const res = await fetch("http://localhost:5000/api/admin/profile", {
+      const res = await fetch("http://localhost:5001/api/admin/profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -37,7 +37,7 @@ export function AuthAdminProvider({ children }) {
 
   const login = async (username, password) => {
     try {
-      const response = await fetch("http://localhost:5000/api/admin/login", {
+      const response = await fetch("http://localhost:5001/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

@@ -2,7 +2,7 @@ import { Route } from "react-router-dom";
 import LayoutAdmin from "../admin/components/layout/layout";
 import LoginAdmin from "../admin/pages/login/login";
 import HomeAdmin from "../admin/pages/home/home";
-import ManageUser from "../admin/pages/user/manage_user";
+import UserManagement from "../admin/pages/user/manage_user";
 import AdminProfile from "../admin/pages/admin/adminProfile/adminProfile";
 import ManageAdmin from "../admin/pages/admin/manageAdmin/manageAdmin";
 import AddAdmin from "../admin/pages/admin/addAdmin/addAdmin";
@@ -20,7 +20,7 @@ export function AdminRoutes() {
         <Route path="add" element={<AddAdmin />} />
 
         <Route path="profile" element={<AdminProfile />} />
-        <Route path="user" element={<ManageUser />}/>
+        <Route path="user" element={<UserManagement />}/>
       </Route>
     </>
   );

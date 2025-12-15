@@ -1,0 +1,267 @@
+.admin-user-container {
+    min-height: 100vh;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    background-color: #f8f9fa; /* Thêm màu nền nhạt cho toàn trang */
+}
+
+.user-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 1200px; /* Rộng hơn chút để chứa bảng */
+    overflow: hidden;
+    animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- HEADER --- */
+.user-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-header-info h2 {
+    color: white;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+.user-header-info p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    margin: 0;
+}
+
+/* --- SEARCH BOX (Style giống nút Edit cũ) --- */
+.search-wrapper {
+    position: relative;
+    width: 300px;
+}
+
+.search-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 12px 20px 12px 45px; /* Padding trái để chừa chỗ cho icon */
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.search-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.search-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.8);
+    pointer-events: none;
+}
+
+/* --- BODY & TABLE --- */
+.user-body {
+    padding: 40px;
+    overflow-x: auto; /* Để scroll ngang trên mobile */
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 12px; /* Tạo khoảng cách giữa các hàng */
+}
+
+.custom-table thead th {
+    font-size: 12px;
+    font-weight: 600;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0 20px 10px 20px;
+    text-align: left;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.custom-table tbody tr {
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02); /* Đổ bóng nhẹ từng dòng */
+    transition: transform 0.2s;
+}
+
+.custom-table tbody tr:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.custom-table td {
+    padding: 20px;
+    font-size: 14px;
+    color: #2d3748;
+    font-weight: 500;
+    border-top: 1px solid #edf2f7;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.custom-table td:first-child {
+    border-left: 1px solid #edf2f7;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+}
+
+.custom-table td:last-child {
+    border-right: 1px solid #edf2f7;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+/* --- BADGES (Tái sử dụng style cũ) --- */
+.membership-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+/* Màu sắc cho hạng thành viên */
+.membership-badge.Đồng { background: #E6D0BC; color: #8B5A2B; }
+.membership-badge.Bạc { background: #E2E8F0; color: #4A5568; }
+.membership-badge.Vàng { background: #FEFCBF; color: #B7791F; }
+.membership-badge.Kim.Cương { background: #E6FFFA; color: #2C7A7B; }
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+.active-status { color: #276749; }
+.active-status .status-dot { background-color: #48BB78; }
+.inactive-status { color: #C53030; }
+.inactive-status .status-dot { background-color: #F56565; }
+
+/* --- BUTTONS --- */
+.btn-action {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 8px;
+}
+
+.btn-edit {
+    background: #ebf8ff;
+    color: #3182ce;
+}
+.btn-edit:hover { background: #bee3f8; }
+
+.btn-delete {
+    background: #fff5f5;
+    color: #e53e3e;
+}
+.btn-delete:hover { background: #fed7d7; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .user-header { flex-direction: column; gap: 20px; align-items: stretch; }
+    .search-wrapper { width: 100%; }
+}
+/* --- MODAL EDIT --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    width: 500px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease;
+}
+
+.modal-header h3 {
+    margin: 0 0 20px 0;
+    color: #667eea;
+    font-size: 24px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #718096;
+}
+
+.form-input, .form-select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.form-input:focus, .form-select:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+    justify-content: flex-end;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
