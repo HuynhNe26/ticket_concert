@@ -119,13 +119,13 @@ const MENU = [
     ),
     children: [
       {
-        label: "Quét mã",
-        path: "/admin/orders",
+        label: "Quản lý quản trị viên",
+        path: "/admin/manage_admin",
         allowLevels: [1, 2],
       },
       {
-        label: "Nhập mã đơn hàng",
-        path: "/admin/orders",
+        label: "Thêm quản trị viên",
+        path: "/admin/add",
         allowLevels: [1, 2],
       },
     ],

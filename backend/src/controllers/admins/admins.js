@@ -31,8 +31,20 @@ export const AdminControllers = {
 
       const admin = rows[0];
 
+      const id = admin.admin_id;
+      
+      await pool.query(
+        `
+          UPDATE admins
+          SET status = $1,
+              login_time = NOW()
+          WHERE admin_id = $2
+        `,
+        ["Đang hoạt động", id]
+      );
+
       const token = signToken({
-        admin_id: admin.admin_id,
+        admin_id: id,
         fullName: admin.fullName,
         role: admin.role,
         level: admin.level,
@@ -110,30 +122,75 @@ export const AdminControllers = {
 
   async create(req, res) {
     try {
-      const {fullName, birthOfDay, email, password, phoneNumber, gender, address, level, role} = req.body;
+      const {
+        fullName,
+        birthOfDay,
+        email,
+        phoneNumber,
+        gender,
+        address,
+        level,
+        role
+      } = req.body;
 
-      if (!fullName || !birthOfDay || !email || !password || !phoneNumber || !gender || !address || !level || !role) {
-        return res.status(200).json({
+      if (!fullName || !birthOfDay || !email || !phoneNumber || !gender || !address || !level || !role) {
+        return res.status(400).json({
           success: false,
           message: "Lỗi thiếu thông tin!"
-        })
+        });
       }
 
       const query = `
-        INSERT INTO admin(fullName, birthOfDay, email, password, phoneNumber, gender, address, level, role, status)
-        VALUES ($1, $2. $3, $4, $5, $6, $7, $8, $9, $10)
-      `
+        INSERT INTO admins (
+          fullName,
+          birthOfDay,
+          email,
+          password,
+          phoneNumber,
+          gender,
+          address,
+          level,
+          role,
+          status
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      `;
 
-      const { rows } = await pool.query(query, [fullName, birthOfDay, email, password, phoneNumber, gender, address, level, role, 'Tài khoản mới!']);
+      const { rows } = await pool.query(query, [
+        fullName,
+        birthOfDay,
+        email,
+        "123456",
+        phoneNumber,
+        gender,
+        address,
+        level,
+        role,
+        "Tài khoản mới!"
+      ]);
 
-      return res.status(200).json({
+      return res.status(201).json({
         success: true,
         message: "Tạo tài khoản thành công!",
-        data: row[0]
       });
 
     } catch (err) {
       console.error("Lỗi tạo dữ liệu:", err);
+      return res.status(500).json({ message: "Lỗi server!" });
+    }
+  },
+
+  async getAllAdmin(req, res) {
+    try {
+      const { rows } = await pool.query("SELECT * FROM admins");
+
+      return res.json({
+        success: true,
+        admin: rows,
+      });
+
+    } catch (err) {
+      console.error("Lỗi lấy dữ liệu quản trị viên:", err);
       return res.status(500).json({ message: "Lỗi server!" });
     }
   }
