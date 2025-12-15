@@ -300,7 +300,7 @@ export default function Navbar() {
             <div className="dropdown-menu">
               <button 
                 onClick={() => {
-                  navigate(`/admin/profile/${admin.admin_id}`);
+                  navigate('/admin/profile');
                   setShowProfile(false);
                 }}
                 className="dropdown-item"

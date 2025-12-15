@@ -19,7 +19,7 @@ export function AdminRoutes() {
         <Route path="manage_admin/:id" element={<AdminDetail />} />
         <Route path="add" element={<AddAdmin />} />
 
-        <Route path="profile/:id" element={<AdminProfile />} />
+        <Route path="profile" element={<AdminProfile />} />
         <Route path="user" element={<ManageUser />}/>
       </Route>
     </>

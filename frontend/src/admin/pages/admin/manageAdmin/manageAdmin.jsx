@@ -48,6 +48,27 @@ export default function ManageAdmin() {
         return date.toLocaleDateString('vi-VN')
     }
 
+    const handleSetPass = async (id) => {
+        setLoading(true)
+        try {
+            const response = await fetch(`http://localhost:5000/api/admin/resetPass/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-type': 'application/json'
+                }
+            })
+
+            const data = await response.json()
+            if (data.success) {
+                
+            }
+        } catch (err) {
+
+        } finally {
+            setLoading(false)
+        }
+    }
+
     if (loading) {
         return <LoadingAdmin />
     }
@@ -129,13 +150,13 @@ export default function ManageAdmin() {
                         <div className="modal-body">
                             <div className="detail-avatar">
                                 <div className="avatar-large">
-                                    {selectedAdmin.fullName?.charAt(0).toUpperCase() || "A"}
+                                    {selectedAdmin.fullname?.charAt(0).toUpperCase() || "A"}
                                 </div>
                             </div>
                             <div className="detail-grid">
                                 <div className="detail-item">
                                     <label>Họ và Tên:</label>
-                                    <span>{selectedAdmin.fullName || "N/A"}</span>
+                                    <span>{selectedAdmin.fullname || "N/A"}</span>
                                 </div>
                                 <div className="detail-item">
                                     <label>Email:</label>
@@ -143,15 +164,15 @@ export default function ManageAdmin() {
                                 </div>
                                 <div className="detail-item">
                                     <label>Số Điện Thoại:</label>
-                                    <span>{selectedAdmin.phoneNumber || "N/A"}</span>
+                                    <span>{selectedAdmin.phonenumber || "N/A"}</span>
                                 </div>
                                 <div className="detail-item">
                                     <label>Ngày Sinh:</label>
-                                    <span>{formatDate(selectedAdmin.birthOfDay)}</span>
+                                    <span>{formatDate(selectedAdmin.birthofday)}</span>
                                 </div>
                                 <div className="detail-item">
                                     <label>Giới Tính:</label>
-                                    <span>{selectedAdmin.gender === "male" ? "Nam" : selectedAdmin.gender === "female" ? "Nữ" : "Khác"}</span>
+                                    <span>{selectedAdmin.gender}</span>
                                 </div>
                                 <div className="detail-item">
                                     <label>Vai Trò:</label>
@@ -170,6 +191,7 @@ export default function ManageAdmin() {
                             </div>
                         </div>
                         <div className="modal-footer">
+                            <button className="btn-edit">Đặt lại mật khẩu</button>
                             <button className="btn-edit">Chỉnh Sửa</button>
                             <button className="btn-delete">Xóa</button>
                         </div>

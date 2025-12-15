@@ -38,7 +38,7 @@
 }
 
 .admin-table thead {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6a8775 0%, #6b9673 100%);
 }
 
 .admin-table thead th {
@@ -81,7 +81,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -126,7 +126,7 @@
 
 .btn-detail {
     padding: 8px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6a8775 0%, #6b9673 100%);
     color: white;
     border: none;
     border-radius: 6px;
@@ -200,7 +200,7 @@
     align-items: center;
     padding: 24px 30px;
     border-bottom: 1px solid #e2e8f0;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6a8775 0%, #6b9673 100%);
     border-radius: 16px 16px 0 0;
 }
 
@@ -246,7 +246,7 @@
     width: 80px;
     height: 80px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
     display: flex;
     align-items: center;
     justify-content: center;
