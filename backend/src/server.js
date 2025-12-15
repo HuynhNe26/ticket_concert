@@ -5,7 +5,7 @@ import { connectDB, pool } from "./config/database.js";
 dotenv.config()
 
 // users
-import userRouter from "./router/users/users.js";
+import authRouter from "./router/users/auth_route.js";
 
 // admins
 import adminRouter from "./router/admins/admins.js"
@@ -18,7 +18,7 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use("/api/users", userRouter);
+app.use("/api/users", authRouter);
 
 app.use("/api/admin", adminRouter);
 
