@@ -8,6 +8,16 @@ export default function UserManagement() {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingUserId, setEditingUserId] = useState(null);
+    const [formData, setFormData] = useState({
+        fullName: "",
+        phoneNumber: "",
+        status: "",
+        point: 0,
+        member_id: ""
+    });
+
     const fetchUsers = async (keyword = "") => {
         setLoading(true);
         try {
@@ -65,7 +75,6 @@ export default function UserManagement() {
                 fetchUsers(searchTerm);
             }
         }, 800);
-
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm]);
 
@@ -79,6 +88,76 @@ export default function UserManagement() {
     const formatDate = (dateString) => {
         if (!dateString) return "N/A";
         return new Date(dateString).toLocaleDateString('vi-VN');
+    };
+
+    const handlePointChange = (e) => {
+        const newPoint = parseInt(e.target.value) || 0;
+        const correctRank = getRankInfo(newPoint);
+        
+        setFormData(prev => ({
+            ...prev,
+            point: newPoint,
+            member_id: correctRank ? correctRank.member_id : prev.member_id
+        }));
+    };
+
+    const handleEditClick = (user) => {
+        setEditingUserId(user.user_id);
+        const currentRank = getRankInfo(user.point);
+
+        setFormData({
+            fullName: user.fullname,
+            phoneNumber: user.phonenumber,
+            status: user.status || "Tài khoản mới",
+            point: user.point,
+            member_id: currentRank ? currentRank.member_id : user.member_id
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleSaveUser = async () => {
+        try {
+            const token = localStorage.getItem("authToken");
+            const res = await fetch(`http://localhost:5001/api/admin/users/${editingUserId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                alert("Cập nhật thành công!");
+                setIsModalOpen(false);
+                fetchUsers(searchTerm);
+            } else {
+                alert("Lỗi: " + data.message);
+            }
+        } catch (err) {
+            alert("Có lỗi xảy ra khi lưu!");
+        }
+    };
+
+    const handleDelete = async (userId) => {
+        if (!window.confirm("Bạn có chắc chắn muốn xóa user này?")) return;
+        try {
+            const token = localStorage.getItem("authToken");
+            const res = await fetch(`http://localhost:5001/api/admin/users/${userId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("Đã xóa thành công!");
+                fetchUsers(searchTerm);
+            } else {
+                alert("Lỗi: " + data.message);
+            }
+        } catch (err) {
+            alert("Có lỗi xảy ra khi xóa!");
+        }
     };
 
     const renderRankBadge = (point) => {
@@ -97,6 +176,77 @@ export default function UserManagement() {
     return (
         <div className="admin-user-container">
             {loading && <LoadingAdmin />}
+
+            {/* --- MODAL EDIT --- */}
+            {isModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header"><h3>Chỉnh Sửa Người Dùng</h3></div>
+                        <div className="modal-body">
+                            <div className="form-group">
+                                <label>Họ và tên</label>
+                                <input 
+                                    className="form-input" 
+                                    value={formData.fullName}
+                                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                                />
+                            </div>
+                            
+                            <div className="form-group">
+                                <label>Điểm tích lũy (Thay đổi điểm sẽ tự đổi Hạng)</label>
+                                <input 
+                                    type="number" 
+                                    className="form-input" 
+                                    value={formData.point}
+                                    onChange={handlePointChange} 
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Hạng thành viên (Tự động)</label>
+                                <select 
+                                    className="form-select"
+                                    value={formData.member_id}
+                                    disabled
+                                    style={{backgroundColor: '#f7fafc', cursor: 'not-allowed'}}
+                                >
+                                    {memberships.map((mem) => (
+                                        <option key={mem.member_id} value={mem.member_id}>
+                                            {mem.membership} (Yêu cầu &ge; {mem.member_point} điểm)
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="form-group">
+                                <label>Số điện thoại</label>
+                                <input 
+                                    className="form-input" 
+                                    value={formData.phoneNumber}
+                                    onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                                />
+                            </div>
+                            
+                            <div className="form-group">
+                                <label>Trạng thái</label>
+                                <select 
+                                    className="form-select"
+                                    value={formData.status}
+                                    onChange={(e) => setFormData({...formData, status: e.target.value})}
+                                >
+                                    <option value="Tài khoản mới">Tài khoản mới</option>
+                                    <option value="Hoạt động">Hoạt động</option>
+                                    <option value="Banned">Bị khóa (Banned)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div className="modal-actions">
+                            <button className="btn-cancel" onClick={() => setIsModalOpen(false)}>Hủy</button>
+                            <button className="btn-save" onClick={handleSaveUser}>Lưu thay đổi</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="user-card">
                 <div className="user-header">
@@ -149,7 +299,6 @@ export default function UserManagement() {
                                             <div style={{fontSize: '12px', color: '#718096'}}>{user.phonenumber}</div>
                                         </td>
                                         <td>
-                                            {/* SỬ DỤNG LOGIC SO SÁNH ĐIỂM Ở ĐÂY */}
                                             {renderRankBadge(user.point)}
                                         </td>
                                         <td>{formatDate(user.created_at)}</td>
@@ -160,10 +309,10 @@ export default function UserManagement() {
                                             </div>
                                         </td>
                                         <td>
-                                            <button className="btn-action btn-edit" onClick={() => alert(`Sửa user ${user.user_id}`)}>
+                                            <button className="btn-action btn-edit" onClick={() => handleEditClick(user)}>
                                                 Sửa
                                             </button>
-                                            <button className="btn-action btn-delete" onClick={() => alert(`Xóa user ${user.user_id}`)}>
+                                            <button className="btn-action btn-delete" onClick={() => handleDelete(user.user_id)}>
                                                 Xóa
                                             </button>
                                         </td>
