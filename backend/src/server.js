@@ -5,7 +5,7 @@ import { connectDB, pool } from "./config/database.js";
 dotenv.config()
 
 // users
-import authRouter from "./router/users/auth_route.js";
+import authRouter from "./router/users/user.js";
 
 // admins
 import adminRouter from "./router/admins/admins.js"

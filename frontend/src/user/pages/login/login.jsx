@@ -4,13 +4,13 @@ import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import "./login.css";
 import {jwtDecode} from "jwt-decode"; // sửa import đúng
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = "http://localhost:5001/api";
 console.log("Google Client ID:", process.env.REACT_APP_GOOGLE_CLIENT_ID);
 
 export default function LoginPage() {
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState("login"); // login | register
+  const [tab, setTab] = useState("login"); 
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
   const [showPwd, setShowPwd] = useState(false);
