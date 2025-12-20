@@ -1,5 +1,3 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { pool } from "../../config/database.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -54,5 +52,25 @@ export const EventControllers = {
       console.error("Search events error:", err);
       return res.status(500).json({ message: "Lỗi server" });
     }
-  }
+  },
+  
+  async getAllEvents(req, res) {
+    try {
+      const query = `
+        SELECT event_id, event_name, banner_url, event_start, event_location, 
+               (SELECT MIN(zone_price) FROM zones WHERE event_id = events.event_id) as min_price
+        FROM events
+        ORDER BY created_at DESC
+      `;
+      const { rows } = await pool.query(query);
+
+      return res.json({
+        success: true,
+        data: rows,
+      });
+    } catch (err) {
+      console.error("Lỗi lấy danh sách sự kiện:", err);
+      return res.status(500).json({ message: "Lỗi server" });
+    }
+  },
 };

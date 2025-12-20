@@ -6,6 +6,7 @@ dotenv.config()
 
 // users
 import authRouter from "./router/users/user.js";
+import eventsRouter from "./router/users/events.js";
 
 // admins
 import adminRouter from "./router/admins/admins.js"
@@ -19,6 +20,7 @@ app.use(cors({
 }));
 
 app.use("/api/users", authRouter);
+app.use("/api/events", eventsRouter);
 
 app.use("/api/admin", adminRouter);
 

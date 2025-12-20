@@ -1,5 +1,4 @@
 import { pool } from "../../config/database.js";
-import { signToken } from "../../utils/jwt.js";
 
 export const Manage_userControllers = {
   async getAllUsers(req, res) {
