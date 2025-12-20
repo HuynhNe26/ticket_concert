@@ -64,22 +64,22 @@ const MENU = [
     children: [
       {
         label: "Quản lý sự kiện",
-        path: "/admin/products",
+        path: "/admin/events",
         allowLevels: [1, 2],
       },
       {
         label: "Thêm sự kiện",
-        path: "/admin/products/add",
+        path: "/admin/events/add",
         allowLevels: [1],
       },
       {
         label: "Quản lý bố cục",
-        path: "/admin/products/add",
+        path: "/admin/layout/add",
         allowLevels: [1],
       },
       {
         label: "Thêm bố cục",
-        path: "/admin/products/add",
+        path: "/admin/layout/add",
         allowLevels: [1],
       }
     ],

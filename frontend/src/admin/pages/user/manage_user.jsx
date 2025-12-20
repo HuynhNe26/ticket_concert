@@ -274,7 +274,7 @@ export default function UserManagement() {
                     <table className="custom-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>STT</th>
                                 <th>Họ và Tên</th>
                                 <th>Thông Tin Liên Hệ</th>
                                 <th>Hạng Hội Viên</th>
@@ -285,10 +285,10 @@ export default function UserManagement() {
                         </thead>
                         <tbody>
                             {!loading && users.length > 0 ? (
-                                users.map((user) => (
+                                users.map((user, index) => (
                                     <tr key={user.user_id}>
                                         <td style={{fontWeight: 'bold', color: '#667eea'}}>
-                                            #{user.user_id}
+                                            {index + 1}
                                         </td>
                                         <td>
                                             <div style={{fontWeight: '600'}}>{user.fullname}</div>
