@@ -11,6 +11,7 @@ import eventsRouter from "./router/users/events.js";
 // admins
 import adminRouter from "./router/admins/admins.js"
 import eventRouter from "./router/admins/events.js"
+import userRouter from "./router/admins/user.js"
 // import layoutRouter from "./router/admins/layout.js"
 
 const app = express();
@@ -24,6 +25,7 @@ app.use(cors({
 app.use("/api/users", authRouter);
 app.use("/api/events", eventsRouter);
 
+app.use("/api/admin", userRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/admin/events", eventRouter);
 // app.use("/api/layout", layoutRouter);

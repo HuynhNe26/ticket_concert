@@ -193,6 +193,23 @@
 }
 .btn-delete:hover { background: #fed7d7; }
 
+.btn-view {
+    background-color: #e6f7ff;
+    color: #1890ff;
+    border: 1px solid #91d5ff;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-view:hover {
+    background-color: #1890ff;
+    color: white;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .user-header { flex-direction: column; gap: 20px; align-items: stretch; }
@@ -261,6 +278,39 @@
     gap: 10px;
     margin-top: 25px;
     justify-content: flex-end;
+}
+.user-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 20px 0;
+}
+
+.detail-item {
+    font-size: 14px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 8px;
+}
+
+.detail-item strong {
+    color: #4a5568;
+    margin-right: 5px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #a0aec0;
+}
+
+.close-btn:hover {
+    color: #4a5568;
+}
+
+.detail-modal {
+    max-width: 600px;
 }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }

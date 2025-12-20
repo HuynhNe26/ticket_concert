@@ -1,0 +1,156 @@
+/* Bao bọc toàn bộ trang */
+.event-detail-page {
+    background-color: #0b0b0b;
+    min-height: 100vh;
+    padding: 60px 20px;
+    color: white;
+    font-family: 'Inter', sans-serif;
+}
+
+.event-detail-page .event-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Thân chiếc vé */
+.event-detail-page .event-ticket-main {
+    display: flex;
+    background-color: #1a1a1a;
+    border-radius: 20px;
+    overflow: hidden;
+    min-height: 420px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+    margin-bottom: 50px;
+}
+
+.event-detail-page .event-ticket-left {
+    flex: 4;
+    padding: 45px;
+    display: flex;
+    flex-direction: column;
+}
+
+.event-detail-page .event-ticket-title {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+}
+
+.event-detail-page .event-ticket-meta {
+    color: #00c058;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.event-detail-page .event-meta-item {
+    margin-bottom: 12px;
+    display: flex;
+    gap: 12px;
+}
+
+.event-detail-page .event-price-section {
+    margin-top: auto;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.event-detail-page .event-price-label { color: #aaa; font-size: 18px; }
+.event-detail-page .event-price-value { color: #00c058; font-size: 28px; font-weight: 800; }
+
+.event-detail-page .event-btn-buy {
+    width: 100%;
+    padding: 18px;
+    background-color: #00c058;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.event-detail-page .event-btn-buy:hover {
+    background-color: #00a04a;
+}
+
+/* Phần răng cưa */
+.event-detail-page .event-ticket-divider {
+    position: relative;
+    width: 40px;
+    background-color: #1a1a1a;
+    display: flex;
+    justify-content: center;
+}
+
+.event-detail-page .event-stub-line {
+    width: 0;
+    height: 100%;
+    border-left: 2px dashed #333;
+}
+
+.event-detail-page .event-stub-dot {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: #0b0b0b;
+    border-radius: 50%;
+    left: 0;
+}
+
+.event-detail-page .event-stub-dot.top { top: -20px; }
+.event-detail-page .event-stub-dot.bottom { bottom: -20px; }
+
+/* Ảnh banner bên phải */
+.event-detail-page .event-ticket-right {
+    flex: 6;
+    position: relative;
+}
+
+.event-detail-page .event-ticket-banner {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.event-detail-page .event-banner-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(to right, #1a1a1a 0%, transparent 40%);
+    display: flex;
+    align-items: center;
+    padding-left: 50px;
+}
+
+.event-detail-page .event-overlay-dates h3 {
+    font-size: 36px;
+    font-weight: 900;
+    margin: 5px 0 15px;
+}
+
+/* Phần Giới thiệu */
+.event-detail-page .event-desc-section {
+    background-color: #1a1a1a;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.event-detail-page .event-desc-header {
+    color: #00c058;
+    font-size: 22px;
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333;
+    font-weight: 700;
+}
+
+.event-detail-page .event-desc-content {
+    line-height: 1.8;
+    color: #ccc;
+    font-size: 16px;
+}
