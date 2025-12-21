@@ -1,10 +1,9 @@
-/* Container chung */
 .home-wrapper {
-    background-color: #f7f9fa; /* Nền xám rất nhạt */
+    background-color: #0b0b0b; 
     min-height: 100vh;
-    padding-bottom: 50px;
+    padding-bottom: 60px;
     font-family: 'Inter', sans-serif;
-    color: #333;
+    color: #e0e0e0;
 }
 
 .home-container {
@@ -13,94 +12,104 @@
     padding: 20px;
 }
 
-/* Section */
 .section-home {
-    margin-bottom: 50px;
+    margin-bottom: 60px;
 }
 
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .section-title {
     font-size: 24px;
     font-weight: 800;
-    color: #1a1a1a;
-    margin: 0 0 20px 0;
+    color: #ffffff; 
+    margin: 0;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
 
 .view-more {
     color: #00c058;
     text-decoration: none;
     font-weight: 600;
+    font-size: 14px;
+    transition: color 0.3s;
 }
 
-/* --- XU HƯỚNG (TRENDING) --- */
+.view-more:hover {
+    color: #00ff73;
+}
+
 .trending-list {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 4 cột */
-    gap: 20px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 25px;
 }
 
 .trending-item {
     position: relative;
     cursor: pointer;
-    transition: transform 0.3s;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .trending-item:hover {
-    transform: translateY(-5px);
+    transform: translateY(-10px);
 }
 
-/* Số thứ tự 1, 2, 3, 4 to đùng */
 .trending-number {
     position: absolute;
-    bottom: -15px;
-    left: -15px;
-    font-size: 80px;
+    bottom: -7%;
+    left: -7%;
+    font-size: 90px;
     font-weight: 900;
-    color: transparent;
-    -webkit-text-stroke: 2px #333; /* Viền chữ */
+    color: rgba(234, 255, 0, 0.3);
+    -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.3); 
     font-family: 'Arial Black', sans-serif;
     line-height: 1;
     z-index: 2;
-    text-shadow: 2px 2px 0px rgba(255,255,255,0.5);
+    pointer-events: none; 
 }
 
-/* Highlight số 1 màu xanh */
 .trending-item:first-child .trending-number {
-    -webkit-text-stroke: 2px #00c058;
-    color: rgba(0, 192, 88, 0.1);
+    -webkit-text-stroke: 2px #00e348;
+    color: rgba(0, 255, 34, 0.3);
 }
 
 .trending-card {
-    background: white;
-    border-radius: 12px;
+    background: #1a1a1a; 
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border: 1px solid #eee;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid #333;
     height: 100%;
+    transition: border-color 0.3s;
+}
+
+.trending-item:hover .trending-card {
+    border-color: #00c058;
 }
 
 .trending-card img {
     width: 100%;
-    height: 250px; /* Poster dọc */
+    height: 280px; 
     object-fit: cover;
 }
 
 .trending-info {
-    padding: 15px;
-    padding-left: 25px; /* Né số to ra */
+    padding: 20px;
+    padding-left: 20%; 
 }
 
 .trending-info h3 {
     font-size: 16px;
-    margin: 0 0 5px 0;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 8px 0;
+    line-height: 1.4;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -112,31 +121,30 @@
     color: #888;
 }
 
-/* --- GRID SỰ KHIỆN (FOR YOU) --- */
 .event-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-    gap: 25px;
+    gap: 30px;
 }
 
 .event-card-light {
-    background: white;
-    border-radius: 12px;
+    background: #1a1a1a;
+    border-radius: 16px;
     overflow: hidden;
-    border: 1px solid #eee;
+    border: 1px solid #333;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
 
 .event-card-light:hover {
-    box-shadow: 0 10px 25px rgba(0, 192, 88, 0.15);
+    box-shadow: 0 15px 35px rgba(0, 192, 88, 0.15);
     border-color: #00c058;
-    transform: translateY(-5px);
+    transform: translateY(-8px);
 }
 
 .card-thumb {
     position: relative;
-    height: 160px;
+    height: 180px;
 }
 
 .card-thumb img {
@@ -147,26 +155,28 @@
 
 .card-tag {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 12px;
+    right: 12px;
     background: #ff9800;
     color: white;
     font-size: 11px;
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 4px;
-    font-weight: bold;
+    font-weight: 800;
+    text-transform: uppercase;
 }
 
 .card-body {
-    padding: 15px;
+    padding: 20px;
 }
 
 .card-title {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
-    color: #222;
-    margin: 0 0 10px 0;
-    height: 44px;
+    color: #ffffff;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+    height: 48px;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -175,22 +185,31 @@
 
 .card-price {
     color: #00c058;
-    font-weight: 700;
-    font-size: 15px;
-    margin-bottom: 5px;
+    font-weight: 800;
+    font-size: 16px;
+    margin-bottom: 8px;
 }
 
 .card-meta {
     font-size: 13px;
-    color: #666;
+    color: #888;
+    line-height: 1.5;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .trending-list {
-        grid-template-columns: repeat(2, 1fr); /* 2 cột trên mobile */
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .section-title {
+        font-size: 20px;
     }
     .trending-number {
-        font-size: 60px;
+        font-size: 65px;
+    }
+    .event-grid {
+        grid-template-columns: 1fr;
     }
 }

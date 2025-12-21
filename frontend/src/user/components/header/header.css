@@ -2,6 +2,10 @@
     background: linear-gradient(135deg, #3d8dbc 0%, #00b872 100%);
     padding: 1rem 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
 }
 
 .header-container {
@@ -30,61 +34,74 @@
     width: auto;
 }
 
-/* Search Box */
 .search-box {
     display: flex;
     align-items: center;
-    background: white;
-    border-radius: 25px;
-    padding: 0.5rem 1rem;
-    min-width: 400px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: #202124; /* Màu nền đặc trưng của Google Dark Mode */
+    border: 1px solid transparent;
+    border-radius: 28px; /* Bo góc cực đại để tạo độ mượt */
+    padding: 3px 6px 3px 20px;
+    min-width: 480px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hiệu ứng khi người dùng click vào khung tìm kiếm */
+.search-box:focus-within {
+    background: #303134; /* Sáng hơn một chút khi active */
+    border-color: transparent;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
 .search-input {
+    background: transparent;
     border: none;
     outline: none;
     flex: 1;
-    padding: 0.5rem;
-    font-size: 14px;
-    color: #333;
+    padding: 10px 0;
+    font-size: 16px; /* Cỡ chữ lớn hơn một chút cho mượt */
+    color: #e8eaed; /* Màu chữ Google Dark Mode */
+    font-family: inherit;
 }
 
 .search-input::placeholder {
-    color: #999;
+    color: #9aa0a6; /* Màu placeholder nhẹ nhàng */
+    font-weight: 400;
 }
 
+/* Nút tìm kiếm tối giản */
 .search-button {
     background: #00d084;
-    color: white;
+    color: #ffffff;
     border: none;
-    padding: 0.5rem 1.5rem;
+    padding: 8px 24px;
     border-radius: 20px;
     cursor: pointer;
     font-weight: 600;
     font-size: 14px;
-    transition: background 0.3s ease;
+    transition: background 0.2s;
+    margin-left: 10px;
 }
 
 .search-button:hover {
     background: #00b872;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Right Section */
+/* --- RIGHT SECTION --- */
 .header-right {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1.2rem;
 }
 
 .header-link {
     color: white;
     text-decoration: none;
     font-size: 14px;
-    font-weight: 500;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    transition: background 0.3s ease;
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    transition: all 0.3s ease;
     white-space: nowrap;
 }
 
@@ -97,36 +114,26 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.6rem 1.2rem;
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .auth-link {
     color: white;
     text-decoration: none;
     font-size: 14px;
-    font-weight: 500;
-    transition: opacity 0.3s ease;
-}
-
-.auth-link:hover {
-    opacity: 0.8;
-}
-
-.separator {
-    color: white;
-    opacity: 0.6;
-    font-weight: 300;
+    font-weight: 600;
 }
 
 /* Language Selector */
 .language-selector {
     display: flex;
-    gap: 0.25rem;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 0.25rem;
-    border-radius: 20px;
+    gap: 0.2rem;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 0.2rem;
+    border-radius: 25px;
 }
 
 .lang-btn {
@@ -134,63 +141,22 @@
     color: white;
     border: none;
     padding: 0.4rem 0.8rem;
-    border-radius: 15px;
+    border-radius: 20px;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.lang-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    font-size: 12px;
+    font-weight: 700;
 }
 
 .lang-btn.active {
     background: white;
-    color: #00d084;
+    color: #00b872;
 }
 
-/* Responsive Design */
 @media (max-width: 1200px) {
-    .search-box {
-        min-width: 300px;
-    }
+    .search-box { min-width: 300px; }
 }
 
 @media (max-width: 968px) {
-    .header-container {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .header-left,
-    .header-right {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .search-box {
-        min-width: 100%;
-    }
-}
-
-@media (max-width: 640px) {
-    .header-container {
-        padding: 0 1rem;
-    }
-
-    .header-left {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .header-right {
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        font-size: 13px;
-    }
-
-    .search-box {
-        min-width: 100%;
-    }
+    .header-container { flex-direction: column; padding: 1rem; }
+    .search-box { min-width: 100%; }
 }

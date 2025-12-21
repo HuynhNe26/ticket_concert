@@ -32,7 +32,7 @@ header > * {
 
 main {
     grid-row: 2;
-    background-color: #f5f5f5;
+    background-color: #000000;
     display: grid;
     grid-template-columns: 1fr minmax(auto, 1200px) 1fr;
 }
@@ -44,8 +44,8 @@ main > * {
 
 footer {
     grid-row: 3;
-    background-color: #333;
-    color: #fff;
+    background-color: #000000;
+    color: #000000;
     display: grid;
     grid-template-columns: 1fr minmax(auto, 1200px) 1fr;
 }

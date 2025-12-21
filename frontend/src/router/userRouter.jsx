@@ -12,7 +12,7 @@ export function UserRoutes() {
     <Route path="/" element={<LayoutUser />}>
       <Route index element={<HomeUser />} />
       <Route path="/search" element={<SearchPage />} />
-      <Route path="/event" element={<EventDetail />} />
+      <Route path="/event/:id" element={<EventDetail />} />
     </Route>
     <Route path="/login" element={<LoginPage />} />
     </>

@@ -1,317 +1,120 @@
-.admin-user-container {
+/* ROOT SCOPE */
+.manager-user-page-wrapper {
     min-height: 100vh;
     padding: 40px 20px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    background-color: #f8f9fa; /* Thêm màu nền nhạt cho toàn trang */
+    background-color: #f8f9fa;
+    font-family: 'Inter', sans-serif;
 }
 
-.user-card {
+/* CONTAINER CARD */
+.manager-user-page-wrapper .mu-user-card {
     background: white;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 1200px; /* Rộng hơn chút để chứa bảng */
+    max-width: 1200px;
+    margin: 0 auto;
     overflow: hidden;
-    animation: slideIn 0.5s ease;
+    animation: muSlideIn 0.5s ease;
 }
 
-@keyframes slideIn {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* --- HEADER --- */
-.user-header {
+/* HEADER SECTION */
+.manager-user-page-wrapper .mu-user-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 40px;
+    padding: 30px 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-.user-header-info h2 {
-    color: white;
-    font-size: 28px;
-    font-weight: 700;
-    margin: 0 0 8px 0;
+.manager-user-page-wrapper .mu-user-header-info h2 {
+    color: white; margin: 0; font-size: 24px;
 }
 
-.user-header-info p {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 14px;
-    margin: 0;
+.manager-user-page-wrapper .mu-user-header-info p {
+    color: rgba(255, 255, 255, 0.7); margin: 5px 0 0; font-size: 14px;
 }
 
-/* --- SEARCH BOX (Style giống nút Edit cũ) --- */
-.search-wrapper {
-    position: relative;
-    width: 300px;
+/* SEARCH */
+.manager-user-page-wrapper .mu-search-wrapper {
+    position: relative; width: 300px;
 }
 
-.search-input {
+.manager-user-page-wrapper .mu-search-input {
     width: 100%;
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
-    padding: 12px 20px 12px 45px; /* Padding trái để chừa chỗ cho icon */
+    padding: 10px 15px 10px 40px;
     border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-}
-
-.search-input::placeholder {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.search-input:focus {
-    outline: none;
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-}
-
-.search-icon {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: rgba(255, 255, 255, 0.8);
-    pointer-events: none;
-}
-
-/* --- BODY & TABLE --- */
-.user-body {
-    padding: 40px;
-    overflow-x: auto; /* Để scroll ngang trên mobile */
-}
-
-.custom-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 12px; /* Tạo khoảng cách giữa các hàng */
-}
-
-.custom-table thead th {
-    font-size: 12px;
-    font-weight: 600;
-    color: #718096;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 0 20px 10px 20px;
-    text-align: left;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.custom-table tbody tr {
-    background-color: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.02); /* Đổ bóng nhẹ từng dòng */
-    transition: transform 0.2s;
-}
-
-.custom-table tbody tr:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-}
-
-.custom-table td {
-    padding: 20px;
-    font-size: 14px;
-    color: #2d3748;
-    font-weight: 500;
-    border-top: 1px solid #edf2f7;
-    border-bottom: 1px solid #edf2f7;
-}
-
-.custom-table td:first-child {
-    border-left: 1px solid #edf2f7;
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
-}
-
-.custom-table td:last-child {
-    border-right: 1px solid #edf2f7;
-    border-top-right-radius: 10px;
-    border-bottom-right-radius: 10px;
-}
-
-/* --- BADGES (Tái sử dụng style cũ) --- */
-.membership-badge {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-}
-/* Màu sắc cho hạng thành viên */
-.membership-badge.Đồng { background: #E6D0BC; color: #8B5A2B; }
-.membership-badge.Bạc { background: #E2E8F0; color: #4A5568; }
-.membership-badge.Vàng { background: #FEFCBF; color: #B7791F; }
-.membership-badge.Kim.Cương { background: #E6FFFA; color: #2C7A7B; }
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 500;
-}
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-.active-status { color: #276749; }
-.active-status .status-dot { background-color: #48BB78; }
-.inactive-status { color: #C53030; }
-.inactive-status .status-dot { background-color: #F56565; }
-
-/* --- BUTTONS --- */
-.btn-action {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: none;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-right: 8px;
-}
-
-.btn-edit {
-    background: #ebf8ff;
-    color: #3182ce;
-}
-.btn-edit:hover { background: #bee3f8; }
-
-.btn-delete {
-    background: #fff5f5;
-    color: #e53e3e;
-}
-.btn-delete:hover { background: #fed7d7; }
-
-.btn-view {
-    background-color: #e6f7ff;
-    color: #1890ff;
-    border: 1px solid #91d5ff;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: all 0.3s;
-}
-
-.btn-view:hover {
-    background-color: #1890ff;
-    color: white;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .user-header { flex-direction: column; gap: 20px; align-items: stretch; }
-    .search-wrapper { width: 100%; }
-}
-/* --- MODAL EDIT --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    animation: fadeIn 0.3s ease;
-}
-
-.modal-content {
-    background: white;
-    padding: 30px;
-    border-radius: 20px;
-    width: 500px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    animation: slideUp 0.3s ease;
-}
-
-.modal-header h3 {
-    margin: 0 0 20px 0;
-    color: #667eea;
-    font-size: 24px;
-    text-align: center;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #718096;
-}
-
-.form-input, .form-select {
-    width: 100%;
-    padding: 12px;
-    border: 2px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 14px;
-    transition: all 0.3s;
-}
-
-.form-input:focus, .form-select:focus {
-    border-color: #667eea;
     outline: none;
 }
 
-.modal-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 25px;
-    justify-content: flex-end;
-}
-.user-detail-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    padding: 20px 0;
+.manager-user-page-wrapper .mu-search-icon {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%); color: white;
 }
 
-.detail-item {
-    font-size: 14px;
-    border-bottom: 1px solid #f0f0f0;
-    padding-bottom: 8px;
+/* TABLE STYLES */
+.manager-user-page-wrapper .mu-user-body { padding: 30px; }
+
+.manager-user-page-wrapper .mu-custom-table {
+    width: 100%; border-collapse: collapse;
 }
 
-.detail-item strong {
-    color: #4a5568;
-    margin-right: 5px;
+.manager-user-page-wrapper .mu-custom-table th {
+    text-align: left; padding: 15px;
+    color: #718096; border-bottom: 2px solid #edf2f7;
+    font-size: 13px; text-transform: uppercase;
 }
 
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #a0aec0;
+.manager-user-page-wrapper .mu-custom-table td {
+    padding: 15px; border-bottom: 1px solid #edf2f7; font-size: 14px;
 }
 
-.close-btn:hover {
-    color: #4a5568;
+/* BADGES */
+.manager-user-page-wrapper .mu-membership-badge {
+    padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 12px;
+}
+.manager-user-page-wrapper .mu-membership-badge.Đồng { background: #E6D0BC; color: #8B5A2B; }
+.manager-user-page-wrapper .mu-membership-badge.Bạc { background: #E2E8F0; color: #4A5568; }
+.manager-user-page-wrapper .mu-membership-badge.Vàng { background: #FEFCBF; color: #B7791F; }
+
+.manager-user-page-wrapper .mu-status-badge { display: flex; align-items: center; gap: 6px; }
+.manager-user-page-wrapper .mu-status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.manager-user-page-wrapper .mu-active-status .mu-status-dot { background: #48BB78; }
+.manager-user-page-wrapper .mu-inactive-status .mu-status-dot { background: #F56565; }
+
+/* ACTION BUTTON */
+.manager-user-page-wrapper .mu-btn-view {
+    background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff;
+    padding: 6px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s;
+}
+.manager-user-page-wrapper .mu-btn-view:hover { background: #1890ff; color: white; }
+
+/* MODAL SECTION */
+.manager-user-page-wrapper .mu-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+    align-items: center; z-index: 2000; animation: muFadeIn 0.3s ease;
 }
 
-.detail-modal {
-    max-width: 600px;
+.manager-user-page-wrapper .mu-modal-content {
+    background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 600px;
 }
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.manager-user-page-wrapper .mu-user-detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;
+}
+
+.manager-user-page-wrapper .mu-detail-item {
+    border-bottom: 1px solid #eee; padding-bottom: 8px; font-size: 14px;
+}
+
+.manager-user-page-wrapper .mu-btn-cancel {
+    background: #f5f5f5; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer;
+}
+
+/* ANIMATIONS */
+@keyframes muSlideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes muFadeIn { from { opacity: 0; } to { opacity: 1; } }

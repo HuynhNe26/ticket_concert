@@ -14,7 +14,7 @@ export default function EventDetail() {
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/events/${id}`);
+                const res = await fetch(`${API_BASE_URL}/api/events/event/${id}`);
                 const data = await res.json();
                 if (data.success) {
                     setEvent(data.data);
@@ -35,10 +35,9 @@ export default function EventDetail() {
         new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
     return (
-        <div className="event-detail-page"> {/* Thêm class định danh ở đây */}
+        <div className="event-detail-page">
             <div className="event-container">
                 
-                {/* --- GIAO DIỆN CHIẾC VÉ --- */}
                 <div className="event-ticket-main">
                     <div className="event-ticket-left">
                         <h1 className="event-ticket-title">{event.event_name}</h1>
@@ -62,7 +61,6 @@ export default function EventDetail() {
                         </div>
                     </div>
 
-                    {/* Răng cưa giữa vé */}
                     <div className="event-ticket-divider">
                         <div className="event-stub-dot top"></div>
                         <div className="event-stub-line"></div>

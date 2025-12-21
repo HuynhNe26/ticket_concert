@@ -73,4 +73,29 @@ export const EventControllers = {
       return res.status(500).json({ message: "Lỗi server" });
     }
   },
+async getEventById(req, res) {
+    try {
+        const { id } = req.params;
+        const eventId = parseInt(id); 
+
+        if (isNaN(eventId)) {
+            return res.status(400).json({ success: false, message: "ID không hợp lệ" });
+        }
+
+        const query = `
+            SELECT e.*, 
+                   (SELECT MIN(zone_price) FROM zones WHERE event_id = e.event_id) as min_price
+            FROM events e 
+            WHERE e.event_id = $1
+        `;
+        const { rows } = await pool.query(query, [eventId]);
+        
+        if (rows.length === 0) return res.status(404).json({ success: false, message: "Không tìm thấy sự kiện" });
+        
+        return res.json({ success: true, data: rows[0] });
+    } catch (err) {
+        console.error("Lỗi lấy chi tiết:", err);
+        return res.status(500).json({ message: "Lỗi server" });
+    }
+  },
 };

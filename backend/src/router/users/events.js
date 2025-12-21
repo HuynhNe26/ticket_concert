@@ -5,5 +5,6 @@ const router = express.Router();
 
 router.get("/search", EventControllers.searchEvents);
 router.get("/", EventControllers.getAllEvents);
+router.get("/event/:id", EventControllers.getEventById);
 
 export default router;

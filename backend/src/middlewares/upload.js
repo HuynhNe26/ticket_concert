@@ -15,10 +15,14 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'ticket_concert', 
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'], 
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    transformation: [{ quality: "auto", fetch_format: "auto" }] 
   },
 });
 
-const uploadCloud = multer({ storage });
+const uploadCloud = multer({ 
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 } // Giới hạn tối đa 5MB mỗi ảnh
+});
 
 export default uploadCloud;

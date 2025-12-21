@@ -1,66 +1,70 @@
-/* --- SEARCH PAGE WRAPPER (Light Mode) --- */
+/* --- SEARCH PAGE WRAPPER (Dark Mode) --- */
 .search-page-wrapper {
-    background-color: #f7f9fa; /* Nền xám nhạt */
+    background-color: #0b0b0b; 
     min-height: 100vh;
-    color: #333;
+    color: #e0e0e0; 
     font-family: 'Inter', sans-serif;
     padding-bottom: 60px;
 }
 
-.search-container {
+.search-page-wrapper .search-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 24px;
 }
 
 /* Header Bộ Lọc */
-.search-filter-header {
-    background-color: #ffffff; /* Nền trắng */
+.search-page-wrapper .search-filter-header {
+    background-color: #1a1a1a;
     padding: 30px 0;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid #333;
     margin-bottom: 30px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
-.search-result-info h2 {
+.search-page-wrapper .search-result-info h2 {
     font-size: 26px;
     font-weight: 700;
     margin: 0 0 8px 0;
-    color: #1a1a1a;
+    color: #ffffff;
 }
 
-.search-highlight { color: #00c058; }
+.search-page-wrapper .search-highlight { 
+    color: #00c058;
+}
 
-.search-actions-bar {
+.search-page-wrapper .search-actions-bar {
     display: flex;
     gap: 12px;
     margin-top: 15px;
     align-items: center;
 }
 
-/* Nút Filter */
-.search-filter-pill {
-    background: #fff;
-    border: 1px solid #ddd;
-    color: #555;
+.search-page-wrapper .search-filter-pill {
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: #ccc;
     padding: 8px 20px;
     border-radius: 50px;
     font-size: 14px;
     cursor: pointer;
     font-weight: 500;
-    transition: 0.2s;
+    transition: 0.3s ease;
 }
 
-.search-filter-pill:hover { background: #f0f0f0; }
+.search-page-wrapper .search-filter-pill:hover { 
+    background: #3a3a3a;
+    border-color: #666;
+}
 
-.search-filter-pill.active {
-    background: #e6f9ee;
+.search-page-wrapper .search-filter-pill.active {
+    background: rgba(0, 192, 88, 0.15); 
     color: #00c058;
     border-color: #00c058;
     font-weight: 700;
 }
 
-.btn-search-clear {
+.search-page-wrapper .btn-search-clear {
     background: none;
     border: none;
     color: #888;
@@ -68,81 +72,162 @@
     text-decoration: underline;
 }
 
-/* Popup Bộ Lọc */
-.search-popup {
+.search-page-wrapper .btn-search-clear:hover {
+    color: #ff4d4f;
+}
+
+/* Popup Bộ Lọc - Dark Mode */
+.search-page-wrapper .search-popup {
     position: absolute;
     top: 110%;
     left: 0;
     width: 300px;
-    background: #fff;
+    background: #1a1a1a; 
     padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Bóng nhẹ */
-    border: 1px solid #eee;
-    z-index: 100;
-}
-
-.search-popup h4 { margin: 0 0 15px 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-.search-popup label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 5px; }
-.search-popup input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
-
-.search-popup-footer { display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; }
-.btn-reset { background: #f5f5f5; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-.btn-apply { background: #00c058; color: white; border: none; padding: 6px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-
-/* Grid Kết Quả */
-.search-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-    gap: 25px;
-}
-
-.search-card {
-    background: #fff;
     border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #eee;
-    cursor: pointer;
-    transition: all 0.3s;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    border: 1px solid #333;
+    z-index: 100;
+    color: #fff;
 }
 
-.search-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 192, 88, 0.1);
+.search-page-wrapper .search-popup h4 { 
+    margin: 0 0 15px 0; 
+    border-bottom: 1px solid #333; 
+    padding-bottom: 10px; 
+    color: #00c058;
+}
+
+.search-page-wrapper .search-popup label { 
+    display: block; 
+    font-size: 13px; 
+    font-weight: 600; 
+    color: #aaa; 
+    margin-bottom: 5px; 
+}
+
+.search-page-wrapper .search-popup input { 
+    width: 100%; 
+    padding: 10px; 
+    border: 1px solid #444; 
+    background: #2a2a2a;
+    color: #fff;
+    border-radius: 6px; 
+    margin-bottom: 15px; 
+    outline: none;
+}
+
+.search-page-wrapper .search-popup input:focus {
     border-color: #00c058;
 }
 
-.search-card-img { position: relative; height: 170px; }
-.search-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.search-page-wrapper .search-popup-footer { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-top: 5px; 
+    padding-top: 15px; 
+    border-top: 1px solid #333; 
+}
 
-.search-tag-status {
+.search-page-wrapper .btn-reset { 
+    background: #333; 
+    color: #eee;
+    border: none; 
+    padding: 8px 15px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+}
+
+.search-page-wrapper .btn-apply { 
+    background: #00c058; 
+    color: white; 
+    border: none; 
+    padding: 8px 20px; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    cursor: pointer; 
+}
+
+/* Grid Kết Quả */
+.search-page-wrapper .search-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.search-page-wrapper .search-card {
+    background: #1a1a1a;
+    border-radius: 15px;
+    overflow: hidden;
+    border: 1px solid #333;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.search-page-wrapper .search-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 35px rgba(0, 192, 88, 0.15);
+    border-color: #00c058;
+}
+
+.search-page-wrapper .search-card-img { 
+    position: relative; 
+    height: 180px; 
+}
+
+.search-page-wrapper .search-card-img img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+}
+
+.search-page-wrapper .search-tag-status {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 12px;
+    right: 12px;
     background: #ff9800;
     color: white;
     font-size: 11px;
     font-weight: bold;
-    padding: 3px 8px;
+    padding: 4px 10px;
     border-radius: 4px;
+    text-transform: uppercase;
 }
 
-.search-card-content { padding: 15px; }
+.search-page-wrapper .search-card-content { 
+    padding: 20px; 
+}
 
-.search-event-title {
-    font-size: 16px;
+.search-page-wrapper .search-event-title {
+    font-size: 18px;
     font-weight: 700;
-    color: #222;
-    margin: 0 0 8px 0;
+    color: #ffffff;
+    margin: 0 0 10px 0;
     line-height: 1.4;
-    height: 44px;
+    height: 50px;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 }
 
-.search-event-price { color: #00c058; font-weight: 700; margin-bottom: 5px; }
-.search-event-info { font-size: 13px; color: #666; }
+.search-page-wrapper .search-event-price { 
+    color: #00c058; 
+    font-weight: 800; 
+    font-size: 17px;
+    margin-bottom: 8px; 
+}
 
-.search-loading, .search-no-result { text-align: center; color: #888; margin-top: 50px; }
+.search-page-wrapper .search-event-info { 
+    font-size: 13px; 
+    color: #888; 
+    line-height: 1.6;
+}
+
+.search-page-wrapper .search-loading, 
+.search-page-wrapper .search-no-result { 
+    text-align: center; 
+    color: #666; 
+    margin-top: 80px; 
+    font-size: 16px;
+}
