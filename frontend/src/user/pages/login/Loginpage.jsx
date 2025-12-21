@@ -7,7 +7,7 @@ import { saveToken, handleGoogleLoginAPI } from "./Authutils";
 import Success from "../../components/notification/success/success.jsx";
 import Error from "../../components/notification/error/error";
 import Warning from "../../components/notification/warning/warning";
-import "./login.css";
+import "./Login_user.css";
 
 console.log("Google Client ID:", process.env.REACT_APP_GOOGLE_CLIENT_ID);
 
@@ -23,7 +23,6 @@ export default function LoginPage() {
     show: false
   });
 
-  // Helper functions để show notifications
   const showSuccess = (message) => {
     setNotification({ type: 'success', message, show: true });
   };

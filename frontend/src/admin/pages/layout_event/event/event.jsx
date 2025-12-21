@@ -21,7 +21,7 @@ export default function ManageEvent() {
         getAllEvents();
         
         // Setup Socket.IO connection for hot events
-        const socket = io('http://localhost:5001');
+        const socket = io('http://localhost:5000');
         
         socket.on('connect', () => {
             console.log('Connected to socket server');
@@ -48,7 +48,7 @@ export default function ManageEvent() {
         setLoading(true);
         setError('');
         try {
-            const response = await fetch("http://localhost:5001/api/admin/events", {
+            const response = await fetch("http://localhost:5000/api/admin/events", {
                 method: 'GET',
                 headers: {
                     "Content-Type": 'application/json'
@@ -132,7 +132,7 @@ export default function ManageEvent() {
         if (!window.confirm('Bạn có chắc muốn xóa sự kiện này?')) return;
         
         try {
-            const response = await fetch(`http://localhost:5001/api/admin/events/${eventId}`, {
+            const response = await fetch(`http://localhost:5000/api/admin/events/${eventId}`, {
                 method: 'DELETE'
             });
             

@@ -52,7 +52,7 @@ export default function AdminProfile() {
     const handleSave = async () => {
         try {
             const token = localStorage.getItem("authToken")
-            const response = await fetch("http://localhost:5001/api/admin/update-profile", {
+            const response = await fetch("http://localhost:5000/api/admin/update-profile", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
