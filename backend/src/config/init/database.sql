@@ -311,261 +311,261 @@ Người sở hữu Vé Điện Tử, Mã Vé Điện Tử đồng ý rằng BTC
 'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219939/po4tuuayssz8a9l0i54r.png', 'IWP', '2025-12-27 12:00:00', '2025-12-27 23:00:00'),
 ('EM XINH "SAY HI" 2025', 'Sở hữu vé sớm để hưởng các đặc quyền đặc biệt', 'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219953/mv8grgnsbvr7ui7aioqf.png', 'JBUWF', '2026-01-27 12:00:00', '2026-01-27 23:00:00');
 
-CREATE TABLE layout (
-    layout_id SERIAL PRIMARY KEY,
-    layout_json JSONB,
-    event_id INT NOT NULL,
-    CONSTRAINT fk_event
-        FOREIGN KEY (event_id)
-        REFERENCES events(event_id)
-);
+    CREATE TABLE layout (
+        layout_id SERIAL PRIMARY KEY,
+        layout_json JSONB,
+        event_id INT NOT NULL,
+        CONSTRAINT fk_event
+            FOREIGN KEY (event_id)
+            REFERENCES events(event_id)
+    );
 
-INSERT INTO layout (layout_json, event_id) VALUES 
-('
-    {
-        "canvas": {
-            "width": 1200,
-            "height": 700,
-            "background": "#000000"
-        },
-        "zones": [
-            {
-            "id": "STAGE",
-            "name": "STAGE",
-            "type": "Sân khấu",
-            "shape": "rect",
-            "x": 300,
-            "y": 30,
-            "width": 600,
-            "height": 70,
-            "color": "#555555",
-            "status": false
+    INSERT INTO layout (layout_json, event_id) VALUES 
+    ('
+        {
+            "canvas": {
+                "width": 1200,
+                "height": 700,
+                "background": "#000000"
             },
-            {
-            "id": "SUPER_FAN",
-            "name": "SUPER FAN",
-            "type": "Đứng",
-            "shape": "polygon",
-            "points": [[500,120],[700,120],[760,200],[600,260],[440,200]],
-            "color": "#FF2D2D",
-            "price": 3500000,
-            "total_quantity": 300
-            },
+            "zones": [
+                {
+                "id": "STAGE",
+                "name": "STAGE",
+                "type": "Sân khấu",
+                "shape": "rect",
+                "x": 300,
+                "y": 30,
+                "width": 600,
+                "height": 70,
+                "color": "#555555",
+                "status": false
+                },
+                {
+                "id": "SUPER_FAN",
+                "name": "SUPER FAN",
+                "type": "Đứng",
+                "shape": "polygon",
+                "points": [[500,120],[700,120],[760,200],[600,260],[440,200]],
+                "color": "#FF2D2D",
+                "price": 3500000,
+                "total_quantity": 300
+                },
 
-            {
-            "id": "FANZONE_A",
-            "name": "FANZONE A",
-            "type": "Đứng",
-            "shape": "rect",
-            "x": 200,
-            "y": 150,
-            "width": 250,
-            "height": 260,
-            "color": "#00C7D9",
-            "price": 2000000,
-            "total_quantity": 800
-            },
-            {
-            "id": "FANZONE_B",
-            "name": "FANZONE B",
-            "type": "Đứng",
-            "shape": "rect",
-            "x": 750,
-            "y": 150,
-            "width": 250,
-            "height": 260,
-            "color": "#00C7D9",
-            "price": 2000000,
-            "total_quantity": 800
-            },
+                {
+                "id": "FANZONE_A",
+                "name": "FANZONE A",
+                "type": "Đứng",
+                "shape": "rect",
+                "x": 200,
+                "y": 150,
+                "width": 250,
+                "height": 260,
+                "color": "#00C7D9",
+                "price": 2000000,
+                "total_quantity": 800
+                },
+                {
+                "id": "FANZONE_B",
+                "name": "FANZONE B",
+                "type": "Đứng",
+                "shape": "rect",
+                "x": 750,
+                "y": 150,
+                "width": 250,
+                "height": 260,
+                "color": "#00C7D9",
+                "price": 2000000,
+                "total_quantity": 800
+                },
 
-            {
-            "id": "GA_1A",
-            "name": "GA 1A",
-            "type": "Đứng",
-            "shape": "rect",
-            "x": 80,
-            "y": 150,
-            "width": 100,
-            "height": 260,
-            "color": "#00838F",
-            "price": 1500000,
-            "total_quantity": 600
-            },
-            {
-            "id": "GA_1B",
-            "name": "GA 1B",
-            "type": "Đứng",
-            "shape": "rect",
-            "x": 1020,
-            "y": 150,
-            "width": 100,
-            "height": 260,
-            "color": "#00838F",
-            "price": 1500000,
-            "total_quantity": 600
-            },
+                {
+                "id": "GA_1A",
+                "name": "GA 1A",
+                "type": "Đứng",
+                "shape": "rect",
+                "x": 80,
+                "y": 150,
+                "width": 100,
+                "height": 260,
+                "color": "#00838F",
+                "price": 1500000,
+                "total_quantity": 600
+                },
+                {
+                "id": "GA_1B",
+                "name": "GA 1B",
+                "type": "Đứng",
+                "shape": "rect",
+                "x": 1020,
+                "y": 150,
+                "width": 100,
+                "height": 260,
+                "color": "#00838F",
+                "price": 1500000,
+                "total_quantity": 600
+                },
 
-            {
-            "id": "CAT_3A",
-            "name": "CAT 3A",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 20,
-            "y": 80,
-            "width": 80,
-            "height": 60,
-            "color": "#2E7D8A",
-            "price": 500000,
-            "total_quantity": 100
-            },
-            {
-            "id": "CAT_3B",
-            "name": "CAT 3B",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 1100,
-            "y": 80,
-            "width": 80,
-            "height": 60,
-            "color": "#2E7D8A",
-            "price": 500000,
-            "total_quantity": 100
-            },
+                {
+                "id": "CAT_3A",
+                "name": "CAT 3A",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 20,
+                "y": 80,
+                "width": 80,
+                "height": 60,
+                "color": "#2E7D8A",
+                "price": 500000,
+                "total_quantity": 100
+                },
+                {
+                "id": "CAT_3B",
+                "name": "CAT 3B",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 1100,
+                "y": 80,
+                "width": 80,
+                "height": 60,
+                "color": "#2E7D8A",
+                "price": 500000,
+                "total_quantity": 100
+                },
 
-            {
-            "id": "CAT_2A",
-            "name": "CAT 2A",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 20,
-            "y": 160,
-            "width": 80,
-            "height": 200,
-            "color": "#0D47A1",
-            "price": 700000,
-            "total_quantity": 600
-            },
-            {
-            "id": "CAT_2B",
-            "name": "CAT 2B",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 1100,
-            "y": 160,
-            "width": 80,
-            "height": 200,
-            "color": "#0D47A1",
-            "price": 700000,
-            "total_quantity": 600
-            },
+                {
+                "id": "CAT_2A",
+                "name": "CAT 2A",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 20,
+                "y": 160,
+                "width": 80,
+                "height": 200,
+                "color": "#0D47A1",
+                "price": 700000,
+                "total_quantity": 600
+                },
+                {
+                "id": "CAT_2B",
+                "name": "CAT 2B",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 1100,
+                "y": 160,
+                "width": 80,
+                "height": 200,
+                "color": "#0D47A1",
+                "price": 700000,
+                "total_quantity": 600
+                },
 
-            {
-            "id": "VIP_A",
-            "name": "VIP A",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 260,
-            "y": 440,
-            "width": 120,
-            "height": 90,
-            "color": "#FFB74D",
-            "price": 2500000,
-            "total_quantity": 100
-            },
-            {
-            "id": "VIP_B",
-            "name": "VIP B",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 820,
-            "y": 440,
-            "width": 120,
-            "height": 90,
-            "color": "#FFB74D",
-            "price": 2500000,
-            "total_quantity": 100
-            },
-            {
-            "id": "SVIP_A",
-            "name": "SVIP A",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 400,
-            "y": 440,
-            "width": 120,
-            "height": 90,
-            "color": "#FF5A4F",
-            "price": 3000000,
-            "total_quantity": 150
-            },
-            {
-            "id": "SVIP_B",
-            "name": "SVIP B",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 680,
-            "y": 440,
-            "width": 120,
-            "height": 90,
-            "color": "#FF5A4F",
-            "price": 3000000,
-            "total_quantity": 150
-            },
-            {
-            "id": "SKY_LOUNGE",
-            "name": "SKY LOUNGE",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 540,
-            "y": 440,
-            "width": 120,
-            "height": 90,
-            "color": "#FF3B7F",
-            "price": 4000000,
-            "total_quantity": 80
-            },
-            {
-            "id": "CAT_1A",
-            "name": "CAT 1A",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 200,
-            "y": 560,
-            "width": 360,
-            "height": 90,
-            "color": "#1E88E5",
-            "price": 1000000,
-            "total_quantity": 500
-            },
-            {
-            "id": "CAT_1B",
-            "name": "CAT 1B",
-            "type": "Ngồi",
-            "shape": "rect",
-            "x": 640,
-            "y": 560,
-            "width": 360,
-            "height": 90,
-            "color": "#1E88E5",
-            "price": 1000000,
-            "total_quantity": 500
-            },
-            {
-            "id": "FOH",
-            "name": "FOH",
-            "type": "Quản lý",
-            "shape": "rect",
-            "x": 560,
-            "y": 570,
-            "width": 80,
-            "height": 50,
-            "color": "#888888",
-            "status": false
-            }
-        ]
-    }
-', 1);
+                {
+                "id": "VIP_A",
+                "name": "VIP A",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 260,
+                "y": 440,
+                "width": 120,
+                "height": 90,
+                "color": "#FFB74D",
+                "price": 2500000,
+                "total_quantity": 100
+                },
+                {
+                "id": "VIP_B",
+                "name": "VIP B",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 820,
+                "y": 440,
+                "width": 120,
+                "height": 90,
+                "color": "#FFB74D",
+                "price": 2500000,
+                "total_quantity": 100
+                },
+                {
+                "id": "SVIP_A",
+                "name": "SVIP A",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 400,
+                "y": 440,
+                "width": 120,
+                "height": 90,
+                "color": "#FF5A4F",
+                "price": 3000000,
+                "total_quantity": 150
+                },
+                {
+                "id": "SVIP_B",
+                "name": "SVIP B",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 680,
+                "y": 440,
+                "width": 120,
+                "height": 90,
+                "color": "#FF5A4F",
+                "price": 3000000,
+                "total_quantity": 150
+                },
+                {
+                "id": "SKY_LOUNGE",
+                "name": "SKY LOUNGE",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 540,
+                "y": 440,
+                "width": 120,
+                "height": 90,
+                "color": "#FF3B7F",
+                "price": 4000000,
+                "total_quantity": 80
+                },
+                {
+                "id": "CAT_1A",
+                "name": "CAT 1A",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 200,
+                "y": 560,
+                "width": 360,
+                "height": 90,
+                "color": "#1E88E5",
+                "price": 1000000,
+                "total_quantity": 500
+                },
+                {
+                "id": "CAT_1B",
+                "name": "CAT 1B",
+                "type": "Ngồi",
+                "shape": "rect",
+                "x": 640,
+                "y": 560,
+                "width": 360,
+                "height": 90,
+                "color": "#1E88E5",
+                "price": 1000000,
+                "total_quantity": 500
+                },
+                {
+                "id": "FOH",
+                "name": "FOH",
+                "type": "Quản lý",
+                "shape": "rect",
+                "x": 560,
+                "y": 570,
+                "width": 80,
+                "height": 50,
+                "color": "#888888",
+                "status": false
+                }
+            ]
+        }
+    ', 1);
 
 CREATE TABLE zones (
   zone_id SERIAL PRIMARY KEY,

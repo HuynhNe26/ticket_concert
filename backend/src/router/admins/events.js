@@ -3,6 +3,6 @@ import { EventControllers } from "../../controllers/admins/events.js";
 
 const router = express.Router();
 
-router.get("/events", EventControllers.getAllEvent); 
+router.get("/", EventControllers.getAllEvent); 
 
 export default router;

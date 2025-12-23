@@ -13,9 +13,9 @@ export default function LayoutAdmin() {
     return (
         <div>
             <Navbar />
-            <main>
+            <div>
                 <Outlet />
-            </main>
+            </div>
         </div>
     )
 }

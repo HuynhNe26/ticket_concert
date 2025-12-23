@@ -73,7 +73,8 @@ export const EventControllers = {
       return res.status(500).json({ message: "Lỗi server" });
     }
   },
-async getEventById(req, res) {
+  
+  async getEventById(req, res) {
     try {
         const { id } = req.params;
         const eventId = parseInt(id); 

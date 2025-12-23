@@ -21,7 +21,7 @@ export default function ManageEvent() {
         getAllEvents();
         
         // Setup Socket.IO connection for hot events
-        const socket = io('http://localhost:5000');
+        const socket = io('http://localhost:5001');
         
         socket.on('connect', () => {
             console.log('Connected to socket server');
@@ -48,7 +48,7 @@ export default function ManageEvent() {
         setLoading(true);
         setError('');
         try {
-            const response = await fetch("http://localhost:5000/api/admin/events", {
+            const response = await fetch("http://localhost:5001/api/admin/events", {
                 method: 'GET',
                 headers: {
                     "Content-Type": 'application/json'
@@ -122,17 +122,21 @@ export default function ManageEvent() {
     };
 
     const filteredEvents = events.filter(event => {
-        const matchesSearch = event.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            event.location?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = filterStatus === 'all' || event.status === filterStatus;
-        return matchesSearch && matchesFilter;
+    const matchesSearch =
+        event.event_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.event_location?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesFilter =
+        filterStatus === 'all' || event.status === filterStatus;
+
+    return matchesSearch && matchesFilter;
     });
 
     const handleDeleteEvent = async (eventId) => {
         if (!window.confirm('Bạn có chắc muốn xóa sự kiện này?')) return;
         
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/events/${eventId}`, {
+            const response = await fetch(`http://localhost:5001/api/admin/events/${eventId}`, {
                 method: 'DELETE'
             });
             
@@ -381,7 +385,7 @@ export default function ManageEvent() {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                                     <div>
                                         <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b', marginBottom: '8px' }}>
-                                            {event.name}
+                                            {event.event_name}
                                         </h3>
                                         <div style={{ display: 'flex', gap: '12px', fontSize: '14px', color: '#64748b', flexWrap: 'wrap' }}>
                                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -390,7 +394,7 @@ export default function ManageEvent() {
                                             </span>
                                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 <MapPin size={16} />
-                                                {event.location || 'Chưa có'}
+                                                {event.event_location || 'Chưa có'}
                                             </span>
                                         </div>
                                     </div>
