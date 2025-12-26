@@ -13,7 +13,7 @@ export default function LayoutAdmin() {
     return (
         <div>
             <Navbar />
-            <div>
+            <div style={{background: "white"}}>
                 <Outlet />
             </div>
         </div>

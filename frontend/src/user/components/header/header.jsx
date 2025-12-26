@@ -3,7 +3,7 @@ import './header.css';
 import { jwtDecode } from "jwt-decode";
 import { Link, useNavigate } from "react-router-dom"; 
 import SessionCountdown from "../Countdown/Countdown";
-
+const API_BASE = "http://localhost:5000/api";
 export default function Header() {
     const [user, setUser] = useState(null);
     const [keyword, setKeyword] = useState(""); 
@@ -23,11 +23,28 @@ export default function Header() {
         }
     }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setUser(null);
+    const handleLogout = async () => {
+    const token = localStorage.getItem("token");
+
+    try {
+        if (token) {
+        await fetch(`${API_BASE}/users/logout`, {
+            method: "POST",
+            headers: {
+            Authorization: `Bearer ${token}`,
+            },
+        });
+        }
+    } catch (err) {
+        console.log("Logout update fail", err);
+    }
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tokenExpire");
+    setUser(null);
     };
+
 
     const handleSearch = () => {
         navigate(`/search?q=${encodeURIComponent(keyword)}`);

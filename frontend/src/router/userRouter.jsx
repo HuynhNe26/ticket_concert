@@ -13,6 +13,7 @@ export function UserRoutes() {
       <Route index element={<HomeUser />} />
       <Route path="/search" element={<SearchPage />} />
       <Route path="/event/:id" element={<EventDetail />} />
+
     </Route>
     <Route path="/login" element={<LoginPage />} />
     </>

@@ -229,20 +229,28 @@ export const authControllers = {
    * POST /api/users/logout
    * Đăng xuất (cập nhật status)
    */
-  async logout(req, res) {
+    async logout(req, res) {
     try {
-      const userId = req.user.user_id; // Từ middleware verifyToken
+      const authHeader = req.headers.authorization;
+      if (!authHeader) {
+        return res.status(401).json({ message: "Thiếu token" });
+      }
+
+      const token = authHeader.split(" ")[1];
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const userId = decoded.user_id;
 
       await pool.query(
-        `UPDATE users 
-         SET status = $1
-         WHERE user_id = $2`,
-        ["Đã đăng xuất", userId]
+        `UPDATE users
+        SET logout_time = NOW()
+        WHERE user_id = $1`,
+        [userId]
       );
 
-      return res.json({ 
+      return res.json({
         success: true,
-        message: "Đăng xuất thành công" 
+        message: "Đã cập nhật logout_time",
       });
     } catch (err) {
       console.error("Logout error:", err);

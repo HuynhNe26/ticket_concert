@@ -9,7 +9,7 @@ import Error from "../../components/notification/error/error";
 import Warning from "../../components/notification/warning/warning";
 import "./Login_user.css";
 
-console.log("Google Client ID:", process.env.REACT_APP_GOOGLE_CLIENT_ID);
+
 
 export default function LoginPage() {
   const navigate = useNavigate();
