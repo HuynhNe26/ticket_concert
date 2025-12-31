@@ -34,6 +34,9 @@ export default function AddEvent() {
   const [selectedColor, setSelectedColor] = useState('#00C7D9');
   const [zoom, setZoom] = useState(1);
 
+  // Loading state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleAddRect = () => {
     const newZone = {
       id: generateId(),
@@ -104,7 +107,7 @@ export default function AddEvent() {
     setSelectedZone(duplicated);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validation
     if (!eventInfo.name || !eventInfo.date || !eventInfo.address) {
       alert('⚠️ Vui lòng điền đầy đủ thông tin sự kiện!');
@@ -116,13 +119,62 @@ export default function AddEvent() {
       return;
     }
 
+    // Kiểm tra age
+    if (!eventInfo.age || eventInfo.age === '') {
+      alert('⚠️ Vui lòng nhập độ tuổi tối thiểu!');
+      return;
+    }
+
+    // Kiểm tra description
+    if (!eventInfo.description || eventInfo.description.trim() === '') {
+      alert('⚠️ Vui lòng nhập mô tả sự kiện!');
+      return;
+    }
+
     const dataToSend = {
       event: eventInfo,
       layout: layout
     };
 
     console.log('📤 DỮ LIỆU GỬI LÊN BACKEND:', JSON.stringify(dataToSend, null, 2));
-    alert('✅ Tạo sự kiện thành công!\n\nKiểm tra console để xem dữ liệu JSON.');
+
+    // Bắt đầu gửi request
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/admin/events/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSend)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('✅ ' + result.message);
+        console.log('📥 Kết quả trả về:', result);
+        
+        // Optional: Reset form sau khi tạo thành công
+        if (window.confirm('Sự kiện đã được tạo! Bạn có muốn tạo sự kiện mới?')) {
+          window.location.reload();
+        } else {
+          // Hoặc chuyển về trang danh sách events
+          // window.location.href = '/admin/events';
+          // hoặc dùng React Router
+          // navigate('/admin/events');
+        }
+      } else {
+        alert('❌ ' + result.message);
+        console.error('Error response:', result);
+      }
+    } catch (error) {
+      console.error('❌ Lỗi kết nối:', error);
+      alert('❌ Không thể kết nối đến server!\n\nVui lòng kiểm tra:\n- Server có đang chạy không?\n- URL API có đúng không?');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 3));
@@ -200,49 +252,92 @@ export default function AddEvent() {
                   window.location.reload();
                 }
               }}
+              disabled={isSubmitting}
               style={{
                 padding: '12px 30px',
-                background: '#6c757d',
+                background: isSubmitting ? '#cccccc' : '#6c757d',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '15px',
                 fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s'
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s',
+                opacity: isSubmitting ? 0.6 : 1
               }}
-              onMouseEnter={(e) => e.target.style.background = '#5a6268'}
-              onMouseLeave={(e) => e.target.style.background = '#6c757d'}
+              onMouseEnter={(e) => !isSubmitting && (e.target.style.background = '#5a6268')}
+              onMouseLeave={(e) => !isSubmitting && (e.target.style.background = '#6c757d')}
             >
               Hủy bỏ
             </button>
 
             <button
               onClick={handleSubmit}
+              disabled={isSubmitting}
               style={{
                 padding: '12px 40px',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: isSubmitting 
+                  ? '#cccccc' 
+                  : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 fontSize: '15px',
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+                boxShadow: isSubmitting 
+                  ? 'none' 
+                  : '0 4px 15px rgba(102, 126, 234, 0.4)',
+                opacity: isSubmitting ? 0.6 : 1
               }}
-              onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+              onMouseEnter={(e) => !isSubmitting && (e.target.style.transform = 'translateY(-2px)')}
+              onMouseLeave={(e) => !isSubmitting && (e.target.style.transform = 'translateY(0)')}
             >
               <Save size={18} />
-              Tạo sự kiện
+              {isSubmitting ? 'Đang tạo...' : 'Tạo sự kiện'}
             </button>
           </div>
+
+          {/* Loading indicator */}
+          {isSubmitting && (
+            <div style={{
+              marginTop: '20px',
+              padding: '15px',
+              background: '#e3f2fd',
+              border: '1px solid #2196f3',
+              borderRadius: '8px',
+              textAlign: 'center',
+              color: '#1976d2',
+              fontWeight: 500
+            }}>
+              <div style={{
+                display: 'inline-block',
+                width: '16px',
+                height: '16px',
+                border: '3px solid #1976d2',
+                borderTopColor: 'transparent',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite',
+                marginRight: '10px',
+                verticalAlign: 'middle'
+              }} />
+              Đang gửi dữ liệu lên server...
+            </div>
+          )}
         </div>
       </div>
+
+      {/* CSS Animation for loading spinner */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

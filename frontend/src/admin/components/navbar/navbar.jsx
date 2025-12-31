@@ -74,7 +74,7 @@ const MENU = [
       },
       {
         label: "Quản lý bố cục",
-        path: "/admin/layout/add",
+        path: "/admin/layout/manage",
         allowLevels: [1],
       },
       {

@@ -16,6 +16,7 @@ import eventsRouter from "./router/users/events.js";
 import adminRouter from "./router/admins/admins.js";
 import eventRouter from "./router/admins/events.js";
 import userRouter from "./router/admins/user.js";
+
 // import layoutRouter from "./router/admins/layout.js";
 
 // ================== APP ==================
@@ -40,6 +41,7 @@ app.use("/api/events", eventsRouter);
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
 app.use("/api/admin/events", eventRouter);
+
 // app.use("/api/layout", layoutRouter);
 
 // ================== SOCKET.IO ==================
