@@ -326,8 +326,8 @@ F. ĐỔI, TRẢ, HỦY VÉ
 Người sở hữu Vé Điện Tử và Mã Vé Điện Tử được mặc định đã đọc, hiểu và đồng ý đối với các quy định này và cam kết tuân thủ các quy định tại đây và các quy định khác được niêm yết, thông báo tại buổi biểu diễn.
 
 Người sở hữu Vé Điện Tử, Mã Vé Điện Tử đồng ý rằng BTC có toàn quyền áp dụng mọi biện pháp cần thiết khác không được quy định tại đây nhằm đảm bảo an ninh, an toàn và chất lượng của buổi biểu diễn',
-'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219939/po4tuuayssz8a9l0i54r.png', 'IWP', '2025-12-27 12:00:00', '2025-12-27 23:00:00','VieOnChannel','',2),
-('EM XINH "SAY HI" 2025', 'Sở hữu vé sớm để hưởng các đặc quyền đặc biệt', 'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219953/mv8grgnsbvr7ui7aioqf.png', 'JBUWF', '2026-01-27 12:00:00', '2026-01-27 23:00:00','VieOnChannel','',2);
+'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219939/po4tuuayssz8a9l0i54r.png', 'IWP', '2025-12-27 12:00:00', '2025-12-27 23:00:00','VieOnChannel','{"ca si": "Son Tung MTP"}',2),
+('EM XINH "SAY HI" 2025', 'Sở hữu vé sớm để hưởng các đặc quyền đặc biệt', 'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219953/mv8grgnsbvr7ui7aioqf.png', 'JBUWF', '2026-01-27 12:00:00', '2026-01-27 23:00:00','VieOnChannel','{"ca si": "Hòa Minzy"}',2);
 
     CREATE TABLE layout (
         layout_id SERIAL PRIMARY KEY,
@@ -689,22 +689,20 @@ CREATE TABLE chat_ai (
     intent VARCHAR(255) NOT NULL,
     ticket_quantity INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    event_id INT NOT NULL,
     meta_json JSONB,
-    CONSTRAINT fk_events
-        FOREIGN KEY (event_id)
-        REFERENCES events(event_id)
+    CONSTRAINT fk_users
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
 );
 
 INSERT INTO chat_ai 
-(user_id, message, intent, ticket_quantity, event_id, meta_json, sender)
+(user_id, message, intent, ticket_quantity, meta_json, sender)
 VALUES
 (
   1,
   'Vé VIP A còn không?',
   'Kiểm tra số lượng còn lại',
   0,
-  1,
   '{
     "zone_code": "VIP_A",
     "available": 5,
@@ -717,35 +715,9 @@ VALUES
   'Bạn có muốn mua 1 vé VIP A không?',
   'Gợi ý mua vé',
   1,
-  1,
   '{
     "zone_code": "VIP_A",
     "price": 3000000
   }',
   'AI'
-);
-
-CREATE TABLE user_behavior_log (
-    log_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    action VARCHAR(255),
-    object_id VARCHAR(255),
-    value JSONB,
-    ip_address VARCHAR(255),
-    device_info VARCHAR(100),
-    user_agent TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO user_behavior_log
-(user_id, action, object_id, value, ip_address, device_info, user_agent)
-VALUES
-(
-  1,
-  'VIEW_LAYOUT',
-  'EVENT_1',
-  '{"screen":"desktop","zoom":1.2}',
-  '113.161.45.22',
-  'Windows 11',
-  'Chrome 143.0'
 );
