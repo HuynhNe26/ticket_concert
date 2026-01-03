@@ -24,6 +24,7 @@ CREATE TABLE users (
     login_time TIMESTAMP,
     logout_time TIMESTAMP,
     member_id INT NOT NULL,
+    favorite JSONB,
     CONSTRAINT fk_member
         FOREIGN KEY (member_id)
         REFERENCES members(member_id)
@@ -58,6 +59,17 @@ VALUES
 ('Trần Diệp Anh Kiệt', '2005-01-01', 'anhkiet@gmail.com', '123456', '0123456789', 'Nam', 'TP. Hồ Chí Minh', 1, 'Quản trị viên cấp cao', 'Tài khoản mới'),
 ('Phùng Minh Vũ', '2005-01-01', 'minhvu@gmail.com', '123456', '0123456789', 'Nam', 'TP. Hồ Chí Minh', 1, 'Quản trị viên cấp cao', 'Tài khoản mới');
 
+CREATE TABLE categories (
+    category_id SERIAL PRIMARY KEY,
+    category_name VARCHAR(255)
+);
+
+INSERT INTO categories
+(category_name)
+VALUES
+('Đại Hội'),
+('Ca Nhạc');
+
 CREATE TABLE events (
     event_id SERIAL PRIMARY KEY,
     event_name VARCHAR(255) NOT NULL,
@@ -65,14 +77,20 @@ CREATE TABLE events (
     event_location VARCHAR(255) NOT NULL,
     event_age INT NOT NULL,
     banner_url TEXT NOT NULL,
-    event_layout VARCHAR(255) NOT NULL,
+    event_layout TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     event_start TIMESTAMP,
     event_end TIMESTAMP,
-    event_status BOOLEAN DEFAULT false
+    event_status BOOLEAN DEFAULT false,
+    event_actor VARCHAR(255),
+    event_artist JSONB,
+    category_id INT,
+    CONSTRAINT fk_categories
+        FOREIGN KEY (category_id)
+        REFERENCES categories(category_id)
 );
 
-INSERT INTO events (event_name, event_description, event_location, event_age, banner_url, event_layout, event_start, event_end)
+INSERT INTO events (event_name, event_description, event_location, event_age, banner_url, event_layout, event_start, event_end, event_actor, event_artist, category_id)
 VALUES
 ('ANH TRAI "SAY HI" 2025 CONCERT', 'I. ĐIỀU KIỆN VÀ ĐIỀU KHOẢN MUA VÉ:
 ●      Khi mua vé, tức là người mua đã đồng ý với các Điều Kiện và Điều Khoản của BTC và Quy Định Tham Gia Chương Trình được ghi rõ tại ticketbox.vn.
@@ -308,8 +326,8 @@ F. ĐỔI, TRẢ, HỦY VÉ
 Người sở hữu Vé Điện Tử và Mã Vé Điện Tử được mặc định đã đọc, hiểu và đồng ý đối với các quy định này và cam kết tuân thủ các quy định tại đây và các quy định khác được niêm yết, thông báo tại buổi biểu diễn.
 
 Người sở hữu Vé Điện Tử, Mã Vé Điện Tử đồng ý rằng BTC có toàn quyền áp dụng mọi biện pháp cần thiết khác không được quy định tại đây nhằm đảm bảo an ninh, an toàn và chất lượng của buổi biểu diễn',
-'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219939/po4tuuayssz8a9l0i54r.png', 'IWP', '2025-12-27 12:00:00', '2025-12-27 23:00:00'),
-('EM XINH "SAY HI" 2025', 'Sở hữu vé sớm để hưởng các đặc quyền đặc biệt', 'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219953/mv8grgnsbvr7ui7aioqf.png', 'JBUWF', '2026-01-27 12:00:00', '2026-01-27 23:00:00');
+'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219939/po4tuuayssz8a9l0i54r.png', 'IWP', '2025-12-27 12:00:00', '2025-12-27 23:00:00','VieOnChannel','',2),
+('EM XINH "SAY HI" 2025', 'Sở hữu vé sớm để hưởng các đặc quyền đặc biệt', 'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219953/mv8grgnsbvr7ui7aioqf.png', 'JBUWF', '2026-01-27 12:00:00', '2026-01-27 23:00:00','VieOnChannel','',2);
 
     CREATE TABLE layout (
         layout_id SERIAL PRIMARY KEY,
@@ -623,15 +641,16 @@ CREATE TABLE payments (
     payment_status VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     payment_ref VARCHAR(150) NOT NULL,
+    ticket_qr TEXT NOT NULL,
     CONSTRAINT fk_users 
         FOREIGN KEY (user_id)
         REFERENCES users(user_id)
 );
 
-INSERT INTO payments (user_id, method, payment_status, payment_ref)
+INSERT INTO payments (user_id, method, payment_status, payment_ref, ticket_qr)
 VALUES
-(1, 'VNPAY', 'Thành công', 'VNPAY_20251227_0001'),
-(1, 'MOMO', 'Thất bại', 'MOMO_20251227_0002');
+(1, 'VNPAY', 'Thành công', 'VNPAY_20251227_0001', 'QR_1'),
+(1, 'MOMO', 'Thất bại', 'MOMO_20251227_0002', 'QR_2');
 
 
 CREATE TABLE payment_detail (
@@ -640,7 +659,6 @@ CREATE TABLE payment_detail (
     event_id INT NOT NULL,
     zone_id INT NOT NULL,
     ticket_quantity INT NOT NULL,
-    ticket_qr VARCHAR(255) NOT NULL,
     CONSTRAINT fk_events 
         FOREIGN KEY (event_id)
         REFERENCES events(event_id),
@@ -653,14 +671,13 @@ CREATE TABLE payment_detail (
 );
 
 INSERT INTO payment_detail 
-(payment_id, event_id, zone_id, ticket_quantity, ticket_qr)
+(payment_id, event_id, zone_id, ticket_quantity)
 VALUES
 (
   1,
   1,
   10,
-  1,
-  'QR_1_EVENT1_VIPA_20251227_0001'
+  1
 );
 
 
