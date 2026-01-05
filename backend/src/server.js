@@ -6,7 +6,10 @@ import { Server } from "socket.io";
 import { connectDB } from "./config/database.js";
 
 dotenv.config();
-
+// ================== SOCKET ==================
+// users
+import { initZoneSocket } from "./socket/users/zone.js";
+// admins
 // ================== ROUTERS ==================
 // users
 import authRouter from "./router/users/user.js";
@@ -39,7 +42,7 @@ app.use(
 // ================== ROUTES ==================
 app.use("/api/users", authRouter);
 app.use("/api/events", eventsRouter);
-app.use("/api/layout", )
+app.use("/api/layout", layoutRouter);
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
@@ -55,18 +58,7 @@ const io = new Server(httpServer, {
     credentials: true,
   },
 });
-
-io.on("connection", (socket) => {
-  console.log("🟢 Socket connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("🔴 Socket disconnected:", socket.id);
-  });
-});
-
-export { io };
-const PORT = process.env.PORT;
-
+initZoneSocket(io);
 await connectDB();
 
 httpServer.listen(PORT, () => {
