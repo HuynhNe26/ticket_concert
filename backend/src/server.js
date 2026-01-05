@@ -11,6 +11,8 @@ dotenv.config();
 // users
 import authRouter from "./router/users/user.js";
 import eventsRouter from "./router/users/events.js";
+import layoutRouter from "./router/users/layout.js";
+import zoneRouter from "./router/users/zone.js";
 
 // admins
 import adminRouter from "./router/admins/admins.js";
@@ -37,6 +39,7 @@ app.use(
 // ================== ROUTES ==================
 app.use("/api/users", authRouter);
 app.use("/api/events", eventsRouter);
+app.use("/api/layout", )
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
@@ -62,8 +65,6 @@ io.on("connection", (socket) => {
 });
 
 export { io };
-
-// ================== START SERVER ==================
 const PORT = process.env.PORT;
 
 await connectDB();

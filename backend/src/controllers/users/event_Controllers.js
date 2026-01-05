@@ -1,7 +1,5 @@
 import { pool } from "../../config/database.js";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
 export const EventControllers = {
 
   async searchEvents(req, res) {
