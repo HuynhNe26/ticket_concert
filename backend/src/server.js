@@ -61,7 +61,7 @@ const io = new Server(httpServer, {
 initZoneSocket(io);
 await connectDB();
 
-PORT=process.env.PORT;
+const PORT = process.env.PORT ;
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
