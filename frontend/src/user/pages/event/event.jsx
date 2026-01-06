@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import LoadingUser from "../../components/loading/loading";
 import "./event.css";
 
-const API_BASE_URL = "http://localhost:5001";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function EventDetail() {
     const { id } = useParams();
@@ -14,7 +14,7 @@ export default function EventDetail() {
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/events/event/${id}`);
+                const res = await fetch(`${API_BASE}/api/events/event/${id}`);
                 const data = await res.json();
                 if (data.success) {
                     setEvent(data.data);

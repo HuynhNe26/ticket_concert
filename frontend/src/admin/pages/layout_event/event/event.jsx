@@ -3,6 +3,8 @@ import { Search, Plus, Calendar, MapPin, Users, DollarSign, Edit2, Trash2, Eye, 
 import LoadingAdmin from '../../../components/loading/loading';
 import io from 'socket.io-client';
 
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function ManageEvent() {
     const [events, setEvents] = useState([]);
     const [hotEvents, setHotEvents] = useState([]);
@@ -21,7 +23,7 @@ export default function ManageEvent() {
         getAllEvents();
         
         // Setup Socket.IO connection for hot events
-        const socket = io('http://localhost:5000');
+        const socket = io(API_BASE);
         
         socket.on('connect', () => {
             console.log('Connected to socket server');
@@ -48,7 +50,7 @@ export default function ManageEvent() {
         setLoading(true);
         setError('');
         try {
-            const response = await fetch("http://localhost:5000/api/admin/events", {
+            const response = await fetch(`${API_BASE}/api/admin/events`, {
                 method: 'GET',
                 headers: {
                     "Content-Type": 'application/json'
@@ -136,7 +138,7 @@ export default function ManageEvent() {
         if (!window.confirm('Bạn có chắc muốn xóa sự kiện này?')) return;
         
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/events/${eventId}`, {
+            const response = await fetch(`${API_BASE}/api/admin/events/${eventId}`, {
                 method: 'DELETE'
             });
             

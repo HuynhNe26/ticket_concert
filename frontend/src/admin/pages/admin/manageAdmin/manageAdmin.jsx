@@ -2,6 +2,8 @@ import LoadingAdmin from "../../../components/loading/loading"
 import "./manageAdmin.css"
 import React, {useState, useEffect} from "react"
 
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function ManageAdmin() {
     const [admin, setAdmin] = useState([])
     const [loading, setLoading] = useState(true)
@@ -11,7 +13,7 @@ export default function ManageAdmin() {
     useEffect(() => {
         const getAllAdmin = async () => {
             try {
-                const response = await fetch("http://localhost:5000/api/admin/", {
+                const response = await fetch(`${API_BASE}/api/admin/`, {
                     method: 'GET',
                     headers: {
                         'Content-type': 'application/json'
@@ -51,7 +53,7 @@ export default function ManageAdmin() {
     const handleSetPass = async (id) => {
         setLoading(true)
         try {
-            const response = await fetch(`http://localhost:5000/api/admin/resetPass/${id}`, {
+            const response = await fetch(`${API_BASE}/api/admin/resetPass/${id}`, {
                 method: 'GET',
                 headers: {
                     'Content-type': 'application/json'

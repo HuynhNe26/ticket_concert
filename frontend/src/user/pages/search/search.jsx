@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import "./search.css";
 
-const API_BASE_URL = "http://localhost:5001";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function SearchPage() {
     const [searchParams] = useSearchParams();
@@ -20,7 +19,7 @@ export default function SearchPage() {
     const fetchEvents = async () => {
         setLoading(true);
         try {
-            let url = `${API_BASE_URL}/api/events/search?q=${encodeURIComponent(queryFromUrl)}`;
+            let url = `${API_BASE}/api/events/search?q=${encodeURIComponent(queryFromUrl)}`;
             if (dateRange.start) url += `&dateStart=${dateRange.start}`;
             if (dateRange.end) url += `&dateEnd=${dateRange.end}`;
             if (location && location !== "Toàn quốc") url += `&location=${encodeURIComponent(location)}`;

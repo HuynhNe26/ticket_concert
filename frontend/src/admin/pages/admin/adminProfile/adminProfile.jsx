@@ -3,6 +3,8 @@ import LoadingAdmin from "../../../components/loading/loading"
 import "./adminProfile.css"
 import { useState } from "react"
 
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function AdminProfile() {
     const { admin, loading } = useAdminAuth()
     const [isEditing, setIsEditing] = useState(false)
@@ -52,7 +54,7 @@ export default function AdminProfile() {
     const handleSave = async () => {
         try {
             const token = localStorage.getItem("authToken")
-            const response = await fetch("http://localhost:5000/api/admin/update-profile", {
+            const response = await fetch(`${API_BASE}/api/admin/update-profile`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

@@ -3,6 +3,8 @@ import React, { useState } from "react"
 import LoadingAdmin from "../../../components/loading/loading"
 import SuccessInfo from "../../../components/notification/success/success"
 
+const API_BASE = process.env.REACT_APP_API_URL;
+
 export default function AddAdmin() {
     const [formData, setFormData] = useState({
         fullName: "",
@@ -83,7 +85,7 @@ export default function AddAdmin() {
         setLoading(true);
 
         try {
-            const response = await fetch("http://localhost:5000/api/admin/create", {
+            const response = await fetch(`${API_BASE}/api/admin/create`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
