@@ -18,7 +18,7 @@ export function AuthAdminProvider({ children }) {
 
   const verifyToken = async (token) => {
     try {
-      const res = await fetch("http://localhost:5000/api/admin/auth/profile", {
+      const res = await fetch("https://ticket-concert.onrender.com/api/admin/auth/profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -37,7 +37,7 @@ export function AuthAdminProvider({ children }) {
 
   const login = async (username, password) => {
     try {
-      const response = await fetch("http://localhost:5000/api/admin/auth/login", {
+      const response = await fetch("https://ticket-concert.onrender.com/api/admin/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

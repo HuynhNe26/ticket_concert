@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import LoadingUser from "../../components/loading/loading";
 import "./event.css";
 
-const API_BASE_URL = "http://localhost:5001";
+const API_BASE_URL = "https://ticket-concert.onrender.com";
 
 export default function EventDetail() {
     const { id } = useParams();
@@ -55,7 +55,7 @@ export default function EventDetail() {
                                 <span className="event-price-label">Giá từ</span>
                                 <span className="event-price-value">{formatCurrency(event.min_price || 0)} ›</span>
                             </div>
-                            <button className="event-btn-buy" onClick={() => navigate(`/booking/${event.event_id}`)}>
+                            <button className="event-btn-buy" onClick={() => navigate(`booking`)}>
                                 Chọn lịch diễn
                             </button>
                         </div>
