@@ -1,6 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 
-const API_BASE = "http://localhost:5001/api";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 // Helper lưu token + user + expire
 export const saveToken = (data) => {
@@ -17,7 +17,7 @@ export const handleGoogleLoginAPI = async (credentialResponse) => {
     throw new Error("Không có credential từ Google");
   }
 
-  const res = await fetch(`${API_BASE}/users/login-google`, {
+  const res = await fetch(`${API_BASE}/api/users/login-google`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ tokenId }),

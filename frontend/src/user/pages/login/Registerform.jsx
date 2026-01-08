@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const API_BASE = "http://localhost:5001/api";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function RegisterForm({ onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function RegisterForm({ onSuccess }) {
     setMsg("");
 
     try {
-      const res = await fetch(`${API_BASE}/users/register`, {
+      const res = await fetch(`${API_BASE}/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

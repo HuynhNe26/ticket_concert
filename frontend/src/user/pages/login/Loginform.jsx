@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 
-const API_BASE = "http://localhost:5001/api";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function LoginForm({ onSuccess, onGoogleLogin }) {
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ export default function LoginForm({ onSuccess, onGoogleLogin }) {
     setMsg("");
 
     try {
-      const res = await fetch(`${API_BASE}/users/login`, {
+      const res = await fetch(`${API_BASE}/api/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

@@ -6,18 +6,22 @@ import { Server } from "socket.io";
 import { connectDB } from "./config/database.js";
 
 dotenv.config();
-
+// ================== SOCKET ==================
+// users
+import { initZoneSocket } from "./socket/users/zone.js";
+// admins
 // ================== ROUTERS ==================
 // users
 import authRouter from "./router/users/user.js";
 import eventsRouter from "./router/users/events.js";
-import layoutRouter from "./router/users/layout.js";
+import userLayoutRouter from "./router/users/layout.js";
 import zoneRouter from "./router/users/zone.js";
 
 // admins
 import adminRouter from "./router/admins/admins.js";
 import eventRouter from "./router/admins/events.js";
 import userRouter from "./router/admins/user.js";
+import adminLayoutRouter from "./router/admins/layout.js";
 
 // import layoutRouter from "./router/admins/layout.js";
 
@@ -39,11 +43,12 @@ app.use(
 // ================== ROUTES ==================
 app.use("/api/users", authRouter);
 app.use("/api/events", eventsRouter);
-app.use("/api/layout", )
+app.use("/api/layout", userLayoutRouter);
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
 app.use("/api/admin/events", eventRouter);
+app.use("/api/admin/layout", adminLayoutRouter);
 
 // app.use("/api/layout", layoutRouter);
 
@@ -55,20 +60,9 @@ const io = new Server(httpServer, {
     credentials: true,
   },
 });
-
-io.on("connection", (socket) => {
-  console.log("🟢 Socket connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("🔴 Socket disconnected:", socket.id);
-  });
-});
-
-export { io };
-const PORT = process.env.PORT;
-
+initZoneSocket(io);
 await connectDB();
-
+const PORT = process.env.PORT ;
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

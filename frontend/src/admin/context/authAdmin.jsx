@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthAdminContext = createContext();
-
+const API_BASE = process.env.REACT_APP_API_URL;
 export function AuthAdminProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [admin, setAdmin] = useState(null);
@@ -18,7 +18,11 @@ export function AuthAdminProvider({ children }) {
 
   const verifyToken = async (token) => {
     try {
+<<<<<<< HEAD
       const res = await fetch("https://ticket-concert.onrender.com/api/admin/auth/profile", {
+=======
+      const res = await fetch(`${API_BASE}/api/admin/auth/profile`, {
+>>>>>>> b319ef262c9c6967589cbd046fffba22610d077f
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -37,7 +41,11 @@ export function AuthAdminProvider({ children }) {
 
   const login = async (username, password) => {
     try {
+<<<<<<< HEAD
       const response = await fetch("https://ticket-concert.onrender.com/api/admin/auth/login", {
+=======
+      const response = await fetch(`${API_BASE}/api/admin/auth/login`, {
+>>>>>>> b319ef262c9c6967589cbd046fffba22610d077f
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
