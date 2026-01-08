@@ -50,7 +50,7 @@ export default function ManageEvent() {
         setLoading(true);
         setError('');
         try {
-            const response = await fetch(`${API_BASE}/api/admin/events`, {
+            const response = await fetch(`https://ticket-concert.onrender.com/api/admin/events`, {
                 method: 'GET',
                 headers: {
                     "Content-Type": 'application/json'

@@ -3,11 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import LoadingUser from "../../components/loading/loading";
 import "./event.css";
 
-<<<<<<< HEAD
-const API_BASE_URL = "https://ticket-concert.onrender.com";
-=======
 const API_BASE = process.env.REACT_APP_API_URL;
->>>>>>> b319ef262c9c6967589cbd046fffba22610d077f
 
 export default function EventDetail() {
     const { id } = useParams();

@@ -6,11 +6,9 @@ import { Server } from "socket.io";
 import { connectDB } from "./config/database.js";
 
 dotenv.config();
-// ================== SOCKET ==================
-// users
+
 import { initZoneSocket } from "./socket/users/zone.js";
-// admins
-// ================== ROUTERS ==================
+
 // users
 import authRouter from "./router/users/user.js";
 import eventsRouter from "./router/users/events.js";
@@ -22,25 +20,22 @@ import adminRouter from "./router/admins/admins.js";
 import eventRouter from "./router/admins/events.js";
 import userRouter from "./router/admins/user.js";
 import adminLayoutRouter from "./router/admins/layout.js";
+import categoriesRouter from "./router/admins/categories.js"
 
-// import layoutRouter from "./router/admins/layout.js";
 
-// ================== APP ==================
 const app = express();
 const httpServer = createServer(app);
 
-// ================== MIDDLEWARE ==================
 app.use(express.json());
 
 app.use(
   cors({
-    origin: "http://localhost:3000", // ❗ FIX CORS
+    origin: "http://localhost:3000", 
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
 
-// ================== ROUTES ==================
 app.use("/api/users", authRouter);
 app.use("/api/events", eventsRouter);
 app.use("/api/layout", userLayoutRouter);
@@ -49,10 +44,8 @@ app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
 app.use("/api/admin/events", eventRouter);
 app.use("/api/admin/layout", adminLayoutRouter);
+app.use("/api/admin/categories", categoriesRouter);
 
-// app.use("/api/layout", layoutRouter);
-
-// ================== SOCKET.IO ==================
 const io = new Server(httpServer, {
   cors: {
     origin: "http://localhost:3000",
@@ -60,9 +53,12 @@ const io = new Server(httpServer, {
     credentials: true,
   },
 });
+
 initZoneSocket(io);
 await connectDB();
+
+
 const PORT = process.env.PORT ;
 httpServer.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

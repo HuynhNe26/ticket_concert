@@ -3,11 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import LoadingUser from "../../components/loading/loading";
 import "./home.css"; 
 
-<<<<<<< HEAD
-const API_BASE_URL = "https://ticket-concert.onrender.com";
-=======
-const API_BASE = process.env.REACT_APP_API_URL;
->>>>>>> b319ef262c9c6967589cbd046fffba22610d077f
+const API_BASE = "http://localhost:5001";
 
 export default function HomeUser() {
     const [loading, setLoading] = useState(false);

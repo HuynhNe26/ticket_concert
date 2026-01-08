@@ -1,8 +1,31 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar } from 'lucide-react';
 import { EVENT_CATEGORIES } from './constants/index_event';
 import FormField from './FormField';
 import FormSelect from './FormSelect';
+
+const [categories, setCategories] = useState([])
+const [error, setError] = useState("")
+
+useEffect(() => {
+  const getAllCategories = async () => {
+    try {
+      const response = await fetch("http://localhost:5001/api/admin/categories", {
+        method: 'GET',
+        headers: {
+          'content-type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setCategories(data.data)
+      }
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+}, [])
 
 const EventInfoForm = ({ eventInfo, onChange }) => {
   const handleChange = (field, value) => {
@@ -39,17 +62,19 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
             label="Tên sự kiện *"
             value={eventInfo.name}
             onChange={(v) => handleChange('name', v)}
-            placeholder="VD: Đêm nhạc Sơn Tùng MTP 2025"
+            placeholder="VD: Anh Trai Say Hi 2025"
           />
         </div>
 
-        <FormSelect
-          label="Thể loại *"
-          value={eventInfo.category}
-          options={EVENT_CATEGORIES}
-          onChange={(v) => handleChange('category', v)}
-        />
-
+        {categories.map((category) => (
+          <FormSelect
+            key={category.category_id}
+            label="Thể loại *"
+            value={category.category_name}
+            options={EVENT_CATEGORIES}
+            onChange={(v) => handleChange('category', v)}
+          />
+        ))}
         <br />
 
         <FormField
