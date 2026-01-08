@@ -12,7 +12,7 @@ export const ZoneControllers = {
       });
 
     } catch (err) {
-      console.error("Lỗi lấy dữ liệu quản trị viên:", err);
+      console.error("Lỗi lấy dữ liệu zone: ", err);
       return res.status(500).json({ message: "Lỗi server!" });
     }
   }
