@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Calendar } from 'lucide-react';
-import { EVENT_CATEGORIES } from './constants/index_event';
 import FormField from './FormField';
 import FormSelect from './FormSelect';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_URL;
 
 const EventInfoForm = ({ eventInfo, onChange }) => {
-  // ✅ Hooks phải ở ĐÂY - bên trong component
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
 
@@ -20,10 +18,13 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
             'content-type': 'application/json'
           }
         });
-
         const data = await response.json();
         if (data.success) {
-          setCategories(data.data);
+          const formattedCategories = data.data.map(cat => ({
+            value: cat.category_id,
+            label: cat.category_name
+          }));
+          setCategories(formattedCategories);
         }
       } catch (err) {
         setError(err.message);

@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
-import { DEFAULT_LAYOUT } from './add_event_component/constants/index_event.js';
 import EventInfoForm from './add_event_component/EventInfoForm.jsx';
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function AddEvent() {
-  // Event Info State
   const [eventInfo, setEventInfo] = useState({
     name: '',
-    category: 'concert',
+    category: '',
     date: '',
     time: '',
     endDate: '',
     endTime: '',
-    venue: '',
     address: '',
     age: '',
     description: '',
@@ -21,10 +18,6 @@ export default function AddEvent() {
     descImage: null
   });
 
-  // Layout State
-  const [layout, setLayout] = useState(DEFAULT_LAYOUT);
-
-  // Loading state
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -34,8 +27,8 @@ export default function AddEvent() {
       return;
     }
 
-    if (layout.zones.length === 0) {
-      alert('⚠️ Vui lòng tạo ít nhất 1 zone!');
+    if (!eventInfo.category) {
+      alert('⚠️ Vui lòng chọn thể loại sự kiện!');
       return;
     }
 
@@ -50,8 +43,7 @@ export default function AddEvent() {
     }
 
     const dataToSend = {
-      event: eventInfo,
-      layout: layout
+      event: eventInfo
     };
 
     console.log('📤 DỮ LIỆU GỬI LÊN BACKEND:', JSON.stringify(dataToSend, null, 2));
@@ -72,9 +64,18 @@ export default function AddEvent() {
       if (result.success) {
         alert('✅ ' + result.message);
         console.log('📥 Kết quả trả về:', result);
+        console.log('📋 Event ID:', result.data.event.event_id);
         
-        if (window.confirm('Sự kiện đã được tạo! Bạn có muốn tạo sự kiện mới?')) {
+        // Hỏi user có muốn thêm layout không
+        if (window.confirm('Sự kiện đã được tạo thành công!\n\nBạn có muốn thêm layout và zones cho sự kiện này không?')) {
+          // Redirect đến trang add layout với event_id
+          const eventId = result.data.event.event_id;
+          window.location.href = `/admin/events/${eventId}/add-layout`;
+        } else if (window.confirm('Bạn có muốn tạo sự kiện mới?')) {
           window.location.reload();
+        } else {
+          // Quay về danh sách events
+          window.location.href = '/admin/events';
         }
       } else {
         alert('❌ ' + result.message);
@@ -92,10 +93,11 @@ export default function AddEvent() {
     <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      padding: '20px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
       <div style={{
-        maxWidth: '1500px',
+        maxWidth: '1200px',
         margin: '0 auto',
         background: 'white',
         borderRadius: '12px',
@@ -120,13 +122,92 @@ export default function AddEvent() {
             opacity: 0.9, 
             fontSize: '14px' 
           }}>
-            Nhập thông tin sự kiện
+            Nhập thông tin cơ bản về sự kiện. Bạn có thể thêm layout và zones sau.
           </p>
         </div>
 
         <div style={{ padding: '30px' }}>
           {/* Event Info Form */}
           <EventInfoForm eventInfo={eventInfo} onChange={setEventInfo} />
+
+          {/* Info Box */}
+          <div style={{
+            marginTop: '20px',
+            padding: '15px 20px',
+            background: '#e7f3ff',
+            border: '1px solid #b3d9ff',
+            borderRadius: '8px',
+            fontSize: '13px',
+            color: '#0066cc'
+          }}>
+            <strong>💡 Lưu ý:</strong> Sau khi tạo sự kiện, bạn sẽ có thể thêm layout và zones để bắt đầu bán vé.
+          </div>
+
+          {/* Buttons */}
+          <div style={{
+            display: 'flex',
+            gap: '15px',
+            justifyContent: 'flex-end',
+            marginTop: '30px',
+            paddingTop: '20px',
+            borderTop: '2px solid #e0e0e0'
+          }}>
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('Bạn có chắc muốn hủy? Dữ liệu đã nhập sẽ bị mất.')) {
+                  window.history.back();
+                }
+              }}
+              disabled={isSubmitting}
+              style={{
+                padding: '14px 35px',
+                fontSize: '15px',
+                fontWeight: 600,
+                border: '2px solid #ddd',
+                borderRadius: '8px',
+                background: 'white',
+                color: '#666',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s',
+                opacity: isSubmitting ? 0.5 : 1
+              }}
+              onMouseOver={(e) => {
+                if (!isSubmitting) e.target.style.background = '#f5f5f5';
+              }}
+              onMouseOut={(e) => {
+                if (!isSubmitting) e.target.style.background = 'white';
+              }}
+            >
+              ❌ Hủy
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              style={{
+                padding: '14px 35px',
+                fontSize: '15px',
+                fontWeight: 600,
+                border: 'none',
+                borderRadius: '8px',
+                background: isSubmitting ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s',
+                boxShadow: isSubmitting ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.4)'
+              }}
+              onMouseOver={(e) => {
+                if (!isSubmitting) e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseOut={(e) => {
+                if (!isSubmitting) e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              {isSubmitting ? '⏳ Đang tạo sự kiện...' : '✅ Tạo Sự Kiện'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

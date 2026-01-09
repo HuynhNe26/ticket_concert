@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import LoadingUser from "../../components/loading/loading";
 import "./home.css"; 
 
-const API_BASE = "http://localhost:5001";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function HomeUser() {
     const [loading, setLoading] = useState(false);

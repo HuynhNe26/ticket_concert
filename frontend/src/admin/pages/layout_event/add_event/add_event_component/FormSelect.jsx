@@ -12,7 +12,7 @@ const FormSelect = ({ label, value, options, onChange }) => (
       {label}
     </label>
     <select
-      value={value}
+      value={value || ''}
       onChange={(e) => onChange(e.target.value)}
       style={{
         width: '100%',
