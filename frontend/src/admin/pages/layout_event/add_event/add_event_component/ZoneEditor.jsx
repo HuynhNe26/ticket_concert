@@ -152,15 +152,6 @@ const ZoneEditor = ({ zone, onUpdate, onDelete, onDuplicate }) => {
           background: 'white',
           borderRadius: '6px'
         }}>
-          <input
-            type="checkbox"
-            checked={zone.status !== false}
-            onChange={(e) => handleChange('status', e.target.checked)}
-            style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-          />
-          <label style={{ fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
-            Mở bán
-          </label>
         </div>
       </div>
     </div>

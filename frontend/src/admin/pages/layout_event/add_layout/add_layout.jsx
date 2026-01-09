@@ -195,7 +195,7 @@ const handleAddPolygon = () => {
 
     try {
       const method = isEditMode ? 'PUT' : 'POST';
-      const response = await fetch(`${API_BASE}/api/admin/events/${selectedEventId}/layout`, {
+      const response = await fetch(`${API_BASE}/api/admin/layout/${selectedEventId}`, {
         method: method,
         headers: {
           'Content-Type': 'application/json',

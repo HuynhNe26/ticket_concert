@@ -4,30 +4,35 @@ import { EVENT_CATEGORIES } from './constants/index_event';
 import FormField from './FormField';
 import FormSelect from './FormSelect';
 
-const [categories, setCategories] = useState([])
-const [error, setError] = useState("")
-
-useEffect(() => {
-  const getAllCategories = async () => {
-    try {
-      const response = await fetch("http://localhost:5001/api/admin/categories", {
-        method: 'GET',
-        headers: {
-          'content-type': 'application/json'
-        }
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        setCategories(data.data)
-      }
-    } catch (err) {
-      setError(err.message)
-    }
-  }
-}, [])
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const EventInfoForm = ({ eventInfo, onChange }) => {
+  // ✅ Hooks phải ở ĐÂY - bên trong component
+  const [categories, setCategories] = useState([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const getAllCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/categories`, {
+          method: 'GET',
+          headers: {
+            'content-type': 'application/json'
+          }
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          setCategories(data.data);
+        }
+      } catch (err) {
+        setError(err.message);
+      }
+    };
+    
+    getAllCategories();
+  }, []);
+
   const handleChange = (field, value) => {
     onChange({ ...eventInfo, [field]: value });
   };
@@ -52,6 +57,12 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
         Thông tin sự kiện
       </h2>
 
+      {error && (
+        <div style={{ color: 'red', marginBottom: '10px' }}>
+          Lỗi: {error}
+        </div>
+      )}
+
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',
@@ -66,16 +77,12 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
           />
         </div>
 
-        {categories.map((category) => (
-          <FormSelect
-            key={category.category_id}
-            label="Thể loại *"
-            value={category.category_name}
-            options={EVENT_CATEGORIES}
-            onChange={(v) => handleChange('category', v)}
-          />
-        ))}
-        <br />
+        <FormSelect
+          label="Thể loại *"
+          value={eventInfo.category}
+          options={categories}
+          onChange={(v) => handleChange('category', v)}
+        />
 
         <FormField
           label="Ngày diễn ra *"
