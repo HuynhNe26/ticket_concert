@@ -1,9 +1,9 @@
-import { pool } from "../../config/database.js";
+import { pool } from "../config/database.js";
 
 export const initZoneSocket = (io) => {
   io.on("connection", (socket) => {
     // Người dùng tham gia vào phòng của Zone cụ thể
-    socket.on("join_zone", ({ eventId, zoneId }) => {
+    socket.on("event", ({ eventId, zoneId }) => {
       const roomName = `room_${eventId}_${zoneId}`;
       socket.join(roomName);
       // console.log(`User ${socket.id} joined ${roomName}`);
@@ -14,25 +14,29 @@ export const initZoneSocket = (io) => {
       socket.leave(`room_${eventId}_${zoneId}`);
     });
 
-    // Lắng nghe yêu cầu cập nhật mỗi 10 giây từ Client
-    socket.on("request_refresh_tickets", async ({ eventId, zoneId }) => {
+    socket.on("zone", async ({ eventId, zoneId }) => {
       try {
-        // Truy vấn dựa trên database bạn vừa cập nhật
         const query = `
-          SELECT 
-            zone_id, 
-            zone_name, 
-            zone_quantity, 
-            sold_quantity, 
-            (zone_quantity - sold_quantity) as available_tickets
-          FROM zones 
-          WHERE event_id = $1 AND zone_id = $2
+          SELECT
+            z.zone_id,
+            z.zone_code,
+            z.zone_name,
+            z.zone_quantity,
+            z.sold_quantity,
+            (z.zone_quantity - z.sold_quantity) AS available_tickets,
+            z.status
+          FROM layout l
+          JOIN LATERAL jsonb_array_elements(l.layout_json->'zones') AS layout_zone ON true
+          JOIN zones z
+            ON z.zone_code = layout_zone ->> 'id'
+          WHERE l.event_id = $1
+            AND z.zone_code = $2
+          LIMIT 1
         `;
-        
+
         const { rows } = await pool.query(query, [eventId, zoneId]);
-        
-        if (rows.length > 0) {
-          // Gửi dữ liệu về cho CHỈ người dùng vừa yêu cầu
+
+        if (rows.length) {
           socket.emit("update_ticket_count", rows[0]);
         }
       } catch (err) {

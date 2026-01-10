@@ -21,6 +21,7 @@ import eventRouter from "./router/admins/events.js";
 import userRouter from "./router/admins/user.js";
 import adminLayoutRouter from "./router/admins/layout.js";
 import categoriesRouter from "./router/admins/categories.js"
+import { ChatSocket } from "./socket/chat_ai.js";
 
 
 const app = express();
@@ -55,6 +56,7 @@ const io = new Server(httpServer, {
 });
 
 initZoneSocket(io);
+ChatSocket(io);
 await connectDB();
 
 
