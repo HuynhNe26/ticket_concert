@@ -79,7 +79,7 @@ export default function LoginPage() {
   };
 
   return (
-    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+    <GoogleOAuthProvider clientId="940435928416-p9ic1ginb2kon6nrrqk6e9g7r7pjbfkt.apps.googleusercontent.com">
       <div className="login-wrap">
         <div className="login-side">
           <div className="auth-card">

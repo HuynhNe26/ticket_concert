@@ -14,7 +14,7 @@ export default function EventDetail() {
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                const res = await fetch(`${API_BASE}/api/events/event/${id}`);
+                const res = await fetch(`https://ticket-concert.onrender.com/api/events/${id}`);
                 const data = await res.json();
                 if (data.success) {
                     setEvent(data.data);

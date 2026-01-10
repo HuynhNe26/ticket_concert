@@ -49,7 +49,7 @@ export default function HomeUser() {
                     <h2 className="section-title">🔥 Sự kiện xu hướng</h2>
                     <div className="trending-list">
                         {trendingEvents.map((event, index) => (
-                            <div key={event.event_id} className="trending-item" onClick={() => navigate(`/event/id=${event.event_id}`)}>
+                            <div key={event.event_id} className="trending-item" onClick={() => navigate(`/event/${event.event_id}`)}>
                                 {/* Số thứ tự to (1, 2, 3...) */}
                                 <span className="trending-number" style={{ WebkitTextStroke: `1px ${index === 0 ? '#00c058' : '#333'}` }}>
                                     {index + 1}

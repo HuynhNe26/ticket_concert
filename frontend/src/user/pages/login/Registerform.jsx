@@ -34,7 +34,7 @@ export default function RegisterForm({ onSuccess }) {
     setMsg("");
 
     try {
-      const res = await fetch(`${API_BASE}/api/users/register`, {
+      const res = await fetch(`https://ticket-concert.onrender.com/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
