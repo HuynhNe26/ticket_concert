@@ -2,18 +2,31 @@ import { pool } from "../../config/database.js";
 
 export const ZoneControllers = {
 
-  async getAllZone(req, res) {
+  async getZonebyId(req, res) {
     try {
-      const { rows } = await pool.query("SELECT * FROM zones");
+      const { id } = req.params
+      let query = `SELECT * FROM zones WHERE event_id = $1`
+      const { rows } = pool.query(query, id)
 
-      return res.json({
-        success: true,
-        zones: rows,
-      });
+      if (rows.length === 0) {
+            res.status(400).json({
+                success: false, 
+                message: "Lỗi lấy thông tin vé"
+            })
+        }
 
-    } catch (err) {
-      console.error("Lỗi lấy dữ liệu zone: ", err);
-      return res.status(500).json({ message: "Lỗi server!" });
+        res.status(200).json({
+            success: true, 
+            message: "Lấy tất cả thông tin vé!", 
+            data: rowsn
+        })
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Lỗi server!",
+        })
+        console.error("Lỗi lấy tất cả vé: ", error)
     }
   }
 };

@@ -40,6 +40,7 @@ app.use(
 app.use("/api/users", authRouter);
 app.use("/api/events", eventsRouter);
 app.use("/api/layout", userLayoutRouter);
+app.use("/api/zone", zoneRouter);
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);

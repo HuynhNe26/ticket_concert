@@ -1,0 +1,87 @@
+/* --- CONTAINER CHÍNH --- */
+.booking-page-wrapper {
+    background-color: #0b0b0b; /* Nền đen sâu đồng bộ trang chủ */
+    min-height: 100vh;
+    padding-top: 100px; /* Chừa chỗ cho Header */
+    font-family: 'Inter', sans-serif;
+}
+
+.zone-container {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 40px;
+    padding: 0 20px;
+}
+
+/* --- PHẦN BÊN TRÁI: LAYOUT (KHÔNG KHUNG) --- */
+.zone-layout {
+    flex: 0 0 65%;
+    /* Xóa bỏ các thuộc tính tạo khung */
+    background: transparent; 
+    border: none; 
+    padding: 0;
+    
+    /* Giữ lại vị trí cố định khi cuộn */
+    height: calc(100vh - 140px);
+    position: sticky;
+    top: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- PHẦN BÊN PHẢI: TICKET (CÓ KHUNG DANH SÁCH) --- */
+.zone-ticket {
+    flex: 1;
+    /* Tạo khung nổi bật cho danh sách vé */
+    background: #1a1a1a; 
+    border: 1px solid #333;
+    border-radius: 20px;
+    padding: 25px;
+    
+    /* Đổ bóng để tạo chiều sâu */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    
+    /* Cấu hình cuộn riêng cho danh sách */
+    height: calc(100vh - 140px);
+    overflow-y: auto;
+}
+
+/* Tùy chỉnh thanh cuộn bên trong khung vé cho mượt */
+.zone-ticket::-webkit-scrollbar {
+    width: 5px;
+}
+.zone-ticket::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+.zone-ticket::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+}
+.zone-ticket::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1200px) {
+    .zone-layout { flex: 0 0 60%; }
+}
+
+@media (max-width: 1024px) {
+    .zone-container { 
+        flex-direction: column; 
+        gap: 20px;
+    }
+    .zone-layout { 
+        position: static; 
+        height: auto; 
+        flex: 1;
+        padding: 20px 0;
+    }
+    .zone-ticket { 
+        height: auto; 
+        flex: 1;
+        max-height: 600px; /* Giới hạn chiều cao trên mobile */
+    }
+}

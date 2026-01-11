@@ -3,18 +3,17 @@ import { pool } from "../config/database.js";
 export const initZoneSocket = (io) => {
   io.on("connection", (socket) => {
     // Người dùng tham gia vào phòng của Zone cụ thể
-    socket.on("event", ({ eventId, zoneId }) => {
-      const roomName = `room_${eventId}_${zoneId}`;
+    socket.on("event", ({ eventId }) => {
+      const roomName = `room_${eventId}`;
       socket.join(roomName);
-      // console.log(`User ${socket.id} joined ${roomName}`);
     });
 
     // Rời phòng khi chuyển trang
-    socket.on("leave_zone", ({ eventId, zoneId }) => {
-      socket.leave(`room_${eventId}_${zoneId}`);
+    socket.on("leave_zone", ({ eventId }) => {
+      socket.leave(`room_${eventId}`);
     });
 
-    socket.on("zone", async ({ eventId, zoneId }) => {
+    socket.on("zone", async ({ eventId }) => {
       try {
         const query = `
           SELECT
@@ -30,14 +29,13 @@ export const initZoneSocket = (io) => {
           JOIN zones z
             ON z.zone_code = layout_zone ->> 'id'
           WHERE l.event_id = $1
-            AND z.zone_code = $2
           LIMIT 1
         `;
 
-        const { rows } = await pool.query(query, [eventId, zoneId]);
+        const { rows } = await pool.query(query, [eventId]);
 
         if (rows.length) {
-          socket.emit("update_ticket_count", rows[0]);
+          socket.emit("update_ticket_count", rows);
         }
       } catch (err) {
         console.error("Socket Database Error:", err);
