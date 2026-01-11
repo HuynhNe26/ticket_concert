@@ -14,7 +14,6 @@ export const ZoneControllers = {
                 message: "Lỗi lấy thông tin vé"
             })
         }
-
         res.status(200).json({
             success: true, 
             message: "Lấy tất cả thông tin vé!", 
