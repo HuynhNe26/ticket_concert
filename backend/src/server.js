@@ -7,7 +7,7 @@ import { connectDB } from "./config/database.js";
 
 dotenv.config();
 
-import { initZoneSocket } from "./socket/users/zone.js";
+import { initZoneSocket } from "./socket/zone.js";
 
 // users
 import authRouter from "./router/users/user.js";
