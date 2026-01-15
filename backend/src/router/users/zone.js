@@ -3,6 +3,6 @@ import { ZoneControllers } from "../../controllers/users/zone.js";
 
 const router = express.Router();
 
-router.get("/", ZoneControllers.getAllZone);
+router.get("/:id", ZoneControllers.getZonebyId);
 
 export default router;

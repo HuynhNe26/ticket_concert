@@ -1,0 +1,99 @@
+.ticket-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.ticket-list-title {
+    color: #ffffff;
+    font-size: 18px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Card vé */
+.ticket-item-card {
+    background: #252525; /* Xám đen nhẹ hơn nền chính */
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.ticket-item-card:hover:not(.sold-out) {
+    border-color: #00c058;
+    background: #2a2a2a;
+}
+
+.ticket-item-card.sold-out {
+    opacity: 0.5;
+    filter: grayscale(1);
+}
+
+/* Thông tin vé */
+.ticket-item-name {
+    color: #fff;
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ticket-code-tag {
+    background: #444;
+    color: #ccc;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.ticket-item-price {
+    color: #00c058;
+    font-size: 20px;
+    font-weight: 800;
+    margin: 5px 0;
+}
+
+.ticket-item-desc {
+    color: #888;
+    font-size: 12px;
+}
+
+/* Thao tác */
+.ticket-item-action {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ticket-remaining {
+    font-size: 12px;
+    color: #aaa;
+}
+
+.btn-select-ticket {
+    background: #00c058;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-select-ticket:hover:not(:disabled) {
+    background: #00ff73;
+    box-shadow: 0 0 15px rgba(0, 192, 88, 0.3);
+}
+
+.btn-select-ticket:disabled {
+    background: #444;
+    cursor: not-allowed;
+}
