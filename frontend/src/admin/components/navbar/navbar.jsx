@@ -78,8 +78,8 @@ const MENU = [
         allowLevels: [1],
       },
       {
-        label: "Thêm bố cục",
-        path: "/admin/layout/add",
+        label: "Quản lý thể loại",
+        path: "/admin/categories",
         allowLevels: [1],
       }
     ],

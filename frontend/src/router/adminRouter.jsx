@@ -13,6 +13,8 @@ import EventDetail from "../admin/pages/layout_event/event_detail/event_detail";
 import ManageLayout from "../admin/pages/layout_event/layout/layout";
 import AddLayout from "../admin/pages/layout_event/add_layout/add_layout";
 import LayoutDetail from "../admin/pages/layout_event/layout_detail/layout_detail";
+import ManageCategories from "../admin/pages/category/manageCategories/categories";
+import AddCategory from "../admin/pages/category/addCategory/addCategory";
 
 export function AdminRoutes() {
   return (
@@ -33,6 +35,9 @@ export function AdminRoutes() {
         <Route path="layout" element={<ManageLayout />} />
         <Route path="layout/:id" element={<LayoutDetail />} />
         <Route path="layout/add" element={<AddLayout />} />
+
+        <Route path="categories" element={<ManageCategories />} />
+        <Route path="categories/add" element={<AddCategory />} />
 
         <Route path="profile" element={<AdminProfile />} />
         <Route path="user" element={<UserManagement />}/>
