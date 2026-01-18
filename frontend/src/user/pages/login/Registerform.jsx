@@ -78,7 +78,6 @@ export default function RegisterForm({ onSuccess }) {
         onChange={(e) => setEmail(e.target.value)}
         required
       />
-      <label className="label"></label>
       <input
         type="date"
         className="input"
@@ -86,17 +85,26 @@ export default function RegisterForm({ onSuccess }) {
         onChange={(e) => setBirthOfDay(e.target.value)}
         required
       />
-      <label className="label"></label>
       <select
         className="input"
         value={gender}
         onChange={(e) => setGender(e.target.value)}
         required
+        style={{
+          backgroundColor: '#1a1d29',
+          color: gender ? '#ffffff' : 'rgba(255, 255, 255, 0.5)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          fontSize: '15px',
+          cursor: 'pointer',
+          width: '100%'
+        }}
       >
-        <option value="">Giới tính</option>
-        <option value="Nam">Nam</option>
-        <option value="Nữ">Nữ</option>
-        <option value="Khác">Khác</option>
+        <option value="" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Giới tính</option>
+        <option value="Nam" style={{ backgroundColor: '#1a1d29', color: '#ffffff' }}>Nam</option>
+        <option value="Nữ" style={{ backgroundColor: '#1a1d29', color: '#ffffff' }}>Nữ</option>
+        <option value="Khác" style={{ backgroundColor: '#1a1d29', color: '#ffffff' }}>Khác</option>
       </select>
 
       <input

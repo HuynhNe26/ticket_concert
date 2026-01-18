@@ -11,7 +11,7 @@ import "./Login_user.css";
 
 
 
-export default function LoginPage() {
+export default function LoginPage({ isModal = false, onClose = null }) {
   const navigate = useNavigate();
   const [tab, setTab] = useState("login"); // login | register
   const [loading, setLoading] = useState(false);
@@ -43,7 +43,15 @@ export default function LoginPage() {
   const handleLoginSuccess = (data) => {
     saveToken(data);
     showSuccess("Đăng nhập thành công!");
-    setTimeout(() => navigate("/"), 1500);
+    setTimeout(() => {
+      hideNotification(); // Tắt thông báo
+      if (isModal && onClose) {
+        onClose(); // Đóng modal
+      }
+      setTimeout(() => {
+        window.location.reload(); // Reload sau khi đóng modal
+      }, 300);
+    }, 1000);
   };
 
   // Xử lý thành công đăng ký
@@ -70,7 +78,15 @@ export default function LoginPage() {
       const data = await handleGoogleLoginAPI(credentialResponse);
       saveToken(data);
       showSuccess("Đăng nhập Google thành công!");
-      setTimeout(() => navigate("/"), 1500);
+      setTimeout(() => {
+        hideNotification(); // Tắt thông báo
+        if (isModal && onClose) {
+          onClose(); // Đóng modal
+        }
+        setTimeout(() => {
+          window.location.reload(); // Reload sau khi đóng modal
+        }, 300);
+      }, 1000);
     } catch (err) {
       showError(err.message || "Đăng nhập Google thất bại");
     } finally {
@@ -80,52 +96,91 @@ export default function LoginPage() {
 
   return (
     <GoogleOAuthProvider clientId="940435928416-p9ic1ginb2kon6nrrqk6e9g7r7pjbfkt.apps.googleusercontent.com">
-      <div className="login-wrap">
-        <div className="login-side">
-          <div className="auth-card">
-            <div className="brand">
-              <img src="/logo.svg" alt="Logo" />
-            </div>
+      <div 
+        className="auth-card" 
+        style={isModal ? {
+          position: 'relative',
+          maxHeight: '85vh',
+          overflowY: 'auto',
+          overflowX: 'hidden'
+        } : {}}
+      >
+        {/* Nút đóng (chỉ hiện khi isModal) */}
+        {isModal && onClose && (
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: 'none',
+              width: '36px',
+              height: '36px',
+              borderRadius: '50%',
+              cursor: 'pointer',
+              fontSize: '20px',
+              color: 'rgba(255, 255, 255, 0.7)',
+              zIndex: 100,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.color = '#fff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)';
+            }}
+          >
+            ✕
+          </button>
+        )}
 
-            {/* Tabs */}
-            <div className="tabs">
-              <button
-                className={`tab ${tab === "login" ? "active" : ""}`}
-                onClick={() => {
-                  hideNotification();
-                  setTab("login");
-                }}
-              >
-                Đăng nhập
-              </button>
-              <button
-                className={`tab ${tab === "register" ? "active" : ""}`}
-                onClick={() => {
-                  hideNotification();
-                  setTab("register");
-                }}
-              >
-                Đăng ký
-              </button>
-            </div>
-
-            {/* Render form tương ứng */}
-            {tab === "login" && (
-              <LoginForm
-                onSuccess={handleLoginSuccess}
-                onError={handleLoginError}
-                onGoogleLogin={handleGoogleLogin}
-              />
-            )}
-
-            {tab === "register" && (
-              <RegisterForm 
-                onSuccess={handleRegisterSuccess}
-                onError={handleRegisterError}
-              />
-            )}
-          </div>
+        <div className="brand">
+          <img src="/logo.svg" alt="Logo" />
         </div>
+
+        {/* Tabs */}
+        <div className="tabs">
+          <button
+            className={`tab ${tab === "login" ? "active" : ""}`}
+            onClick={() => {
+              hideNotification();
+              setTab("login");
+            }}
+          >
+            Đăng nhập
+          </button>
+          <button
+            className={`tab ${tab === "register" ? "active" : ""}`}
+            onClick={() => {
+              hideNotification();
+              setTab("register");
+            }}
+          >
+            Đăng ký
+          </button>
+        </div>
+
+        {/* Render form tương ứng */}
+        {tab === "login" && (
+          <LoginForm
+            onSuccess={handleLoginSuccess}
+            onError={handleLoginError}
+            onGoogleLogin={handleGoogleLogin}
+          />
+        )}
+
+        {tab === "register" && (
+          <RegisterForm 
+            onSuccess={handleRegisterSuccess}
+            onError={handleRegisterError}
+          />
+        )}
       </div>
 
       {/* Notifications */}

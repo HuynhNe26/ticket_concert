@@ -73,11 +73,6 @@ const MENU = [
         allowLevels: [1],
       },
       {
-        label: "Quản lý bố cục",
-        path: "/admin/layout/manage",
-        allowLevels: [1],
-      },
-      {
         label: "Quản lý thể loại",
         path: "/admin/categories",
         allowLevels: [1],

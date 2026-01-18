@@ -17,7 +17,7 @@ export function UserRoutes() {
       <Route path="/event/:id/booking" element={<ZonePage />} />
 
     </Route>
-    <Route path="/login" element={<LoginPage />} />
+    
     </>
   );
 }
