@@ -185,7 +185,6 @@ export const EventControllers = {
           category_id = $6,
           event_start = $7,
           event_end = $8,
-          updated_at = CURRENT_TIMESTAMP
         WHERE event_id = $9
         RETURNING *
       `;
