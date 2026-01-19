@@ -184,7 +184,7 @@ export const EventControllers = {
           banner_url = COALESCE($5, banner_url),
           category_id = $6,
           event_start = $7,
-          event_end = $8,
+          event_end = $8
         WHERE event_id = $9
         RETURNING *
       `;
