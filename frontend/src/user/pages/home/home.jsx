@@ -44,26 +44,6 @@ export default function HomeUser() {
     return (
         <div className="home-wrapper">
             <div className="home-container">
-                
-                {/* Nút mở modal đăng nhập */}
-                <div style={{ textAlign: 'right', marginBottom: '20px' }}>
-                    <button 
-                        onClick={() => setShowLoginModal(true)}
-                        style={{
-                            padding: '10px 24px',
-                            background: '#00c058',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '15px',
-                            fontWeight: '600',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        Đăng nhập
-                    </button>
-                </div>
-
                 {/* --- PHẦN 1: SỰ KIỆN XU HƯỚNG --- */}
                 <section className="section-home">
                     <h2 className="section-title">🔥 Sự kiện xu hướng</h2>

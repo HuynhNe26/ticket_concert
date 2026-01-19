@@ -17,7 +17,7 @@ import zoneRouter from "./router/users/zone.js";
 
 // admins
 import adminRouter from "./router/admins/admins.js";
-import eventRouter from "./router/admins/events.js";
+// import eventRouter from "./router/admins/events.js";
 import userRouter from "./router/admins/user.js";
 import adminLayoutRouter from "./router/admins/layout.js";
 import categoriesRouter from "./router/admins/categories.js"
@@ -44,7 +44,7 @@ app.use("/api/zone", zoneRouter);
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
-app.use("/api/admin/events", eventRouter);
+
 app.use("/api/admin/layout", adminLayoutRouter);
 app.use("/api/admin/categories", categoriesRouter);
 

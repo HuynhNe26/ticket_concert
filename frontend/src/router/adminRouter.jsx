@@ -15,7 +15,7 @@ import AddLayout from "../admin/pages/layout_event/add_layout/add_layout";
 import LayoutDetail from "../admin/pages/layout_event/layout_detail/layout_detail";
 import ManageCategories from "../admin/pages/category/manageCategories/categories";
 import AddCategory from "../admin/pages/category/addCategory/addCategory";
-
+import EditEvent from "../admin/pages/layout_event/event/event_edit";
 export function AdminRoutes() {
   return (
     <>
@@ -31,10 +31,10 @@ export function AdminRoutes() {
         <Route path="events" element={<ManageEvent />} />
         <Route path="events/:id" element={<EventDetail />} />
         <Route path="events/add" element={<AddEvent />} />
+        <Route path="events/edit/:id" element={<EditEvent />} />
 
-        <Route path="layout" element={<ManageLayout />} />
         <Route path="layout/:id" element={<LayoutDetail />} />
-        <Route path="layout/add" element={<AddLayout />} />
+        <Route path="layout" element={<AddLayout />} />
 
         <Route path="categories" element={<ManageCategories />} />
         <Route path="categories/add" element={<AddCategory />} />
