@@ -63,23 +63,8 @@ export const EventControllers = {
         : event.endDate 
           ? `${event.endDate} 23:59:59`
           : null;
-          
-      let eventActor = null;
-      let eventArtist = null;
 
-      if (event.actor) {
-        // Nếu đã là object thì giữ nguyên, nếu là string thì wrap vào object
-        eventActor = typeof event.actor === 'string' 
-          ? { name: event.actor }
-          : event.actor;
-      }
-
-      if (event.artist) {
-        // Nếu đã là object thì giữ nguyên, nếu là string thì wrap vào object
-        eventArtist = typeof event.artist === 'string'
-          ? { name: event.artist }
-          : event.artist;
-      }
+      
       // 2. Insert vào bảng events (KHÔNG CÓ event_layout vì chưa tạo layout)
       const eventInsertQuery = `
         INSERT INTO events (
@@ -194,22 +179,6 @@ export const EventControllers = {
           ? `${event.endDate} 23:59:59`
           : null;
 
-      let eventActor = null;
-      let eventArtist = null;
-
-      if (event.actor) {
-        // Nếu đã là object thì giữ nguyên, nếu là string thì wrap vào object
-        eventActor = typeof event.actor === 'string' 
-          ? { name: event.actor }
-          : event.actor;
-      }
-
-      if (event.artist) {
-        // Nếu đã là object thì giữ nguyên, nếu là string thì wrap vào object
-        eventArtist = typeof event.artist === 'string'
-          ? { name: event.artist }
-          : event.artist;
-      }    
       // Update thông tin event
       const updateEventQuery = `
         UPDATE events SET
