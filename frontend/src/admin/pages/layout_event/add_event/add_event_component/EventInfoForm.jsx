@@ -143,6 +143,35 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
         </div>
 
         <div style={{ gridColumn: 'span 2' }}>
+          <FormField
+            label="Mô tả sự kiện"
+            value={eventInfo.description}
+            onChange={(v) => handleChange('description', v)}
+            placeholder="Giới thiệu về sự kiện, nghệ sĩ tham gia..."
+            multiline
+          />
+        </div>
+
+        <div style={{ gridColumn: 'span 2' }}>
+          <FormField
+            label="Đơn vị tổ chức"
+            value={eventInfo.actor}
+            onChange={(v) => handleChange('actor', v)}
+            placeholder="Giới thiệu về đơn vị tổ chức"
+            multiline
+          />
+        </div>
+
+        <div style={{ gridColumn: 'span 2' }}>
+          <FormField
+            label="Tên nghệ sĩ"
+            value={eventInfo.artist}
+            onChange={(v) => handleChange('artist', v)}
+            placeholder="Tên nghệ sĩ trình diễn"
+          />
+        </div>
+
+        <div style={{ gridColumn: 'span 2' }}>
           <label style={{
             display: 'block',
             marginBottom: '8px',
