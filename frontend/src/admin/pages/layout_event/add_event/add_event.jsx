@@ -14,6 +14,8 @@ export default function AddEvent() {
     address: '',
     age: '',
     description: '',
+    actor: '',
+    artist: '',
     image: null,
     descImage: null
   });

@@ -43,7 +43,7 @@ export const EventControllers = {
       }
 
       // Kiểm tra các trường bắt buộc
-      const requiredFields = ['name', 'category', 'date', 'address', 'age', 'description'];
+      const requiredFields = ['name', 'category', 'date', 'address', 'age', 'description', 'actor', 'artist'];
       for (const field of requiredFields) {
         if (!event[field]) {
           return res.status(400).json({
@@ -75,9 +75,11 @@ export const EventControllers = {
           category_id,
           event_start,
           event_end,
-          event_status
+          event_status,
+          event_actor,
+          event_artist
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING event_id, event_name, created_at
       `;
 
@@ -90,7 +92,9 @@ export const EventControllers = {
         parseInt(event.category),
         eventStart,
         eventEnd,
-        false // mặc định là chưa active
+        false, // mặc định là chưa active
+        event.actor,
+        event.artist
       ]);
 
       // Trả về response thành công
@@ -184,8 +188,10 @@ export const EventControllers = {
           banner_url = COALESCE($5, banner_url),
           category_id = $6,
           event_start = $7,
-          event_end = $8
-        WHERE event_id = $9
+          event_end = $8,
+          event_actor = $9,
+          event_artist = $10
+        WHERE event_id = $11
         RETURNING *
       `;
 
@@ -198,6 +204,8 @@ export const EventControllers = {
         parseInt(event.category),
         eventStart,
         eventEnd,
+        event.actor,
+        event.artist,
         id
       ]);
 
