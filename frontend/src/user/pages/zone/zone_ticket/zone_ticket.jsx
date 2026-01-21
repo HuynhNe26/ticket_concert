@@ -3,59 +3,37 @@ import { useNavigate } from "react-router-dom";
 import "./zone_ticket.css";
 
 export default function Ticket({ zones, eventId }) {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  // Hàm định dạng tiền tệ VND
-  const formatCurrency = (amount) =>
-    new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
+    const formatCurrency = (amount) =>
+        new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
 
-  return (
-    <div className="ticket-list-container">
-      <h3 className="ticket-list-title">Danh sách hạng vé</h3>
-      
-      {zones.length > 0 ? (
-        zones.map((z) => {
-          // Tính toán số lượng vé dựa trên bảng zones
-          const available = z.zone_quantity - z.sold_quantity;
-          const isFull = available <= 0;
+    return (
+        <div className="ticket-list-wrapper">
+            {zones.map((z) => {
+                const available = z.zone_quantity - z.sold_quantity;
+                const isFull = available <= 0;
 
-          return (
-            <div 
-              key={z.zone_id} 
-              className={`ticket-item-card ${isFull ? "sold-out" : ""}`}
-            >
-              <div className="ticket-item-info">
-                <div className="ticket-item-name">
-                  {z.zone_name} 
-                  <span className="ticket-code-tag">{z.zone_code}</span>
-                </div>
-                <div className="ticket-item-price">
-                  {formatCurrency(z.zone_price)}
-                </div>
-                <div className="ticket-item-desc">{z.zone_description}</div>
-              </div>
-
-              <div className="ticket-item-action">
-                <div className="ticket-remaining">
-                  Còn lại: <strong>{available}</strong> / {z.zone_quantity}
-                </div>
-                <button
-                  className="btn-select-ticket"
-                  disabled={isFull}
-                  onClick={() => navigate(`/event/${eventId}/booking/${z.zone_id}`)}
-                >
-                  {isFull ? "Hết vé" : "Chọn vé"}
-                </button>
-              </div>
-            </div>
-          );
-        })
-      ) : (
-        <div className="no-ticket-notify">Đang tải danh sách vé...</div>
-      )}
-    </div>
-  );
+                return (
+                    <div key={z.zone_id} className={`ticket-box ${isFull ? 'sold-out' : ''}`}>
+                        <div className="ticket-left">
+                            <h4 className="ticket-name">{z.zone_name}</h4>
+                            <p className="ticket-price">{formatCurrency(z.zone_price)}</p>
+                            <p className="ticket-desc">{z.zone_description}</p>
+                        </div>
+                        <div className="ticket-right">
+                            <span className="ticket-count">Còn: {available}</span>
+                            <button 
+                                className="btn-buy-ticket" 
+                                disabled={isFull}
+                                onClick={() => navigate(`/event/${eventId}/booking/${z.zone_id}`)}
+                            >
+                                {isFull ? "Hết vé" : "Chọn"}
+                            </button>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    );
 }
