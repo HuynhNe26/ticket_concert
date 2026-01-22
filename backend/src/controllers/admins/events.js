@@ -123,7 +123,6 @@ export const EventControllers = {
     try {
       const { id } = req.params;
 
-      // Lấy tất cả thông tin event giống getAllEvent
       const eventQuery = `
         SELECT *
         FROM events
@@ -139,10 +138,28 @@ export const EventControllers = {
         });
       }
 
-      // Trả về đầy đủ thông tin event
+      const event = eventResult.rows[0];
+
+      // ===== FIX ARTIST FORMAT =====
+      let artist = [];
+
+      if (event.event_artist) {
+        if (Array.isArray(event.event_artist)) {
+          artist = event.event_artist;
+        } else if (typeof event.event_artist === 'object') {
+          // case DB đang lưu object
+          artist = [
+            { name: event.event_artist.ca_si }
+          ];
+        }
+      }
+
       return res.status(200).json({
         success: true,
-        data: eventResult.rows[0],
+        data: {
+          ...event,
+          artist,            // 👈 frontend dùng field này
+        },
         message: 'Lấy thông tin sự kiện thành công'
       });
 
@@ -159,7 +176,7 @@ export const EventControllers = {
   async updateEvent(req, res) {
     try {
       const { id } = req.params;
-      const { event } = req.body;
+      const { event, artist } = req.body;
 
       if (!event) {
         return res.status(400).json({
@@ -191,7 +208,7 @@ export const EventControllers = {
           event_start = $7,
           event_end = $8,
           event_actor = $9,
-          event_artist = $10
+          event_artist = $10::jsonb
         WHERE event_id = $11
         RETURNING *
       `;
@@ -206,7 +223,7 @@ export const EventControllers = {
         eventStart,
         eventEnd,
         event.actor,
-        event.artist,
+        JSON.stringify(event.artist),
         id
       ]);
 

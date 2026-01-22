@@ -63,6 +63,8 @@ export default function EditEvent() {
           endDate: event.event_end ? event.event_end.split('T')[0] : '',
           endTime: parseTime(event.event_end),
           address: event.event_location || '',
+          actor: event.event_actor || '',
+          artist: Array.isArray(event.event_artist) ? event.event_artist.map(item => item['ca si']).filter(Boolean).map(name => ({ name })) : [],
           age: event.event_age?.toString() || '', // Backend trả về event_age
           description: event.event_description || '', // Backend trả về event_description
           image: event.banner_url || null,
@@ -105,8 +107,19 @@ export default function EditEvent() {
       return;
     }
 
+     if (!eventInfo.actor) {
+      alert('⚠️ Vui lòng nhập diễn viên chính!');
+      return;
+    }
+
+    if (!eventInfo.artist) {
+      alert('⚠️ Vui lòng nhập nghệ sĩ biểu diễn!');
+      return;
+    }
+
     const dataToSend = {
-      event: eventInfo
+      event: eventInfo,
+      artist: eventInfo.artist
     };
 
     console.log('📤 DỮ LIỆU CẬP NHẬT:', JSON.stringify(dataToSend, null, 2));

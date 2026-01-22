@@ -15,12 +15,21 @@ export default function AddEvent() {
     age: '',
     description: '',
     actor: '',
-    artist: '',
     image: null,
     descImage: null
   });
 
+  const [artists, setArtists] = useState([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const handleArtistChange = (index, value) => {
+    const updatedArtists = [...artists];
+    updatedArtists[index] = value;
+    setArtists(updatedArtists);
+  }
+
+  // Này là hàm xử lý để khi admin nhập vào thì nó lưu thay đổi vào đây!
 
   const handleSubmit = async () => {
     // Validation
@@ -44,6 +53,16 @@ export default function AddEvent() {
       return;
     }
 
+    if (!eventInfo.actor) {
+      alert('⚠️ Vui lòng nhập diễn viên chính!');
+      return;
+    }
+
+    if (!eventInfo.artist) {
+      alert('⚠️ Vui lòng nhập nghệ sĩ biểu diễn!');
+      return;
+    }
+
     const dataToSend = {
       event: eventInfo
     };
@@ -58,8 +77,24 @@ export default function AddEvent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(dataToSend)
+        body: JSON.stringify({
+          eventInfo: dataToSend,
+          artist: artists
+          // Còn này là sẽ gửi riêng, khi bên backend sẽ nhận toàn bộ data của eventInfo và mảng artists
+        })
       });
+
+      // backend chỉ là const { name, ..., arists} = req.body; 
+      // thì nó sẽ lấy tất cả dữ liệu như thường và chỉ cần 
+      // const query = `
+      //   UPDATE events
+      //   SET name = $1, 
+      //   ...,
+      //   artists = $2 (ví dụ)
+      // `
+
+      
+
 
       const result = await response.json();
 
