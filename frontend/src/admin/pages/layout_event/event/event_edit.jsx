@@ -64,7 +64,7 @@ export default function EditEvent() {
           endTime: parseTime(event.event_end),
           address: event.event_location || '',
           actor: event.event_actor || '',
-          artist: Array.isArray(event.event_artist) ? event.event_artist.map(item => item['ca si']).filter(Boolean).map(name => ({ name })) : [],
+          artist: event.event_artist || [],
           age: event.event_age?.toString() || '', // Backend trả về event_age
           description: event.event_description || '', // Backend trả về event_description
           image: event.banner_url || null,
@@ -167,8 +167,9 @@ export default function EditEvent() {
 
   return (
     <div style={{
+      marginTop: '50px',
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #002fff 0%, #ff0000 100%)',
       padding: '20px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
@@ -230,6 +231,32 @@ export default function EditEvent() {
           }}>
             <button
               type="button"
+              onClick={() => {navigate(`/admin/layout`);}}
+              disabled={isSubmitting}
+              style={{
+                marginRight: 'auto',
+                padding: '14px 35px',
+                fontSize: '15px',
+                fontWeight: 600,
+                border: 'none',
+                borderRadius: '8px',
+                background: isSubmitting ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s',
+                boxShadow: isSubmitting ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.4)'
+              }}
+              onMouseOver={(e) => {
+                if (!isSubmitting) e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseOut={(e) => {
+                if (!isSubmitting) e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              🎨 Chỉnh Sửa Layout
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 if (window.confirm('Bạn có chắc muốn hủy? Các thay đổi sẽ không được lưu.')) {
                   navigate('/admin/events');
@@ -283,6 +310,7 @@ export default function EditEvent() {
             >
               {isSubmitting ? '⏳ Đang cập nhật...' : '💾 Lưu Thay Đổi'}
             </button>
+             
           </div>
         </div>
       </div>
