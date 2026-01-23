@@ -10,6 +10,20 @@ export default function Ticket({ zones, eventId }) {
 
     return (
         <div className="ticket-list-wrapper">
+            <div className="layout-legend">
+        <div className="legend-item">
+          <span className="legend-dot" style={{ background: '#4CAF50' }}></span>
+          Còn vé
+        </div>
+        <div className="legend-item">
+          <span className="legend-dot" style={{ background: '#FF9800' }}></span>
+          Sắp hết (&lt;20%)
+        </div>
+        <div className="legend-item">
+          <span className="legend-dot" style={{ background: '#666666' }}></span>
+          Hết vé
+        </div>
+      </div>
             {zones.map((z) => {
                 const available = z.zone_quantity - z.sold_quantity;
                 const isFull = available <= 0;
