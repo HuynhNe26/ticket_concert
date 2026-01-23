@@ -17,19 +17,8 @@ export default function Ticket({ zones, eventId }) {
                 return (
                     <div key={z.zone_id} className={`ticket-box ${isFull ? 'sold-out' : ''}`}>
                         <div className="ticket-left">
-                            <h4 className="ticket-name">{z.zone_name}</h4>
-                            <p className="ticket-price">{formatCurrency(z.zone_price)}</p>
-                            <p className="ticket-desc">{z.zone_description}</p>
-                        </div>
-                        <div className="ticket-right">
-                            <span className="ticket-count">Còn: {available}</span>
-                            <button 
-                                className="btn-buy-ticket" 
-                                disabled={isFull}
-                                onClick={() => navigate(`/event/${eventId}/booking/${z.zone_id}`)}
-                            >
-                                {isFull ? "Hết vé" : "Chọn"}
-                            </button>
+                            <h4 className="ticket-item-name">{z.zone_name}</h4>
+                            <p className="ticket-item-price">{formatCurrency(z.zone_price)}</p>
                         </div>
                     </div>
                 );

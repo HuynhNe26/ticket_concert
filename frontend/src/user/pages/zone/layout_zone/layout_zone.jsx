@@ -185,7 +185,6 @@ export default function LayoutZone({ layout, zones }) {
           <div className="tooltip-header">{hoveredData.zone_name}</div>
           <div className="tooltip-price">{formatPrice(hoveredData.zone_price)}</div>
           <div className="tooltip-stock">
-            Còn lại: {hoveredData.zone_quantity - hoveredData.sold_quantity} / {hoveredData.zone_quantity}
           </div>
         </div>
       )}
