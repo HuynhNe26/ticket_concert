@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAdminAuth } from "../../context/authAdmin";
 import "./navbar.css";
 
@@ -192,10 +192,9 @@ export default function Navbar() {
       <div className="navbar-container">
 
         <div className="navbar-brand">
-          <div className="brand-logo">
-            <img alt="Logo" />
-          </div>
-          <span className="brand-text">Ticket Concert</span>
+          <Link className="brand-logo" to="/admin">
+            <img alt="Logo" src="/Logo.png" />
+          </Link>
         </div>
 
         {/* ICON MENU KHI RESPONSIVE MOBILE */}

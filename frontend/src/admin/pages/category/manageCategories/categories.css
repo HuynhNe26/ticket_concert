@@ -2,6 +2,7 @@
     padding: 20px;
     max-width: 1400px;
     margin: 0 auto;
+    margin-top: 80px;
 }
 
 .categories-header {
@@ -16,8 +17,8 @@
 .categories-header h1 {
     font-size: 28px;
     color: #333;
+    font-weight: bold;
     margin: 0;
-    font-weight: 600;
 }
 
 .btn-add-category {
@@ -25,7 +26,7 @@
     align-items: center;
     gap: 8px;
     padding: 12px 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #216790 0%, #238eae 100%);
     color: white;
     border: none;
     border-radius: 8px;
@@ -33,7 +34,7 @@
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.25);
 }
 
 .btn-add-category:hover {
@@ -64,7 +65,6 @@
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
 }
 
 .no-categories {
@@ -79,7 +79,7 @@
 }
 
 .categories-table-wrapper {
-    overflow-x: auto;
+    width: 100%;
 }
 
 .categories-table {
@@ -88,13 +88,13 @@
 }
 
 .categories-table thead {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #216790 0%, #238eae 100%);
     color: white;
 }
 
 .categories-table th {
     padding: 16px;
-    text-align: left;
+    text-align: center;
     font-weight: 600;
     font-size: 14px;
     text-transform: uppercase;
@@ -104,10 +104,11 @@
 .categories-table tbody tr {
     border-bottom: 1px solid #f0f0f0;
     transition: background-color 0.2s ease;
+    text-align: center;
 }
 
 .categories-table tbody tr:hover {
-    background-color: #f8f9ff;
+    background-color: #d4d6e2;
 }
 
 .categories-table tbody tr:last-child {
@@ -125,47 +126,91 @@
     color: #333;
 }
 
-.category-description {
-    max-width: 400px;
-    color: #777;
-    line-height: 1.5;
+/* Action Menu Styles */
+.action-menu-wrapper {
+    position: relative;
+    display: inline-block;
 }
 
-.action-buttons {
-    display: flex;
-    gap: 8px;
-}
-
-.action-buttons button {
-    padding: 8px 16px;
+.btn-menu {
+    background: none;
     border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 24px;
+    font-weight: bold;
+    color: #666;
     cursor: pointer;
+    padding: 4px 12px;
+    border-radius: 4px;
     transition: all 0.2s ease;
 }
 
-.btn-edit {
-    background-color: #4caf50;
-    color: white;
+.btn-menu:hover {
+    background-color: #f0f0f0;
+    color: #333;
 }
 
-.btn-edit:hover {
-    background-color: #45a049;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 5px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 150px;
+    z-index: 1000;
+    overflow: hidden;
+    animation: slideDown 0.2s ease;
 }
 
-.btn-delete {
-    background-color: #f44336;
-    color: white;
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.btn-delete:hover {
-    background-color: #da190b;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(244, 67, 54, 0.3);
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: #333;
+}
+
+.menu-item:hover {
+    background-color: #f5f5f5;
+}
+
+.menu-item.edit:hover {
+    background-color: #e8f5e9;
+    color: #4caf50;
+}
+
+.menu-item.delete {
+    border-top: 1px solid #f0f0f0;
+}
+
+.menu-item.delete:hover {
+    background-color: #ffebee;
+    color: #f44336;
+}
+
+.menu-icon {
+    font-size: 16px;
 }
 
 /* Responsive Design */
@@ -198,17 +243,9 @@
         padding: 12px 8px;
     }
 
-    .category-description {
-        max-width: 200px;
-        font-size: 13px;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .action-buttons button {
-        width: 100%;
+    .dropdown-menu {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
     }
 }

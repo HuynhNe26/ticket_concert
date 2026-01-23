@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import LoadingAdmin from "../../../components/loading/loading";
 import "./categories.css"
@@ -9,13 +9,44 @@ export default function ManageCategories() {
     const [categories, setCategories] = useState([])
     const [error, setError] = useState(null)
     const [loading, setLoading] = useState(false)
+    const [openMenuId, setOpenMenuId] = useState(null)
     const navigate = useNavigate();
+    const menuRef = useRef(null);
+    const abortControllerRef = useRef(null);
 
     useEffect(() => {
         getAllCategories();
+        
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+            }
+        };
     }, [])
 
+    // Đóng menu khi click ra ngoài
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setOpenMenuId(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     const getAllCategories = async () => {
+        // Hủy request cũ nếu có
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+
+        // Tạo AbortController mới
+        abortControllerRef.current = new AbortController();
+        
         setLoading(true);
         setError(null);
         try {
@@ -23,7 +54,8 @@ export default function ManageCategories() {
                 method: 'GET',
                 headers: {
                     'content-type': 'application/json'
-                }
+                },
+                signal: abortControllerRef.current.signal
             });
 
             const data = await response.json();
@@ -34,10 +66,22 @@ export default function ManageCategories() {
             }
         }
         catch (err) {
-            setError(err.message)
+            if (err.name === 'AbortError') {
+                console.log('Fetch đã bị hủy');
+            } else {
+                setError(err.message)
+            }
         }
         finally {
             setLoading(false)
+            abortControllerRef.current = null;
+        }
+    }
+
+    const handleCancelLoading = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            setLoading(false);
         }
     }
 
@@ -45,11 +89,17 @@ export default function ManageCategories() {
         navigate('/admin/categories/add');
     }
 
+    const toggleMenu = (categoryId) => {
+        setOpenMenuId(openMenuId === categoryId ? null : categoryId);
+    }
+
     const handleEditCategory = (id) => {
+        setOpenMenuId(null);
         navigate(`/admin/categories/edit/${id}`);
     }
 
     const handleDeleteCategory = async (id) => {
+        setOpenMenuId(null);
         if (window.confirm("Bạn có chắc chắn muốn xóa thể loại này?")) {
             try {
                 const response = await fetch(`${API_BASE}/api/admin/categories/${id}`, {
@@ -69,12 +119,8 @@ export default function ManageCategories() {
         }
     }
 
-    const handleAdd = async () => {
-        navigate('/admin/categories/add')
-    }
-
     if (loading) {
-        return <LoadingAdmin />
+        return <LoadingAdmin onCancel={handleCancelLoading} />
     }
 
     return (
@@ -100,14 +146,13 @@ export default function ManageCategories() {
                     </div>
                 ) : (
                     <div className="categories-table-wrapper">
-                        <button onClick={handleAdd}>Thêm thể loại</button>
                         <table className="categories-table">
                             <thead>
                                 <tr>
                                     <th>STT</th>
                                     <th>Tên thể loại</th>
                                     <th>Ngày tạo</th>
-                                    <th>Thao tác</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -116,25 +161,38 @@ export default function ManageCategories() {
                                         <td>{index + 1}</td>
                                         <td className="category-name">{category.category_name}</td>
                                         <td>
-                                            {category.createdAt 
-                                                ? new Date(category.createdAt).toLocaleDateString('vi-VN')
+                                            {category.created_at  
+                                                ? new Date(category.created_at).toLocaleDateString('vi-VN')
                                                 : "-"
                                             }
                                         </td>
                                         <td>
-                                            <div className="action-buttons">
+                                            <div className="action-menu-wrapper" ref={openMenuId === category.category_id ? menuRef : null}>
                                                 <button 
-                                                    className="btn-edit"
-                                                    onClick={() => handleEditCategory(category.category_id)}
+                                                    className="btn-menu"
+                                                    onClick={() => toggleMenu(category.category_id)}
                                                 >
-                                                    Sửa
+                                                    ⋮
                                                 </button>
-                                                <button 
-                                                    className="btn-delete"
-                                                    onClick={() => handleDeleteCategory(category.id)}
-                                                >
-                                                    Xóa
-                                                </button>
+                                                
+                                                {openMenuId === category.category_id && (
+                                                    <div className="dropdown-menu">
+                                                        <button 
+                                                            className="menu-item edit"
+                                                            onClick={() => handleEditCategory(category.category_id)}
+                                                        >
+                                                            <span className="menu-icon">✏️</span>
+                                                            Sửa
+                                                        </button>
+                                                        <button 
+                                                            className="menu-item delete"
+                                                            onClick={() => handleDeleteCategory(category.category_id)}
+                                                        >
+                                                            <span className="menu-icon">🗑️</span>
+                                                            Xóa
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

@@ -7,8 +7,7 @@ const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function AddCategory() {
     const [category, setCategory] = useState({
-        name: "",
-        description: ""
+        category_name: "",
     })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
@@ -41,8 +40,7 @@ export default function AddCategory() {
                     'content-type': 'application/json'
                 },
                 body: JSON.stringify({
-                    name: category.name,
-                    description: category.description
+                    category_name: category.name,
                 })
             })
 

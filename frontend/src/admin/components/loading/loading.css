@@ -12,6 +12,13 @@
     z-index: 9999;
 }
 
+.loading-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
 .loading-container {
     display: flex;
     gap: 8px;
@@ -35,6 +42,31 @@
 
 .loading-bar:nth-child(3) {
     animation-delay: 0.3s;
+}
+
+.btn-cancel-loading {
+    padding: 10px 24px;
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #333;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-cancel-loading:hover {
+    background-color: #f44336;
+    color: white;
+    border-color: #f44336;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(244, 67, 54, 0.3);
+}
+
+.btn-cancel-loading:active {
+    transform: translateY(0);
 }
 
 @keyframes bounce {
