@@ -14,28 +14,46 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
       try {
         const response = await fetch(`${API_BASE}/api/admin/categories`, {
           method: 'GET',
-          headers: {
-            'content-type': 'application/json'
-          }
+          headers: { 'content-type': 'application/json' }
         });
+
         const data = await response.json();
         if (data.success) {
-          const formattedCategories = data.data.map(cat => ({
-            value: cat.category_id,
-            label: cat.category_name
-          }));
-          setCategories(formattedCategories);
+          setCategories(
+            data.data.map(cat => ({
+              value: cat.category_id,
+              label: cat.category_name
+            }))
+          );
         }
       } catch (err) {
         setError(err.message);
       }
     };
-    
+
     getAllCategories();
   }, []);
 
   const handleChange = (field, value) => {
     onChange({ ...eventInfo, [field]: value });
+  };
+
+  // ===== ARTIST HANDLERS =====
+  const handleArtistChange = (index, value) => {
+    const updatedArtists = [...(eventInfo.artist || [])];
+    updatedArtists[index] = { ...updatedArtists[index], name: value };
+    onChange({ ...eventInfo, artist: updatedArtists });
+  };
+
+  const addArtist = () => {
+    const updatedArtists = [...(eventInfo.artist || [])];
+    updatedArtists.push({ name: "" });
+    onChange({ ...eventInfo, artist: updatedArtists });
+  };
+
+  const removeArtist = (index) => {
+    const updatedArtists = eventInfo.artist.filter((_, i) => i !== index);
+    onChange({ ...eventInfo, artist: updatedArtists });
   };
 
   return (
@@ -49,20 +67,15 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
       <h2 style={{
         margin: '0 0 20px 0',
         fontSize: '20px',
-        color: '#333',
         display: 'flex',
         alignItems: 'center',
         gap: '10px'
       }}>
-        <Calendar size={24} style={{ color: '#667eea' }} />
+        <Calendar size={24} />
         Thông tin sự kiện
       </h2>
 
-      {error && (
-        <div style={{ color: 'red', marginBottom: '10px' }}>
-          Lỗi: {error}
-        </div>
-      )}
+      {error && <div style={{ color: 'red' }}>Lỗi: {error}</div>}
 
       <div style={{
         display: 'grid',
@@ -74,7 +87,6 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
             label="Tên sự kiện *"
             value={eventInfo.name}
             onChange={(v) => handleChange('name', v)}
-            placeholder="VD: Anh Trai Say Hi 2025"
           />
         </div>
 
@@ -118,102 +130,82 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
             label="Địa chỉ chi tiết *"
             value={eventInfo.address}
             onChange={(v) => handleChange('address', v)}
-            placeholder="Số nhà, đường, quận/huyện, tỉnh/thành phố"
           />
         </div>
 
         <div style={{ gridColumn: 'span 2' }}>
           <FormField
-            label="Độ tuổi (xét độ tuổi này trở lên) *"
+            label="Độ tuổi *"
             type="number"
             value={eventInfo.age}
             onChange={(v) => handleChange('age', v)}
-            placeholder="18"
           />
         </div>
 
         <div style={{ gridColumn: 'span 2' }}>
           <FormField
             label="Mô tả sự kiện"
+            multiline
             value={eventInfo.description}
             onChange={(v) => handleChange('description', v)}
-            placeholder="Giới thiệu về sự kiện, nghệ sĩ tham gia..."
+          />
+        </div>
+
+        <div style={{ gridColumn: 'span 2' }}>
+          <FormField
+            label="Đơn vị tổ chức"
             multiline
+            value={eventInfo.actor}
+            onChange={(v) => handleChange('actor', v)}
           />
         </div>
 
+        {/* ===== ARTIST SECTION ===== */}
         <div style={{ gridColumn: 'span 2' }}>
-          <label style={{
-            display: 'block',
-            marginBottom: '8px',
-            fontSize: '13px',
-            fontWeight: 600,
-            color: '#555'
-          }}>
-            📷 Ảnh bìa sự kiện
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleChange('image', e.target.files[0])}
-            style={{
-              width: '100%',
-              padding: '10px',
-              border: '2px dashed #ddd',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '13px'
-            }}
-          />
-          {eventInfo.image && (
-            <div style={{
-              marginTop: '10px',
-              padding: '8px',
-              background: '#e7f3ff',
-              borderRadius: '4px',
-              fontSize: '12px',
-              color: '#0066cc'
-            }}>
-              ✓ Đã chọn: {eventInfo.image.name}
-            </div>
-          )}
-        </div>
+          <label style={{ fontWeight: 600 }}>🎤 Nghệ sĩ tham gia</label>
 
-        <div style={{ gridColumn: 'span 2' }}>
-          <label style={{
-            display: 'block',
-            marginBottom: '8px',
-            fontSize: '13px',
-            fontWeight: 600,
-            color: '#555'
-          }}>
-            📷 Ảnh mô tả sự kiện
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleChange('descImage', e.target.files[0])}
-            style={{
-              width: '100%',
-              padding: '10px',
-              border: '2px dashed #ddd',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '13px'
-            }}
-          />
-          {eventInfo.descImage && (
-            <div style={{
-              marginTop: '10px',
-              padding: '8px',
-              background: '#e7f3ff',
-              borderRadius: '4px',
-              fontSize: '12px',
-              color: '#0066cc'
-            }}>
-              ✓ Đã chọn: {eventInfo.descImage.name}
+          {(eventInfo.artist || []).map((artist, index) => (
+            <div
+              key={index}
+              style={{ display: 'flex', gap: '10px', marginTop: '10px' }}
+            >
+              <FormField
+                value={artist.name}
+                placeholder={`Nghệ sĩ ${index + 1}`}
+                onChange={(v) => handleArtistChange(index, v)}
+              />
+
+              <button
+                type="button"
+                onClick={() => removeArtist(index)}
+                style={{
+                  background: '#ff4d4f',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '0 12px',
+                  cursor: 'pointer'
+                }}
+              >
+                ✕
+              </button>
             </div>
-          )}
+          ))}
+
+          <button
+            type="button"
+            onClick={addArtist}
+            style={{
+              marginTop: '10px',
+              padding: '8px 14px',
+              border: '1px dashed #667eea',
+              borderRadius: '6px',
+              background: '#f0f3ff',
+              cursor: 'pointer'
+            }}
+          >
+            + Thêm nghệ sĩ
+          </button>
         </div>
       </div>
     </div>

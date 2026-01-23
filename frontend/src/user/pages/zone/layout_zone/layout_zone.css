@@ -1,0 +1,134 @@
+.layout-zone-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.layout-canvas {
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 192, 88, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  max-width: 100%;
+  height: auto;
+}
+
+.layout-canvas:hover {
+  transform: scale(1.01);
+}
+
+/* Loading State */
+.layout-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: #888;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #333;
+  border-top-color: #00c058;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Tooltip */
+.zone-tooltip {
+  position: fixed;
+  background: rgba(26, 26, 26, 0.98);
+  backdrop-filter: blur(10px);
+  border: 1px solid #00c058;
+  border-radius: 10px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 32px rgba(0, 192, 88, 0.3);
+  z-index: 1000;
+  pointer-events: none;
+  min-width: 200px;
+  animation: tooltipFadeIn 0.2s ease;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tooltip-header {
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 6px;
+}
+
+.tooltip-price {
+  color: #00c058;
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.tooltip-stock {
+  color: #aaa;
+  font-size: 13px;
+}
+
+/* Legend */
+.layout-legend {
+  display: flex;
+  gap: 20px;
+  padding: 12px 20px;
+  background: rgba(26, 26, 26, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  border: 1px solid #333;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #ccc;
+}
+
+.legend-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .layout-canvas {
+    max-width: 100%;
+  }
+
+  .layout-legend {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .zone-tooltip {
+    font-size: 12px;
+    min-width: 150px;
+  }
+}

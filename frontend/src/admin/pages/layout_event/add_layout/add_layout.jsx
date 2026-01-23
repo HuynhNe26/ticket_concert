@@ -226,7 +226,7 @@ const handleAddPolygon = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #002fff 0%, #ff0000 100%)',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       padding: '30px'
     }}>
@@ -240,6 +240,7 @@ const handleAddPolygon = () => {
       }}>
         {/* Header */}
         <div style={{
+          marginTop: '40px',
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           padding: '25px 30px',
           color: 'white'
@@ -263,7 +264,7 @@ const handleAddPolygon = () => {
         <div style={{ padding: '30px' }}>
           {/* Select Event */}
           <div style={{
-            marginBottom: '30px',
+            marginBottom: '0px',
             padding: '20px',
             background: '#f8f9fa',
             borderRadius: '8px',

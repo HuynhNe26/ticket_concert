@@ -43,7 +43,7 @@ export const EventControllers = {
       }
 
       // Kiểm tra các trường bắt buộc
-      const requiredFields = ['name', 'category', 'date', 'address', 'age', 'description'];
+      const requiredFields = ['name', 'category', 'date', 'address', 'age', 'description', 'actor', 'artist'];
       for (const field of requiredFields) {
         if (!event[field]) {
           return res.status(400).json({
@@ -64,6 +64,7 @@ export const EventControllers = {
           ? `${event.endDate} 23:59:59`
           : null;
 
+      
       // 2. Insert vào bảng events (KHÔNG CÓ event_layout vì chưa tạo layout)
       const eventInsertQuery = `
         INSERT INTO events (
@@ -75,9 +76,11 @@ export const EventControllers = {
           category_id,
           event_start,
           event_end,
-          event_status
+          event_status,
+          event_actor,
+          event_artist
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING event_id, event_name, created_at
       `;
 
@@ -90,7 +93,9 @@ export const EventControllers = {
         parseInt(event.category),
         eventStart,
         eventEnd,
-        false // mặc định là chưa active
+        false, // mặc định là chưa active
+        event.actor,
+        event.artist
       ]);
 
       // Trả về response thành công
@@ -118,17 +123,10 @@ export const EventControllers = {
     try {
       const { id } = req.params;
 
-      // Lấy thông tin event và layout
       const eventQuery = `
-        SELECT 
-          e.*,
-          c.category_name,
-          l.layout_id,
-          l.layout_json
-        FROM events e
-        LEFT JOIN categories c ON e.category_id = c.category_id
-        LEFT JOIN layout l ON e.event_id = l.event_id
-        WHERE e.event_id = $1
+        SELECT *
+        FROM events
+        WHERE event_id = $1
       `;
 
       const eventResult = await pool.query(eventQuery, [id]);
@@ -140,20 +138,27 @@ export const EventControllers = {
         });
       }
 
-      // Lấy danh sách zones
-      const zonesQuery = `
-        SELECT * FROM zones
-        WHERE event_id = $1
-        ORDER BY zone_code
-      `;
+      const event = eventResult.rows[0];
 
-      const zonesResult = await pool.query(zonesQuery, [id]);
+      // ===== FIX ARTIST FORMAT =====
+      let artist = [];
+
+      if (event.event_artist) {
+        if (Array.isArray(event.event_artist)) {
+          artist = event.event_artist;
+        } else if (typeof event.event_artist === 'object') {
+          // case DB đang lưu object
+          artist = [
+            { name: event.event_artist.ca_si }
+          ];
+        }
+      }
 
       return res.status(200).json({
         success: true,
         data: {
-          event: eventResult.rows[0],
-          zones: zonesResult.rows
+          ...event,
+          artist,            // 👈 frontend dùng field này
         },
         message: 'Lấy thông tin sự kiện thành công'
       });
@@ -171,7 +176,7 @@ export const EventControllers = {
   async updateEvent(req, res) {
     try {
       const { id } = req.params;
-      const { event } = req.body;
+      const { event, artist } = req.body;
 
       if (!event) {
         return res.status(400).json({
@@ -202,8 +207,9 @@ export const EventControllers = {
           category_id = $6,
           event_start = $7,
           event_end = $8,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE event_id = $9
+          event_actor = $9,
+          event_artist = $10::jsonb
+        WHERE event_id = $11
         RETURNING *
       `;
 
@@ -216,6 +222,8 @@ export const EventControllers = {
         parseInt(event.category),
         eventStart,
         eventEnd,
+        event.actor,
+        JSON.stringify(event.artist),
         id
       ]);
 

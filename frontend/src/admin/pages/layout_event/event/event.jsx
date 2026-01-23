@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Thêm useNavigate
 import { Search, Plus, Calendar, MapPin, Users, DollarSign, Edit2, Trash2, Eye, Filter, TrendingUp, Flame } from 'lucide-react';
 import LoadingAdmin from '../../../components/loading/loading';
 import io from 'socket.io-client';
@@ -6,6 +7,7 @@ import io from 'socket.io-client';
 const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function ManageEvent() {
+    const navigate = useNavigate(); // Thêm navigate
     const [events, setEvents] = useState([]);
     const [hotEvents, setHotEvents] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -124,15 +126,20 @@ export default function ManageEvent() {
     };
 
     const filteredEvents = events.filter(event => {
-    const matchesSearch =
-        event.event_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.event_location?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch =
+            event.event_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            event.event_location?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesFilter =
-        filterStatus === 'all' || event.status === filterStatus;
+        const matchesFilter =
+            filterStatus === 'all' || event.status === filterStatus;
 
-    return matchesSearch && matchesFilter;
+        return matchesSearch && matchesFilter;
     });
+
+    // Thêm hàm handleEditEvent
+    const handleEditEvent = (eventId) => {
+        navigate(`/admin/events/edit/${eventId}`);
+    };
 
     const handleDeleteEvent = async (eventId) => {
         if (!window.confirm('Bạn có chắc muốn xóa sự kiện này?')) return;
@@ -333,22 +340,24 @@ export default function ManageEvent() {
                         </select>
                     </div>
 
-                    <button style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '10px 20px',
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '10px',
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'transform 0.2s'
-                    }}
-                    onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-                    onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+                    <button 
+                        onClick={() => navigate('/admin/events/create')}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '10px 20px',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '10px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+                        onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
                     >
                         <Plus size={18} />
                         Tạo Sự Kiện Mới
@@ -452,16 +461,18 @@ export default function ManageEvent() {
                                         >
                                             <Eye size={18} color="#64748b" />
                                         </button>
-                                        <button style={{
-                                            padding: '8px 12px',
-                                            background: '#f1f5f9',
-                                            border: 'none',
-                                            borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            transition: 'background 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => e.target.style.background = '#e2e8f0'}
-                                        onMouseLeave={(e) => e.target.style.background = '#f1f5f9'}
+                                        <button 
+                                            onClick={() => handleEditEvent(event.event_id)}
+                                            style={{
+                                                padding: '8px 12px',
+                                                background: '#f1f5f9',
+                                                border: 'none',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer',
+                                                transition: 'background 0.2s'
+                                            }}
+                                            onMouseEnter={(e) => e.target.style.background = '#e2e8f0'}
+                                            onMouseLeave={(e) => e.target.style.background = '#f1f5f9'}
                                         >
                                             <Edit2 size={18} color="#667eea" />
                                         </button>

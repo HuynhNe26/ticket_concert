@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
-import EventInfoForm from './add_event_component/EventInfoForm.jsx';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import EventInfoForm from '../add_event/add_event_component/EventInfoForm.jsx';
+import LoadingAdmin from '../../../components/loading/loading';
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
-export default function AddEvent() {
+export default function EditEvent() {
+  const { id } = useParams(); // Lấy eventId từ URL
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [eventInfo, setEventInfo] = useState({
     name: '',
     category: '',
@@ -14,22 +19,71 @@ export default function AddEvent() {
     address: '',
     age: '',
     description: '',
-    actor: '',
     image: null,
     descImage: null
   });
 
-  const [artists, setArtists] = useState([]);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const handleArtistChange = (index, value) => {
-    const updatedArtists = [...artists];
-    updatedArtists[index] = value;
-    setArtists(updatedArtists);
-  }
 
-  // Này là hàm xử lý để khi admin nhập vào thì nó lưu thay đổi vào đây!
+  // Load dữ liệu sự kiện khi component mount
+  useEffect(() => {
+    loadEventData();
+  }, [id]);
+
+  const loadEventData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE}/api/admin/events/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        const event = result.data;
+        
+        // Parse time từ ISO string (HH:MM format)
+        const parseTime = (isoString) => {
+          if (!isoString) return '';
+          const date = new Date(isoString);
+          const hours = date.getHours().toString().padStart(2, '0');
+          const minutes = date.getMinutes().toString().padStart(2, '0');
+          return `${hours}:${minutes}`;
+        };
+        
+        // Map dữ liệu từ backend vào form - FIELD NAMES ĐÚNG
+        setEventInfo({
+          name: event.event_name || '',
+          category: event.category_id?.toString() || '', // Backend trả về category_id
+          date: event.event_start ? event.event_start.split('T')[0] : '',
+          time: parseTime(event.event_start),
+          endDate: event.event_end ? event.event_end.split('T')[0] : '',
+          endTime: parseTime(event.event_end),
+          address: event.event_location || '',
+          actor: event.event_actor || '',
+          artist: event.event_artist || [],
+          age: event.event_age?.toString() || '', // Backend trả về event_age
+          description: event.event_description || '', // Backend trả về event_description
+          image: event.banner_url || null,
+          descImage: null
+        });
+
+        console.log('✅ Đã load dữ liệu sự kiện:', event);
+      } else {
+        alert('❌ Không thể tải thông tin sự kiện: ' + result.message);
+        navigate('/admin/events');
+      }
+    } catch (error) {
+      console.error('❌ Lỗi kết nối:', error);
+      alert('❌ Không thể kết nối đến server!');
+      navigate('/admin/events');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     // Validation
@@ -53,7 +107,7 @@ export default function AddEvent() {
       return;
     }
 
-    if (!eventInfo.actor) {
+     if (!eventInfo.actor) {
       alert('⚠️ Vui lòng nhập diễn viên chính!');
       return;
     }
@@ -64,55 +118,35 @@ export default function AddEvent() {
     }
 
     const dataToSend = {
-      event: eventInfo
+      event: eventInfo,
+      artist: eventInfo.artist
     };
 
-    console.log('📤 DỮ LIỆU GỬI LÊN BACKEND:', JSON.stringify(dataToSend, null, 2));
+    console.log('📤 DỮ LIỆU CẬP NHẬT:', JSON.stringify(dataToSend, null, 2));
 
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${API_BASE}/api/admin/events/create`, {
-        method: 'POST',
+      const response = await fetch(`${API_BASE}/api/admin/events/${id}`, {
+        method: 'PUT', // Dùng PUT để update
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          eventInfo: dataToSend,
-          artist: artists
-          // Còn này là sẽ gửi riêng, khi bên backend sẽ nhận toàn bộ data của eventInfo và mảng artists
-        })
+        body: JSON.stringify(dataToSend)
       });
-
-      // backend chỉ là const { name, ..., arists} = req.body; 
-      // thì nó sẽ lấy tất cả dữ liệu như thường và chỉ cần 
-      // const query = `
-      //   UPDATE events
-      //   SET name = $1, 
-      //   ...,
-      //   artists = $2 (ví dụ)
-      // `
-
-      
-
 
       const result = await response.json();
 
       if (result.success) {
         alert('✅ ' + result.message);
         console.log('📥 Kết quả trả về:', result);
-        console.log('📋 Event ID:', result.data.event.event_id);
         
-        // Hỏi user có muốn thêm layout không
-        if (window.confirm('Sự kiện đã được tạo thành công!\n\nBạn có muốn thêm layout và zones cho sự kiện này không?')) {
-          // Redirect đến trang add layout với event_id
-          const eventId = result.data.event.event_id;
-          window.location.href = `/admin/events/${eventId}/add-layout`;
-        } else if (window.confirm('Bạn có muốn tạo sự kiện mới?')) {
-          window.location.reload();
+        // Hỏi user muốn làm gì tiếp theo
+        if (window.confirm('Sự kiện đã được cập nhật thành công!\n\nBạn có muốn quay về danh sách sự kiện không?')) {
+          navigate('/admin/events');
         } else {
-          // Quay về danh sách events
-          window.location.href = '/admin/events';
+          // Reload lại data mới
+          loadEventData();
         }
       } else {
         alert('❌ ' + result.message);
@@ -126,10 +160,16 @@ export default function AddEvent() {
     }
   };
 
+  // Hiển thị loading khi đang tải dữ liệu
+  if (loading) {
+    return <LoadingAdmin />;
+  }
+
   return (
     <div style={{
+      marginTop: '50px',
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #002fff 0%, #ff0000 100%)',
       padding: '20px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
@@ -152,14 +192,14 @@ export default function AddEvent() {
             fontSize: '28px', 
             fontWeight: 700 
           }}>
-            ✨ Tạo Sự Kiện Mới
+            ✏️ Chỉnh Sửa Sự Kiện
           </h1>
           <p style={{ 
             margin: 0, 
             opacity: 0.9, 
             fontSize: '14px' 
           }}>
-            Nhập thông tin cơ bản về sự kiện. Bạn có thể thêm layout và zones sau.
+            Cập nhật thông tin sự kiện. Các thay đổi sẽ được lưu ngay lập tức.
           </p>
         </div>
 
@@ -171,13 +211,13 @@ export default function AddEvent() {
           <div style={{
             marginTop: '20px',
             padding: '15px 20px',
-            background: '#e7f3ff',
-            border: '1px solid #b3d9ff',
+            background: '#fff3cd',
+            border: '1px solid #ffc107',
             borderRadius: '8px',
             fontSize: '13px',
-            color: '#0066cc'
+            color: '#856404'
           }}>
-            <strong>💡 Lưu ý:</strong> Sau khi tạo sự kiện, bạn sẽ có thể thêm layout và zones để bắt đầu bán vé.
+            <strong>⚠️ Lưu ý:</strong> Việc thay đổi thông tin sự kiện có thể ảnh hưởng đến vé đã bán và thông tin đã công bố. Vui lòng cân nhắc kỹ trước khi lưu.
           </div>
 
           {/* Buttons */}
@@ -191,9 +231,35 @@ export default function AddEvent() {
           }}>
             <button
               type="button"
+              onClick={() => {navigate(`/admin/layout`);}}
+              disabled={isSubmitting}
+              style={{
+                marginRight: 'auto',
+                padding: '14px 35px',
+                fontSize: '15px',
+                fontWeight: 600,
+                border: 'none',
+                borderRadius: '8px',
+                background: isSubmitting ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                transition: 'all 0.3s',
+                boxShadow: isSubmitting ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.4)'
+              }}
+              onMouseOver={(e) => {
+                if (!isSubmitting) e.target.style.transform = 'translateY(-2px)';
+              }}
+              onMouseOut={(e) => {
+                if (!isSubmitting) e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              🎨 Chỉnh Sửa Layout
+            </button>
+            <button
+              type="button"
               onClick={() => {
-                if (window.confirm('Bạn có chắc muốn hủy? Dữ liệu đã nhập sẽ bị mất.')) {
-                  window.history.back();
+                if (window.confirm('Bạn có chắc muốn hủy? Các thay đổi sẽ không được lưu.')) {
+                  navigate('/admin/events');
                 }
               }}
               disabled={isSubmitting}
@@ -242,8 +308,9 @@ export default function AddEvent() {
                 if (!isSubmitting) e.target.style.transform = 'translateY(0)';
               }}
             >
-              {isSubmitting ? '⏳ Đang tạo sự kiện...' : '✅ Tạo Sự Kiện'}
+              {isSubmitting ? '⏳ Đang cập nhật...' : '💾 Lưu Thay Đổi'}
             </button>
+             
           </div>
         </div>
       </div>
