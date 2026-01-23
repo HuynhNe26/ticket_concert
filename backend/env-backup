@@ -1,13 +1,13 @@
-PG_USER=postgres
-PG_HOST=postgres
+PG_USER=root
+PG_HOST=dpg-d5ci6vali9vc73cj1ur0-a
 PG_DB=ticket_concert
-PG_PASSWORD=postgres
+PG_PS=V5lSabNJxWgVmKiWM9DNvhZl6cy0XuLq
 PG_PORT=5432
-PG_SSL=false
+PG_SSL=true
 
 CORS_ORIGIN=http://localhost:3000
 JWT_SECRET=ticket_concert_123456
-PORT=4000
+PORT=5001
 
 CLOUDINARY_NAME=dzfqqipsx
 CLOUDINARY_API_KEY=759517919839232
