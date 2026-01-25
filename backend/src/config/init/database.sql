@@ -70,7 +70,7 @@ INSERT INTO categories
 (category_name) VALUES 
 ('Đại hội'),
 ('Ca nhạc'),
-('Kịch')
+('Kịch');
 
 CREATE TABLE events (
     event_id SERIAL PRIMARY KEY,
@@ -92,7 +92,7 @@ CREATE TABLE events (
         REFERENCES categories(category_id)
 );
 
-INSERT INTO events (event_name, event_description, event_location, event_age, banner_url, event_layout, event_start, event_end, event_status, event_actor, event_artist, category_id)
+INSERT INTO events (event_name, event_description, event_location, event_age, banner_url, event_layout, event_start, event_end, event_actor, event_artist, category_id)
 VALUES
 ('ANH TRAI "SAY HI" 2025 CONCERT', 'I. ĐIỀU KIỆN VÀ ĐIỀU KHOẢN MUA VÉ:
 ●      Khi mua vé, tức là người mua đã đồng ý với các Điều Kiện và Điều Khoản của BTC và Quy Định Tham Gia Chương Trình được ghi rõ tại ticketbox.vn.
@@ -328,8 +328,8 @@ F. ĐỔI, TRẢ, HỦY VÉ
 Người sở hữu Vé Điện Tử và Mã Vé Điện Tử được mặc định đã đọc, hiểu và đồng ý đối với các quy định này và cam kết tuân thủ các quy định tại đây và các quy định khác được niêm yết, thông báo tại buổi biểu diễn.
 
 Người sở hữu Vé Điện Tử, Mã Vé Điện Tử đồng ý rằng BTC có toàn quyền áp dụng mọi biện pháp cần thiết khác không được quy định tại đây nhằm đảm bảo an ninh, an toàn và chất lượng của buổi biểu diễn',
-'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219939/po4tuuayssz8a9l0i54r.png', 'IWP', '2025-12-27 12:00:00', '2025-12-27 23:00:00', 'VieOnChannel', '[{"name": "Sơn Tùng MTP"}, {"name": "Thiều Bảo Trâm}]', 2),
-('EM XINH "SAY HI" 2025', 'Sở hữu vé sớm để hưởng các đặc quyền đặc biệt', 'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219953/mv8grgnsbvr7ui7aioqf.png', 'JBUWF', '2026-01-27 12:00:00', '2026-01-27 23:00:00', 'VieOnChannel', '[{"name": "Sơn Tùng MTP"}, {"name": "Thiều Bảo Trâm}]', 2);
+'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219939/po4tuuayssz8a9l0i54r.png', 'IWP', '2025-12-27 12:00:00', '2025-12-27 23:00:00', 'VieOnChannel', '[{"name": "Sơn Tùng MTP"}, {"name": "Thiều Bảo Trâm"}]', 2),
+('EM XINH "SAY HI" 2025', 'Sở hữu vé sớm để hưởng các đặc quyền đặc biệt', 'Khu đô thị Vạn Phúc, Phường Hiệp Bình Phước, Quận Thủ Đức, Thành Phố Hồ Chí Minh', 16, 'https://res.cloudinary.com/dzfqqipsx/image/upload/v1766219953/mv8grgnsbvr7ui7aioqf.png', 'JBUWF', '2026-01-27 12:00:00', '2026-01-27 23:00:00', 'VieOnChannel', '[{"name": "Sơn Tùng MTP"}, {"name": "Thiều Bảo Trâm"}]', 2);
 
     CREATE TABLE layout (
         layout_id SERIAL PRIMARY KEY,

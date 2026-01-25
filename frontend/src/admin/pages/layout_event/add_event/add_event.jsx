@@ -15,8 +15,8 @@ export default function AddEvent() {
     age: '',
     description: '',
     actor: '',
-    image: null,
-    descImage: null
+    image: '',
+    descImage: ''
   });
 
   const [artists, setArtists] = useState([]);
@@ -53,7 +53,7 @@ export default function AddEvent() {
       return;
     }
 
-    if (!eventInfo.actor) {
+     if (!eventInfo.actor) {
       alert('⚠️ Vui lòng nhập diễn viên chính!');
       return;
     }
@@ -64,10 +64,11 @@ export default function AddEvent() {
     }
 
     const dataToSend = {
-      event: eventInfo
+      event: eventInfo,
+      artist: eventInfo.artist
     };
 
-    console.log('📤 DỮ LIỆU GỬI LÊN BACKEND:', JSON.stringify(dataToSend, null, 2));
+    console.log('📤 DỮ LIỆU CẬP NHẬT:', JSON.stringify(dataToSend, null, 2));
 
     setIsSubmitting(true);
 
@@ -78,24 +79,9 @@ export default function AddEvent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          eventInfo: dataToSend,
-          artist: artists
-          // Còn này là sẽ gửi riêng, khi bên backend sẽ nhận toàn bộ data của eventInfo và mảng artists
+          eventInfo: dataToSend
         })
       });
-
-      // backend chỉ là const { name, ..., arists} = req.body; 
-      // thì nó sẽ lấy tất cả dữ liệu như thường và chỉ cần 
-      // const query = `
-      //   UPDATE events
-      //   SET name = $1, 
-      //   ...,
-      //   artists = $2 (ví dụ)
-      // `
-
-      
-
-
       const result = await response.json();
 
       if (result.success) {
@@ -129,7 +115,7 @@ export default function AddEvent() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background:'white',
       padding: '20px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
@@ -143,6 +129,7 @@ export default function AddEvent() {
       }}>
         {/* Header */}
         <div style={{
+          marginTop: '50px',
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           padding: '25px 30px',
           color: 'white'

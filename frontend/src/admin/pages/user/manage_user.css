@@ -21,7 +21,6 @@
 /* HEADER SECTION */
 .manager-user-page-wrapper .mu-user-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    margin-top: '40px';
     padding: 30px 40px;
     display: flex;
     justify-content: space-between;
