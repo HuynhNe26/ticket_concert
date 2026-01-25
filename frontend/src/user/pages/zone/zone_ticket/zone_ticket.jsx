@@ -10,6 +10,20 @@ export default function Ticket({ zones, eventId }) {
 
     return (
         <div className="ticket-list-wrapper">
+            <div className="layout-legend">
+        <div className="legend-item">
+          <span className="legend-dot" style={{ background: '#4CAF50' }}></span>
+          Còn vé
+        </div>
+        <div className="legend-item">
+          <span className="legend-dot" style={{ background: '#FF9800' }}></span>
+          Sắp hết (&lt;20%)
+        </div>
+        <div className="legend-item">
+          <span className="legend-dot" style={{ background: '#666666' }}></span>
+          Hết vé
+        </div>
+      </div>
             {zones.map((z) => {
                 const available = z.zone_quantity - z.sold_quantity;
                 const isFull = available <= 0;
@@ -17,19 +31,8 @@ export default function Ticket({ zones, eventId }) {
                 return (
                     <div key={z.zone_id} className={`ticket-box ${isFull ? 'sold-out' : ''}`}>
                         <div className="ticket-left">
-                            <h4 className="ticket-name">{z.zone_name}</h4>
-                            <p className="ticket-price">{formatCurrency(z.zone_price)}</p>
-                            <p className="ticket-desc">{z.zone_description}</p>
-                        </div>
-                        <div className="ticket-right">
-                            <span className="ticket-count">Còn: {available}</span>
-                            <button 
-                                className="btn-buy-ticket" 
-                                disabled={isFull}
-                                onClick={() => navigate(`/event/${eventId}/booking/${z.zone_id}`)}
-                            >
-                                {isFull ? "Hết vé" : "Chọn"}
-                            </button>
+                            <h4 className="ticket-item-name">{z.zone_name}</h4>
+                            <p className="ticket-item-price">{formatCurrency(z.zone_price)}</p>
                         </div>
                     </div>
                 );
