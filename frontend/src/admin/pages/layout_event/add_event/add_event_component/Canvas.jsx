@@ -318,6 +318,8 @@ const Canvas = ({ layout, selectedZone, onSelectZone, onUpdateZone, zoom, onZoom
     
     ctx.fillStyle = layout.canvas.background;
     ctx.fillRect(0, 0, layout.canvas.width, layout.canvas.height);
+    ctx.save();
+    ctx.restore();
     
     layout.zones.forEach(zone => {
       drawZone(ctx, zone, selectedZone?.id === zone.id);

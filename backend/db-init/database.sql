@@ -720,28 +720,3 @@ VALUES
   }',
   'AI'
 );
-
-CREATE TABLE user_behavior_log (
-    log_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    action VARCHAR(255),
-    object_id VARCHAR(255),
-    value JSONB,
-    ip_address VARCHAR(255),
-    device_info VARCHAR(100),
-    user_agent TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-INSERT INTO user_behavior_log
-(user_id, action, object_id, value, ip_address, device_info, user_agent)
-VALUES
-(
-  1,
-  'VIEW_LAYOUT',
-  'EVENT_1',
-  '{"screen":"desktop","zoom":1.2}',
-  '113.161.45.22',
-  'Windows 11',
-  'Chrome 143.0'
-);
