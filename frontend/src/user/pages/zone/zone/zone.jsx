@@ -39,7 +39,7 @@ export default function Zone() {
 
     const timer = setInterval(() => {
       socket.emit("request_refresh_event_zones", { eventId: id });
-    }, 10000);
+    }, 1000);
 
     return () => {
       socket.emit("leave_event_room", { eventId: id });
