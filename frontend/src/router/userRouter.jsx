@@ -10,14 +10,12 @@ import ZonePage from "../user/pages/zone/zone/zone";
 export function UserRoutes() {
   return (
     <>
-    <Route path="/" element={<LayoutUser />}>
-      <Route index element={<HomeUser />} />
-      <Route path="/search" element={<SearchPage />} />
-      <Route path="/event/:id" element={<EventDetail />} />
-      <Route path="/event/:id/booking" element={<ZonePage />} />
-
-    </Route>
-    
+      <Route path="/" element={<LayoutUser />}>
+        <Route index element={<HomeUser />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/event/:id" element={<EventDetail />} />
+        <Route path="/event/:id/booking" element={<ZonePage />} />
+      </Route>
     </>
   );
 }
