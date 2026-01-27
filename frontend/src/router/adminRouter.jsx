@@ -34,7 +34,8 @@ export function AdminRoutes() {
         <Route path="events/edit/:id" element={<EditEvent />} />
 
         <Route path="layout/:id" element={<LayoutDetail />} />
-        <Route path="layout" element={<AddLayout />} />
+        <Route path="layout/add/:id" element={<AddLayout />} />
+        
 
         <Route path="categories" element={<ManageCategories />} />
         <Route path="categories/add" element={<AddCategory />} />

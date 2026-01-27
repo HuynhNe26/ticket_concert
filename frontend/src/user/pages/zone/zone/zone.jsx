@@ -5,8 +5,8 @@ import LayoutZone from "../layout_zone/layout_zone";
 import Ticket from "../zone_ticket/zone_ticket";
 import "./zone.css";
 
-const socket = io("https://ticket-concert.onrender.com");
-const API_BASE_URL = "https://ticket-concert.onrender.com";
+const API_BASE_URL = process.env.REACT_APP_API_URL;
+const socket = io(`${API_BASE_URL}`)
 
 export default function Zone() {
   const { id } = useParams();
@@ -39,7 +39,7 @@ export default function Zone() {
 
     const timer = setInterval(() => {
       socket.emit("request_refresh_event_zones", { eventId: id });
-    }, 10000);
+    }, 1000);
 
     return () => {
       socket.emit("leave_event_room", { eventId: id });

@@ -31,6 +31,8 @@ export const EventControllers = {
 
   // ============ TẠO SỰ KIỆN MỚI (CHỈ EVENT, KHÔNG CÓ LAYOUT/ZONES) ============
   async createEvent(req, res) {
+    const banner_url = req.files?.banner?.[0]?.path || 'https://via.placeholder.com/800x400';
+    await pool.query(query, [banner_url]);
     try {
       const { event } = req.body;
 

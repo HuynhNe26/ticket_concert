@@ -97,3 +97,15 @@
     background: #444;
     cursor: not-allowed;
 }
+.ticket-left {
+    display: flex;             
+    justify-content: space-between;
+    align-items: center;       
+    width: 100%;  
+    margin-top: 5%;             
+}
+
+.ticket-item-name, 
+.ticket-item-price {
+    margin: 0;
+}

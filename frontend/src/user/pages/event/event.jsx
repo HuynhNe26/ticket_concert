@@ -9,15 +9,27 @@ export default function EventDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [event, setEvent] = useState(null);
+    const [zones, setZones] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isDescExpanded, setIsDescExpanded] = useState(false);
 
     useEffect(() => {
-        const fetchEvent = async () => {
+        const fetchEventData = async () => {
             try {
-                const res = await fetch(`${API_BASE}/api/events/${id}`);
-                const data = await res.json();
-                if (data.success) {
-                    setEvent(data.data);
+                // Lấy thông tin sự kiện
+                const resEvent = await fetch(`${API_BASE}/api/events/${id}`);
+                const dataEvent = await resEvent.json();
+                
+                // Lấy thông tin zones để kiểm tra số vé
+                const resZones = await fetch(`${API_BASE}/api/zone/${id}`);
+                const dataZones = await resZones.json();
+                
+                if (dataEvent.success) {
+                    setEvent(dataEvent.data);
+                }
+                
+                if (dataZones.success) {
+                    setZones(dataZones.data);
                 }
             } catch (err) {
                 console.error("Lỗi:", err);
@@ -25,14 +37,34 @@ export default function EventDetail() {
                 setLoading(false);
             }
         };
-        fetchEvent();
+        fetchEventData();
     }, [id]);
 
     if (loading) return <LoadingUser />;
     if (!event) return <div className="no-event">Sự kiện không tồn tại.</div>;
 
+    // Kiểm tra xem còn vé không
+    const checkTicketAvailability = () => {
+        if (zones.length === 0) return true;
+        
+        const totalAvailable = zones.reduce((sum, zone) => {
+            return sum + (zone.zone_quantity - zone.sold_quantity);
+        }, 0);
+        
+        return totalAvailable > 0;
+    };
+
+    const isTicketAvailable = checkTicketAvailability();
+
     const formatCurrency = (amount) => 
         new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+    // Kiểm tra mô tả dài hơn 10 dòng
+    const descriptionLines = event.event_description ? event.event_description.split('\n') : [];
+    const isLongDescription = descriptionLines.length > 10;
+    const displayDescription = isDescExpanded || !isLongDescription 
+        ? event.event_description 
+        : descriptionLines.slice(0, 10).join('\n');
 
     return (
         <div className="event-detail-page">
@@ -53,10 +85,19 @@ export default function EventDetail() {
                         <div className="event-ticket-footer">
                             <div className="event-price-section">
                                 <span className="event-price-label">Giá từ</span>
-                                <span className="event-price-value">{formatCurrency(event.min_price || 0)} ›</span>
+                                <span className="event-price-value">
+                                    {isTicketAvailable 
+                                        ? `${formatCurrency(event.min_price || 0)} ›`
+                                        : 'Hết vé'
+                                    }
+                                </span>
                             </div>
-                            <button className="event-btn-buy" onClick={() => navigate(`booking`)}>
-                                Chọn lịch diễn
+                            <button 
+                                className={`event-btn-buy ${!isTicketAvailable ? 'sold-out' : ''}`}
+                                onClick={() => isTicketAvailable && navigate(`booking`)}
+                                disabled={!isTicketAvailable}
+                            >
+                                {isTicketAvailable ? 'Chọn lịch diễn' : 'Hết vé'}
                             </button>
                         </div>
                     </div>
@@ -80,11 +121,50 @@ export default function EventDetail() {
                     </div>
                 </div>
 
-                {/* --- PHẦN GIỚI THIỆU --- */}
-                <div className="event-desc-section">
-                    <h2 className="event-desc-header">Giới thiệu</h2>
-                    <div className="event-desc-content">
-                        <p style={{ whiteSpace: 'pre-line' }}>{event.event_description}</p>
+                {/* --- PHẦN VÉ VÀ MÔ TẢ --- */}
+                <div className="event-content-wrapper">
+                    {/* Danh sách vé bên trái */}
+                    <div className={`event-tickets-section ${isDescExpanded ? 'expanded' : ''}`}>
+                        <h2 className="section-header">Loại vé</h2>
+                        <div className="tickets-list">
+                            {zones.length > 0 ? (
+                                zones.map((zone) => {
+                                    const available = zone.zone_quantity - zone.sold_quantity;
+                                    const isSoldOut = available <= 0;
+                                    
+                                    return (
+                                        <div key={zone.zone_id} className={`ticket-item ${isSoldOut ? 'sold-out' : ''}`}>
+                                            <div className="ticket-info">
+                                                <h3 className="ticket-name">{zone.zone_name}</h3>
+                                                <p className="ticket-desc">{zone.zone_description}</p>
+                                            </div>
+                                            <div className="ticket-price-box">
+                                                <span className="ticket-price">{formatCurrency(zone.zone_price)}</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <p className="no-tickets">Chưa có thông tin vé</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Mô tả bên phải */}
+                    <div className="event-desc-section">
+                        <h2 className="event-desc-header">Giới thiệu</h2>
+                        <div className="event-desc-content">
+                            <p style={{ whiteSpace: 'pre-line' }}>{displayDescription}</p>
+                            
+                            {isLongDescription && (
+                                <button 
+                                    className="btn-toggle-desc"
+                                    onClick={() => setIsDescExpanded(!isDescExpanded)}
+                                >
+                                    {isDescExpanded ? '▲ Thu gọn' : '▼ Xem thêm'}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 

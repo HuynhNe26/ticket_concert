@@ -5,7 +5,7 @@ import LoadingAdmin from '../../../components/loading/loading';
 import io from 'socket.io-client';
 
 const API_BASE = process.env.REACT_APP_API_URL;
-
+const LIMIT = 1;
 export default function ManageEvent() {
     const navigate = useNavigate(); // Thêm navigate
     const [events, setEvents] = useState([]);
@@ -14,6 +14,8 @@ export default function ManageEvent() {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [yearFilter, setYearFilter] = useState('');
+    const [offset, setOffset] = useState(0);
     const [stats, setStats] = useState({
         totalEvents: 0,
         activeEvents: 0,
@@ -22,6 +24,7 @@ export default function ManageEvent() {
     });
 
     useEffect(() => {
+        setOffset(0);
         getAllEvents();
         
         // Setup Socket.IO connection for hot events
@@ -46,7 +49,7 @@ export default function ManageEvent() {
         return () => {
             socket.disconnect();
         };
-    }, []);
+    }, [searchTerm, filterStatus, yearFilter]);
 
     const getAllEvents = async () => {
         setLoading(true);
@@ -96,7 +99,7 @@ export default function ManageEvent() {
             totalRevenue: revenue
         });
     };
-
+    
     const getStatusBadge = (status) => {
         const statusConfig = {
             active: { label: 'Đang bán', class: 'bg-green-100 text-green-700' },
@@ -130,13 +133,19 @@ export default function ManageEvent() {
             event.event_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             event.event_location?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesFilter =
+        const matchesStatus =
             filterStatus === 'all' || event.status === filterStatus;
 
-        return matchesSearch && matchesFilter;
-    });
+        const matchesYear =
+            !yearFilter ||
+            (event.event_start &&
+            new Date(event.event_start).getFullYear() === Number(yearFilter));
 
-    // Thêm hàm handleEditEvent
+        return matchesSearch && matchesStatus && matchesYear;
+        });
+
+    const visibleEvents = filteredEvents.slice(0, offset + LIMIT);
+
     const handleEditEvent = (eventId) => {
         navigate(`/admin/events/edit/${eventId}`);
     };
@@ -316,6 +325,7 @@ export default function ManageEvent() {
                             onFocus={(e) => e.target.style.borderColor = '#667eea'}
                             onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                         />
+                        
                     </div>
 
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -338,10 +348,25 @@ export default function ManageEvent() {
                             <option value="draft">Nháp</option>
                             <option value="cancelled">Đã hủy</option>
                         </select>
+                        <input
+                        type="number"
+                        placeholder="Năm (vd: 2025)"
+                        value={yearFilter}
+                        onChange={(e) => setYearFilter(e.target.value)}
+                        min="2025"
+                        max="2100"
+                        style={{
+                            padding: '10px 16px',
+                            border: '2px solid #e2e8f0',
+                            borderRadius: '10px',
+                            fontSize: '14px',
+                            width: '120px'
+                        }}
+                        />
                     </div>
 
                     <button 
-                        onClick={() => navigate('/admin/events/create')}
+                        onClick={() => navigate('/admin/events/add')}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -367,7 +392,7 @@ export default function ManageEvent() {
 
             {/* Events List */}
             <div style={{ display: 'grid', gap: '20px' }}>
-                {filteredEvents.map((event) => (
+                {visibleEvents.map((event) => (
                     <div key={event.id} style={{
                         background: 'white',
                         borderRadius: '16px',
@@ -491,12 +516,50 @@ export default function ManageEvent() {
                                         >
                                             <Trash2 size={18} color="#ef4444" />
                                         </button>
+                                    {filteredEvents.length > visibleEvents.length && (
+                                        <div style={{ 
+                                            display: 'flex', 
+                                            justifyContent: 'center', 
+                                            marginTop: '32px' 
+                                        }}>
+                                            <button
+                                                onClick={() => setOffset(offset + LIMIT)}
+                                                style={{
+                                                    padding: '14px 40px',
+                                                    background: 'white',
+                                                    border: '2px solid #667eea',
+                                                    borderRadius: '12px',
+                                                    color: '#667eea',
+                                                    fontSize: '15px',
+                                                    fontWeight: '600',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.3s',
+                                                    boxShadow: '0 2px 8px rgba(102, 126, 234, 0.1)'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.background = '#667eea';
+                                                    e.target.style.color = 'white';
+                                                    e.target.style.transform = 'translateY(-2px)';
+                                                    e.target.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.3)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.background = 'white';
+                                                    e.target.style.color = '#667eea';
+                                                    e.target.style.transform = 'translateY(0)';
+                                                    e.target.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.1)';
+                                                }}
+                                            >
+                                                Xem thêm {Math.min(LIMIT, filteredEvents.length - visibleEvents.length)} sự kiện
+                                            </button>
+                                        </div>
+                                    )}    
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 ))}
+                
             </div>
 
             {/* Empty State */}
@@ -514,6 +577,7 @@ export default function ManageEvent() {
                     <p style={{ fontSize: '14px', color: '#94a3b8' }}>
                         {error ? 'Có lỗi xảy ra khi tải dữ liệu' : 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm'}
                     </p>
+                    
                 </div>
             )}
         </div>

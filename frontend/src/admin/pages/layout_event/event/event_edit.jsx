@@ -169,14 +169,14 @@ export default function EditEvent() {
     <div style={{
       marginTop: '50px',
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #002fff 0%, #ff0000 100%)',
+      background: 'white',
       padding: '20px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
       <div style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        background: 'white',
+        background: 'linear-gradient(180deg, #ff0000 0%, #0059ff 100%)',
         borderRadius: '12px',
         boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
         overflow: 'hidden'
@@ -231,7 +231,7 @@ export default function EditEvent() {
           }}>
             <button
               type="button"
-              onClick={() => {navigate(`/admin/layout`);}}
+              onClick={() => {navigate(`/admin/layout/add/${id}`);}}
               disabled={isSubmitting}
               style={{
                 marginRight: 'auto',
