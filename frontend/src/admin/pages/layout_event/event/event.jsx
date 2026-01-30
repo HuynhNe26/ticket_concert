@@ -5,7 +5,7 @@ import LoadingAdmin from '../../../components/loading/loading';
 import io from 'socket.io-client';
 
 const API_BASE = process.env.REACT_APP_API_URL;
-const LIMIT = 1;
+const LIMIT = 2;
 export default function ManageEvent() {
     const navigate = useNavigate(); // Thêm navigate
     const [events, setEvents] = useState([]);

@@ -5,7 +5,7 @@ import FormSelect from './FormSelect';
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
-const EventInfoForm = ({ eventInfo, onChange }) => {
+const EventInfoForm = ({ eventInfo, onChange, onBannerChange }) => {
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState("");
 
@@ -159,6 +159,45 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
             onChange={(v) => handleChange('actor', v)}
           />
         </div>
+                {/* ===== BANNER UPLOAD ===== */}
+        <div style={{ gridColumn: 'span 2' }}>
+          <label style={{ fontWeight: 600, display: 'block', marginBottom: '8px' }}>
+            🖼 Banner sự kiện *
+          </label>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+
+              // gửi file lên component cha
+              onBannerChange(file);
+
+              // preview tạm thời
+              onChange({
+                ...eventInfo,
+                image: URL.createObjectURL(file)
+              });
+            }}
+          />
+
+          {eventInfo.image && (
+            <img
+              src={eventInfo.image}
+              alt="Banner preview"
+              style={{
+                marginTop: '12px',
+                maxWidth: '100%',
+                maxHeight: '300px',
+                objectFit: 'cover',
+                borderRadius: '8px',
+                border: '1px solid #ddd'
+              }}
+            />
+          )}
+        </div>
 
         {/* ===== ARTIST SECTION ===== */}
         <div style={{ gridColumn: 'span 2' }}>
@@ -174,6 +213,7 @@ const EventInfoForm = ({ eventInfo, onChange }) => {
                 placeholder={`Nghệ sĩ ${index + 1}`}
                 onChange={(v) => handleArtistChange(index, v)}
               />
+              
 
               <button
                 type="button"
