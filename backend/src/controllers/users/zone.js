@@ -44,5 +44,5 @@ export const ZoneControllers = {
         error: error.message
       });
     }
-  }
+  },
 };

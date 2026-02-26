@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 import LayoutZone from "../layout_zone/layout_zone";
@@ -12,51 +12,37 @@ export default function Zone() {
   const { id } = useParams();
   const [zones, setZones] = useState([]);
   const [layout, setLayout] = useState(null);
+  const socketRef = useRef(null);
 
   useEffect(() => {
-    socket.emit("join_event_room", { eventId: id });
+    socketRef.current = io(API_BASE_URL);
+    socketRef.current.emit("join_event_room", { eventId: id });
 
-    const fetchData = async () => {
-      try {
-        const [resZones, resLayout] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/zone/${id}`),
-          fetch(`${API_BASE_URL}/api/layout/${id}`)
-        ]);
-        const dataZones = await resZones.json();
-        const dataLayout = await resLayout.json();
+    socketRef.current.on("update_ticket_count", setZones);
 
-        if (dataZones.success) setZones(dataZones.data);
-        if (dataLayout.success) setLayout(dataLayout.data.layout_json);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchData();
-
-    socket.on("update_ticket_count", (updatedZones) => {
-      setZones(updatedZones);
+    Promise.all([
+      fetch(`${API_BASE_URL}/api/zone/${id}`).then(r => r.json()),
+      fetch(`${API_BASE_URL}/api/layout/${id}`).then(r => r.json())
+    ]).then(([zonesRes, layoutRes]) => {
+      if (zonesRes.success) setZones(zonesRes.data);
+      if (layoutRes.success) setLayout(layoutRes.data.layout_json);
     });
 
-    const timer = setInterval(() => {
-      socket.emit("request_refresh_event_zones", { eventId: id });
-    }, 1000);
-
     return () => {
-      socket.emit("leave_event_room", { eventId: id });
-      socket.off("update_ticket_count");
-      clearInterval(timer);
+      socketRef.current.emit("leave_event_room", { eventId: id });
+      socketRef.current.disconnect();
     };
   }, [id]);
 
   return (
     <div className="booking-page-wrapper">
       <div className="zone-container">
-        <div className="zone-layout">
-          <LayoutZone layout={layout} zones={zones} />
-        </div>
-        <div className="zone-ticket">
-          <Ticket zones={zones} eventId={id} />
-        </div>
+        {layout && zones.length > 0 && (
+          <>
+            <LayoutZone layout={layout} zones={zones} eventId={id} />
+            <Ticket zones={zones} eventId={id} />
+          </>
+        )}
       </div>
     </div>
   );

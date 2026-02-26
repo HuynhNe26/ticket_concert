@@ -643,6 +643,24 @@ VALUES
 -- SKY LOUNGE
 (1, 'SKY_LOUNGE', 'Sky Lounge', 'Khu ghế cao cấp trung tâm', 80, 0, 4000000);
 
+CREATE TABLE cart_items (
+    id SERIAL PRIMARY KEY,
+    user_id INT,
+    event_id INT,
+    zone_code VARCHAR(50),
+    quantity INT,
+    expires_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT fk_users 
+        FOREIGN KEY (user_id)
+        REFERENCES users(user_id),
+    CONSTRAINT fk_events 
+        FOREIGN KEY (event_id)
+        REFERENCES events(event_id)
+);
+
+CREATE INDEX idx_cart_expire ON cart_items(expires_at);
+
 CREATE TABLE payments (
     payment_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
@@ -667,6 +685,7 @@ CREATE TABLE payment_detail (
     payment_id INT NOT NULL,
     event_id INT NOT NULL,
     ticket_quantity INT NOT NULL,
+    zone_code VARCHAR(50) NOT NULL,
     CONSTRAINT fk_events 
         FOREIGN KEY (event_id)
         REFERENCES events(event_id),
@@ -676,12 +695,13 @@ CREATE TABLE payment_detail (
 );
 
 INSERT INTO payment_detail 
-(payment_id, event_id, ticket_quantity)
+(payment_id, event_id, ticket_quantity, zone_code)
 VALUES
 (
   1,
   1,
-  1
+  1,
+  'GA_1A'
 );
 
 
@@ -721,4 +741,25 @@ VALUES
     "price": 3000000
   }',
   'AI'
+);
+
+CREATE EXTENSION IF NOT EXISTS vector;
+
+CREATE TABLE rag_documents (
+  doc_id SERIAL PRIMARY KEY,
+  source_type VARCHAR(50),   
+  source_id INT,
+  title TEXT,
+  content TEXT,
+  embedding VECTOR(1536),
+  meta JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX rag_documents_embedding_hnsw
+ON rag_documents
+USING hnsw (embedding vector_cosine_ops)
+WITH (
+  m = 16,
+  ef_construction = 200
 );

@@ -131,3 +131,119 @@
     min-width: 150px;
   }
 }
+
+.zone-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  background: rgba(0, 0, 0, 0.65);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 1000; /* thấp hơn login */
+}
+
+.zone-modal {
+  width: 460px;
+  max-width: 90vw;
+
+  background: #111;
+  color: #fff;
+  padding: 24px;
+
+  border-radius: 14px;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+
+  animation: modalFadeIn 0.25s ease;
+}
+
+.zone-desc {
+  opacity: 0.8;
+  font-size: 14px;
+  margin: 8px 0 12px;
+}
+
+.zone-info,
+.zone-total {
+  margin: 10px 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.zone-quantity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.zone-quantity button {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.zone-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.btn-cancel {
+  flex: 1;
+  background: #333;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.btn-confirm {
+  flex: 1;
+  background: #00ffd4;
+  color: #000;
+  font-weight: bold;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.btn-confirm:hover {
+  background-color: #5feea2;
+  
+}
+
+.zone-quantity button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 9999; /* CAO NHẤT */
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

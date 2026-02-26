@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import LoginPage from "../../pages/login/Loginpage"; // Import LoginPage
 import SessionCountdown from "../Countdown/Countdown";
 
-const API_BASE = "http://localhost:5000/api";
+const API_BASE = process.env.REACT_APP_API_URL;
 
 export default function Header() {
     const [user, setUser] = useState(null);
@@ -32,7 +32,7 @@ export default function Header() {
 
         try {
             if (token) {
-                await fetch(`${API_BASE}/users/logout`, {
+                await fetch(`${API_BASE}/api/users/logout`, {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${token}`,
