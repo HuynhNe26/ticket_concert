@@ -1,5 +1,5 @@
 import { pool } from "../../config/database.js";
-
+import uploadCloud from "../../middlewares/upload.js";
 export const EventControllers = {
   // ============ LẤY DANH SÁCH SỰ KIỆN ============
   async getAllEvent(req, res) {
@@ -30,21 +30,16 @@ export const EventControllers = {
   },
 
   // ============ TẠO SỰ KIỆN MỚI (CHỈ EVENT, KHÔNG CÓ LAYOUT/ZONES) ============
-  async createEvent(req, res) {
-    const banner_url = req.files?.banner?.[0]?.path || 'https://via.placeholder.com/800x400';
-    await pool.query(query, [banner_url]);
+    async createEvent(req, res) {
     try {
-      const { event } = req.body;
+      // 🔥 multer + cloudinary đã xử lý xong ở đây
+      const bannerUrl =
+        req.files?.banner?.[0]?.path ||
+        'https://via.placeholder.com/800x400';
+      // ❗ form-data => req.body.event là STRING
+      const event = JSON.parse(req.body.event);
 
-      // Validation cơ bản
-      if (!event) {
-        return res.status(400).json({
-          success: false,
-          message: "Thiếu thông tin event"
-        });
-      }
-
-      // Kiểm tra các trường bắt buộc
+      // ===== VALIDATION =====
       const requiredFields = ['name', 'category', 'date', 'address', 'age', 'description', 'actor', 'artist'];
       for (const field of requiredFields) {
         if (!event[field]) {
@@ -55,19 +50,18 @@ export const EventControllers = {
         }
       }
 
-      // 1. Tạo thời gian event_start và event_end
-      const eventStart = event.time 
+      // ===== TIME =====
+      const eventStart = event.time
         ? `${event.date} ${event.time}:00`
         : `${event.date} 00:00:00`;
-      
+
       const eventEnd = event.endDate && event.endTime
         ? `${event.endDate} ${event.endTime}:00`
-        : event.endDate 
+        : event.endDate
           ? `${event.endDate} 23:59:59`
           : null;
 
-      
-      // 2. Insert vào bảng events (KHÔNG CÓ event_layout vì chưa tạo layout)
+      // ===== INSERT EVENT =====
       const eventInsertQuery = `
         INSERT INTO events (
           event_name,
@@ -82,43 +76,42 @@ export const EventControllers = {
           event_actor,
           event_artist
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
         RETURNING event_id, event_name, created_at
       `;
 
-      const eventResult = await pool.query(eventInsertQuery, [
+      const result = await pool.query(eventInsertQuery, [
         event.name,
         event.description,
         event.address,
         parseInt(event.age),
-        event.image || 'https://via.placeholder.com/800x400',
+        bannerUrl,                 
         parseInt(event.category),
         eventStart,
         eventEnd,
-        false, // mặc định là chưa active
+        false,
         event.actor,
-        event.artist
+        JSON.stringify(event.artist) // ✅ jsonb
       ]);
 
-      // Trả về response thành công
       return res.status(201).json({
         success: true,
-        message: 'Tạo sự kiện thành công! Bạn có thể thêm layout và zones sau.',
+        message: 'Tạo sự kiện thành công!',
         data: {
-          event: eventResult.rows[0]
+          event: result.rows[0]
         }
       });
 
     } catch (err) {
-      console.error('❌ Lỗi tạo sự kiện:', err);
-      
+      console.error('❌ createEvent error:', err);
       return res.status(500).json({
         success: false,
         message: 'Lỗi khi tạo sự kiện',
         error: err.message
       });
     }
-  },
+  }
+  ,
 
   // ============ LẤY CHI TIẾT 1 SỰ KIỆN ============
   async getEventById(req, res) {

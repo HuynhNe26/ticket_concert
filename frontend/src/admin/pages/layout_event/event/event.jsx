@@ -5,7 +5,7 @@ import LoadingAdmin from '../../../components/loading/loading';
 import io from 'socket.io-client';
 
 const API_BASE = process.env.REACT_APP_API_URL;
-const LIMIT = 1;
+const LIMIT = 2;
 export default function ManageEvent() {
     const navigate = useNavigate(); // Thêm navigate
     const [events, setEvents] = useState([]);
@@ -148,24 +148,26 @@ export default function ManageEvent() {
 
     const handleEditEvent = (eventId) => {
         navigate(`/admin/events/edit/${eventId}`);
+        console.log('Chỉnh sửa sự kiện với ID:', eventId);
     };
 
     const handleDeleteEvent = async (eventId) => {
         if (!window.confirm('Bạn có chắc muốn xóa sự kiện này?')) return;
-        
+
         try {
             const response = await fetch(`${API_BASE}/api/admin/events/${eventId}`, {
-                method: 'DELETE'
+            method: 'DELETE'
             });
-            
+
             if (response.ok) {
-                setEvents(events.filter(e => e.id !== eventId));
-                alert('Xóa sự kiện thành công!');
+            setEvents(events.filter(e => e.event_id !== eventId));
+            alert('Xóa sự kiện thành công!');
             }
         } catch (e) {
             alert('Lỗi khi xóa sự kiện: ' + e.message);
         }
-    };
+        };
+
 
     if (loading) {
         return <LoadingAdmin />;
@@ -502,7 +504,7 @@ export default function ManageEvent() {
                                             <Edit2 size={18} color="#667eea" />
                                         </button>
                                         <button 
-                                            onClick={() => handleDeleteEvent(event.id)}
+                                            onClick={() => handleDeleteEvent(event.event_id)}
                                             style={{
                                                 padding: '8px 12px',
                                                 background: '#fef2f2',

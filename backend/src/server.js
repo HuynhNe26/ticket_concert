@@ -8,12 +8,14 @@ import { connectDB } from "./config/database.js";
 dotenv.config();
 
 import { initZoneSocket } from "./socket/zone.js";
+// import { initCartWatcher } from "./redis/redisExpiredListener.js";
 
 // users
 import authRouter from "./router/users/user.js";
 import eventsRouter from "./router/users/events.js";
 import userLayoutRouter from "./router/users/layout.js";
 import zoneRouter from "./router/users/zone.js";
+import cartRoutes from "./router/users/cart.js";
 
 // admins
 import adminRouter from "./router/admins/admins.js";
@@ -41,6 +43,7 @@ app.use("/api/users", authRouter);
 app.use("/api/events", eventsRouter);
 app.use("/api/layout", userLayoutRouter);
 app.use("/api/zone", zoneRouter);
+app.use("/api/cart", cartRoutes);
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
@@ -48,7 +51,7 @@ app.use("/api/admin/events", eventRouter);
 app.use("/api/admin/layout", adminLayoutRouter);
 app.use("/api/admin/categories", categoriesRouter);
 
-const io = new Server(httpServer, {
+export const io = new Server(httpServer, {
   cors: {
     origin: "http://localhost:3000",
     methods: ["GET", "POST"],
@@ -59,7 +62,6 @@ const io = new Server(httpServer, {
 initZoneSocket(io);
 ChatSocket(io);
 await connectDB();
-
 
 const PORT = process.env.PORT ;
 httpServer.listen(PORT, () => {

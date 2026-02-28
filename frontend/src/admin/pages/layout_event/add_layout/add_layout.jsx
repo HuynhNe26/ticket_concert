@@ -366,7 +366,7 @@ export default function AddLayout() {
             borderTop: '2px solid #e0e0e0'
           }}>
             <button
-              onClick={() => navigate(`/admin/events/${id}/edit`)}
+              onClick={() => navigate(`/admin/events/edit/${id}`)}
               disabled={isSubmitting}
               style={{
                 padding: '12px 30px',

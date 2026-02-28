@@ -1,10 +1,23 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './layout_zone.css';
+import LoginPage from '../../login/Loginpage';
+import LoadingUser from '../../../components/loading/loading';
 
-export default function LayoutZone({ layout, zones }) {
+const API_BASE = process.env.REACT_APP_API_URL;
+
+export default function LayoutZone({ layout, zones, eventId }) {
   const canvasRef = useRef(null);
   const [hoveredZone, setHoveredZone] = useState(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const token = localStorage.getItem("token");
+  const [selectedZone, setSelectedZone] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
     if (!layout || !canvasRef.current) return;
@@ -157,22 +170,180 @@ export default function LayoutZone({ layout, zones }) {
   if (!layout) {
     return (
       <div className="layout-loading">
-        <div className="spinner"></div>
-        <p>Đang tải sơ đồ chỗ...</p>
+        <p>Chưa cập nhật!</p>
       </div>
     );
   }
 
   const hoveredData = zones.find(z => z.zone_code === hoveredZone);
 
+  const handleCanvasClick = (e) => {
+    if (!layout || !canvasRef.current) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const mergedZones = (layout.zones || []).map(layoutZone => {
+      const apiZone = zones.find(z => z.zone_code === layoutZone.id);
+      return apiZone ? { ...layoutZone, ...apiZone } : layoutZone;
+    });
+
+    for (const zone of mergedZones) {
+      let inside = false;
+
+      if (zone.shape === 'rect') {
+        inside =
+          x >= zone.x &&
+          x <= zone.x + zone.width &&
+          y >= zone.y &&
+          y <= zone.y + zone.height;
+      } 
+      else if (zone.shape === 'polygon') {
+        for (let i = 0, j = zone.points.length - 1; i < zone.points.length; j = i++) {
+          const xi = zone.points[i][0], yi = zone.points[i][1];
+          const xj = zone.points[j][0], yj = zone.points[j][1];
+          const intersect =
+            ((yi > y) !== (yj > y)) &&
+            (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+          if (intersect) inside = !inside;
+        }
+      }
+
+      if (inside && zone.zone_quantity - zone.sold_quantity > 0) {
+        setSelectedZone(zone);
+        setQuantity(1);
+        setShowOverlay(true);
+        break;
+      }
+    }
+  };
+
+  const handleAddToCart = async (eventId, zone_code, quantity) => {
+    if (!eventId || !zone_code || !quantity) {
+      alert('Thiếu dữ liệu')
+    }
+
+    if (!token) {
+      setShowLogin(true);
+      setShowOverlay(false)
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/cart/${eventId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          zone_code: zone_code,
+          eventId: eventId,
+          quantity: quantity
+        })
+      })
+
+      const data = await response.json();
+      if (!response.ok) {
+        const errorText = await response.text(); 
+        let errorData;
+        try {
+            errorData = JSON.parse(errorText);
+        } catch (e) {
+            errorData = { message: errorText || 'Lỗi server' };
+        }
+        
+        alert(errorData.message || 'Thêm vào giỏ thất bại');
+        return;
+      }
+
+      navigate(`/event/${eventId}/cart?zone=${zone_code}&quantity=${quantity}`);
+      
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return <LoadingUser />
+  }
+
   return (
     <div className="layout-zone-wrapper">
-      <canvas
-        ref={canvasRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoveredZone(null)}
-        className="layout-canvas"
+      <canvas ref={canvasRef} 
+        onMouseMove={handleMouseMove} 
+        onMouseLeave={() => setHoveredZone(null)} 
+        onClick={handleCanvasClick} 
+        className="layout-canvas" 
       />
+
+      {showOverlay && selectedZone && (
+        <div className="zone-overlay">
+          <div className="zone-modal">
+            <h3>{selectedZone.zone_name}</h3>
+
+            <p className="zone-desc">
+              {selectedZone.zone_description || 'Chưa cập nhật!'}
+            </p>
+
+            <div className="zone-info">
+              <span>Giá vé:</span>
+              <strong>{formatPrice(selectedZone.zone_price)}</strong>
+            </div>
+
+            <div className="zone-quantity">
+              <span>Số lượng:</span>
+              <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>−</button>
+              <span>{quantity}</span>
+              <button
+                disabled={
+                  quantity >= 5 ||
+                  quantity >= selectedZone.available
+                }
+                onClick={() =>
+                  setQuantity(q =>
+                    Math.min(
+                      5,
+                      selectedZone.zone_quantity - selectedZone.sold_quantity,
+                      q + 1
+                    )
+                  )
+                }
+              >
+                +
+              </button>
+            </div>
+            <span style={{color: 'red', padding: '10px'}}>*Lưu ý: Được mua tối đa 5 ghế</span>
+            <div className="zone-total">
+              Tổng tiền:{" "}
+              <strong>{formatPrice(quantity * selectedZone.zone_price)}</strong>
+            </div>
+
+            <div className="zone-actions">
+              <button className="btn-cancel" onClick={() => setShowOverlay(false)}>
+                Huỷ
+              </button>
+
+              <button
+                className="btn-confirm"
+                onClick={() =>
+                  handleAddToCart(eventId, selectedZone.zone_code, quantity)
+                }
+              >
+               Thanh toán
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLogin && (
+        <LoginPage onClose={() => setShowLogin(false)} />
+      )}
 
       {hoveredZone && hoveredData && (
         <div 

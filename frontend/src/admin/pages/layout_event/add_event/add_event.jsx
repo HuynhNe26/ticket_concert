@@ -14,13 +14,11 @@ export default function AddEvent() {
     address: '',
     age: '',
     description: '',
-    actor: '',
-    image: '',
-    descImage: ''
+    actor: ''
   });
 
   const [artists, setArtists] = useState([]);
-
+  const [bannerFile, setBannerFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleArtistChange = (index, value) => {
@@ -63,50 +61,42 @@ export default function AddEvent() {
       return;
     }
 
-    const dataToSend = {
-      event: eventInfo,
-      artist: eventInfo.artist
-    };
+    if (!bannerFile) {
+      alert('⚠️ Vui lòng tải lên banner sự kiện!');
+      return;
+    }
+     const formData = new FormData();
 
-    console.log('📤 DỮ LIỆU CẬP NHẬT:', JSON.stringify(dataToSend, null, 2));
+    formData.append(
+      'event',
+      JSON.stringify(eventInfo) // 👈 stringify nguyên event
+    );
+
+    formData.append('banner', bannerFile); // 👈 FILE
+
+    console.log('📤 EVENT:', eventInfo);
+    console.log('📤 BANNER:', bannerFile);
 
     setIsSubmitting(true);
 
     try {
       const response = await fetch(`${API_BASE}/api/admin/events/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          eventInfo: dataToSend
-        })
+        body: formData // ❌ KHÔNG headers
       });
+
       const result = await response.json();
 
       if (result.success) {
-        alert('✅ ' + result.message);
-        console.log('📥 Kết quả trả về:', result);
-        console.log('📋 Event ID:', result.data.event.event_id);
-        
-        // Hỏi user có muốn thêm layout không
-        if (window.confirm('Sự kiện đã được tạo thành công!\n\nBạn có muốn thêm layout và zones cho sự kiện này không?')) {
-          // Redirect đến trang add layout với event_id
-          const eventId = result.data.event.event_id;
-          window.location.href = `/admin/events/${eventId}/add-layout`;
-        } else if (window.confirm('Bạn có muốn tạo sự kiện mới?')) {
-          window.location.reload();
-        } else {
-          // Quay về danh sách events
-          window.location.href = '/admin/events';
-        }
+        alert('✅ Tạo sự kiện thành công');
+        const eventId = result.data.event.event_id;
+        window.location.href = `/admin/layout/add/${eventId}`;
       } else {
         alert('❌ ' + result.message);
-        console.error('Error response:', result);
       }
-    } catch (error) {
-      console.error('❌ Lỗi kết nối:', error);
-      alert('❌ Không thể kết nối đến server!\n\nVui lòng kiểm tra:\n- Server có đang chạy không?\n- URL API có đúng không?');
+    } catch (err) {
+      console.error('❌ Lỗi:', err);
+      alert('❌ Lỗi server');
     } finally {
       setIsSubmitting(false);
     }
@@ -152,7 +142,7 @@ export default function AddEvent() {
 
         <div style={{ padding: '30px' }}>
           {/* Event Info Form */}
-          <EventInfoForm eventInfo={eventInfo} onChange={setEventInfo} />
+          <EventInfoForm eventInfo={eventInfo} onChange={setEventInfo} onBannerChange={setBannerFile}/>
 
           {/* Info Box */}
           <div style={{

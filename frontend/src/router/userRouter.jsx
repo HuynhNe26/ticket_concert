@@ -5,19 +5,19 @@ import LoginPage from "../user/pages/login/Loginpage";
 import EventDetail from "../user/pages/event/event";
 import SearchPage from "../user/pages/search/search";
 import ZonePage from "../user/pages/zone/zone/zone";
+import CartPage from "../user/pages/cart/cart";
 
 
 export function UserRoutes() {
   return (
     <>
-    <Route path="/" element={<LayoutUser />}>
-      <Route index element={<HomeUser />} />
-      <Route path="/search" element={<SearchPage />} />
-      <Route path="/event/:id" element={<EventDetail />} />
-      <Route path="/event/:id/booking" element={<ZonePage />} />
-
-    </Route>
-    
+      <Route path="/" element={<LayoutUser />}>
+        <Route index element={<HomeUser />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/event/:id" element={<EventDetail />} />
+        <Route path="/event/:id/booking" element={<ZonePage />} />
+        <Route  path='/event/:id/cart' element={<CartPage />} />
+      </Route>
     </>
   );
 }
