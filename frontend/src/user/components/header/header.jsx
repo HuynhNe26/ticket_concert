@@ -82,7 +82,6 @@ export default function Header() {
                     </div>
 
                     <div className="header-right">
-                        <Link to="/create-event" className="header-link"><span>Tạo sự kiện</span></Link>
                         <Link to="/my-tickets" className="header-link"><span>Vé của tôi</span></Link>
                         <div className="auth-section">
                             {user ? (
