@@ -17,6 +17,7 @@ import ManageCategories from "../admin/pages/category/manageCategories/categorie
 import AddCategory from "../admin/pages/category/addCategory/addCategory";
 import EditEvent from "../admin/pages/layout_event/event/event_edit";
 import ManageOrder from "../admin/pages/order/manage_order/manage_order";
+import ManageOrderDetail from "../admin/pages/order/order_detail/order_detail";
 export function AdminRoutes() {
   return (
     <>
@@ -44,6 +45,7 @@ export function AdminRoutes() {
         <Route path="user" element={<UserManagement />}/>
 
         <Route path='orders' element={<ManageOrder />} />
+        <Route path='orders/:id' element={<ManageOrderDetail />} />
       </Route>
     </>
   );
