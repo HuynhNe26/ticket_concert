@@ -13,28 +13,37 @@ export async function addToCart(req, res) {
   try {
     await client.query("BEGIN");
 
-    const { rows } = await client.query(
+    // 🔒 1. Lock zone row trước (quan trọng)
+    const zoneResult = await client.query(
       `
-      SELECT z.zone_quantity,
-             z.sold_quantity,
-             COALESCE(SUM(c.quantity), 0) AS reserved_quantity
-      FROM zones z
-      LEFT JOIN cart_items c
-        ON c.zone_code = z.zone_code
-       AND c.expires_at > NOW()
-      WHERE z.zone_code = $1
-      GROUP BY z.zone_quantity, z.sold_quantity
+      SELECT zone_quantity, sold_quantity
+      FROM zones
+      WHERE zone_code = $1
       FOR UPDATE
       `,
       [zone_code]
     );
 
-    if (!rows.length) {
+    if (!zoneResult.rows.length) {
       await client.query("ROLLBACK");
       return res.status(404).json({ message: "Zone không tồn tại" });
     }
 
-    const { zone_quantity, sold_quantity, reserved_quantity } = rows[0];
+    const { zone_quantity, sold_quantity } = zoneResult.rows[0];
+
+    // 📊 2. Tính reserved riêng (không cần GROUP BY nữa)
+    const reservedResult = await client.query(
+      `
+      SELECT COALESCE(SUM(quantity), 0) AS reserved_quantity
+      FROM cart_items
+      WHERE zone_code = $1
+        AND expires_at > NOW()
+      `,
+      [zone_code]
+    );
+
+    const reserved_quantity = parseInt(reservedResult.rows[0].reserved_quantity);
+
     const available = zone_quantity - sold_quantity - reserved_quantity;
 
     if (quantity > available) {
@@ -42,7 +51,7 @@ export async function addToCart(req, res) {
       return res.status(400).json({ message: "Không đủ vé" });
     }
 
-    const { rows: existing } = await client.query(
+    const existingResult = await client.query(
       `
       SELECT quantity
       FROM cart_items
@@ -53,14 +62,14 @@ export async function addToCart(req, res) {
       [userId, zone_code]
     );
 
-    const currentQty = existing[0]?.quantity || 0;
+    const currentQty = existingResult.rows[0]?.quantity || 0;
 
     if (currentQty + quantity > 5) {
       await client.query("ROLLBACK");
       return res.status(400).json({ message: "Tối đa 5 vé / khu" });
     }
 
-    if (existing.length) {
+    if (existingResult.rows.length) {
       await client.query(
         `
         UPDATE cart_items
@@ -93,5 +102,32 @@ export async function addToCart(req, res) {
     res.status(500).json({ message: "Lỗi server" });
   } finally {
     client.release();
+  }
+}
+
+export async function getCart(req, res) {
+  const { userId } = req.user;
+
+  try {
+    const query = `
+      SELECT * FROM cart_items 
+      WHERE user_id = $1
+      AND expires_at > NOW()
+      ORDER BY expires_at DESC
+      LIMIT 1
+    `;
+
+    const { rows } = await pool.query(query, [userId]);
+
+    res.status(200).json({
+      success: true,
+      data: rows
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ 
+      message: "Lỗi server" 
+    });
   }
 }
