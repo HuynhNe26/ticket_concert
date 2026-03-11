@@ -221,12 +221,14 @@ export default function LayoutZone({ layout, zones, eventId }) {
 
   const handleAddToCart = async (eventId, zone_code, quantity) => {
     if (!eventId || !zone_code || !quantity) {
-      alert('Thiếu dữ liệu')
+      alert('Thiếu dữ liệu');
+      return
     }
 
     if (!token) {
       setShowLogin(true);
-      setShowOverlay(false)
+      setShowOverlay(false);
+      return
     }
 
     setLoading(true);
@@ -245,28 +247,21 @@ export default function LayoutZone({ layout, zones, eventId }) {
         })
       })
 
-      const data = await response.json();
-      if (!response.ok) {
-        const errorText = await response.text(); 
-        let errorData;
-        try {
-            errorData = JSON.parse(errorText);
-        } catch (e) {
-            errorData = { message: errorText || 'Lỗi server' };
-        }
-        
-        alert(errorData.message || 'Thêm vào giỏ thất bại');
-        return;
-      }
+      const data = await response.json(); // chỉ đọc 1 lần duy nhất
 
-      navigate(`/event/${eventId}/cart?zone=${zone_code}&quantity=${quantity}`);
-      
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false)
+    if (!response.ok) {
+      alert(data.message || 'Thêm vào giỏ thất bại');
+      return;
     }
+
+    navigate(`/event/${eventId}/cart?zone=${zone_code}&quantity=${quantity}`);
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
   }
+};
 
   if (loading) {
     return <LoadingUser />

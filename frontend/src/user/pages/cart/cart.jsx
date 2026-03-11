@@ -8,47 +8,37 @@ const FEE_RATE = 0.15;
 const ORDER_FEE = 10;
 
 export default function CartPage() {
-  const [items, setItems] = useState([]);
-  const [user, setUser] = useState({ name: "", email: "", phone: "" });
+  const [item, setItem] = useState([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [expiresAt, setExpiresAt] = useState(null);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // ─── FETCH CART & USER ─────────────────────────────
+  // ─── FETCH CART ─────────────────────────────
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 🔥 Fetch Cart
-        const res = await fetch(`${API_BASE}/api/cart`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await fetch(`${API_BASE}/api/cart/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
         const json = await res.json();
 
-        if (!json.success || !json.data?.length) {
+        if (!json.success || !json.data) {
           navigate("/");
           return;
         }
 
-        const cart = json.data[0];
+        setItem(json.data[0]);
+        console.log(json.data[0])
+        setExpiresAt(json.data[0].expires_at);
 
-        // ⚠ Quan trọng: backend phải trả về items + expires_at
-        setItems(cart.items || []);
-        setExpiresAt(cart.expires_at);
-
-        // 🔥 Fetch User Profile
-        const userRes = await fetch(`${API_BASE}/api/users/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const userJson = await userRes.json();
-        if (userJson.success) {
-          setUser(userJson.data);
-        }
       } catch (err) {
-        console.error("Cart load error:", err);
+        console.error("Error fetching cart:", err);
+        alert("Lỗi khi tải giỏ hàng");
         navigate("/");
       }
     };
@@ -56,7 +46,7 @@ export default function CartPage() {
     fetchData();
   }, [navigate, token]);
 
-  // ─── COUNTDOWN REALTIME ─────────────────────────────
+  // ─── TIMER ─────────────────────────────
   useEffect(() => {
     if (!expiresAt) return;
 
@@ -68,7 +58,7 @@ export default function CartPage() {
       if (diff <= 0) {
         clearInterval(interval);
         setTimeLeft(0);
-        alert("Hết thời gian giữ chỗ!");
+        alert("Hết thời gian giữ vé");
         navigate("/");
       } else {
         setTimeLeft(diff);
@@ -85,157 +75,192 @@ export default function CartPage() {
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-  const formatUSD = (n) =>
-    n.toLocaleString("en-US", { style: "currency", currency: "USD" });
-
-  // ─── QUANTITY ─────────────────────────────
-  const updateQty = (id, delta) => {
-    setItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? { ...item, quantity: item.quantity + delta }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
-
-  const removeItem = (id) =>
-    setItems((prev) => prev.filter((i) => i.id !== id));
-
-  // ─── CALCULATIONS ─────────────────────────────
-  const subtotal = items.reduce(
-    (sum, i) => sum + i.unitPrice * i.quantity,
-    0
-  );
+  // ─── CALC ─────────────────────────────
+  const subtotal = item ? item.zone_price * item.quantity : 0;
   const fees = subtotal * FEE_RATE;
   const total = subtotal + fees + ORDER_FEE;
-  const totalTickets = items.reduce((sum, i) => sum + i.quantity, 0);
+  const totalTickets = item ? item.quantity : 0;
 
   // ─── RENDER ─────────────────────────────
   return (
-    <>
-      {/* TIMER BANNER */}
+    <div>
+
+      {/* TIMER */}
       <div className="timer-banner">
         <span className="timer-icon">⏱</span>
+
         Complete payment within
+
         <span
-          className={`timer-value${
-            timeLeft > 0 && timeLeft <= 60 ? " warning" : ""
+          className={`timer-value ${
+            timeLeft > 0 && timeLeft <= 60 ? "warning" : ""
           }`}
         >
           {formatTime(timeLeft)}
         </span>
+
         to reserve your tickets.
       </div>
 
+
       <div className="page-wrapper">
-        <h1 className="page-title">GIỎ HÀNG</h1>
+
+        <h1 className="page-title">
+          GIỎ HÀNG
+        </h1>
+
 
         <div className="cart-layout">
-          {/* LEFT — Tickets */}
-          <div className="tickets-section">
-            {items.map((item) => (
-              <div className="ticket-card" key={item.id}>
+
+
+          {/* LEFT */}
+          <div
+            className="tickets-section"
+            style={{ color: "white" }}
+          >
+
+            {item && (
+
+              <div
+                className="ticket-card"
+                key={item.cart_id}
+              >
+
                 <div className="ticket-info">
+
                   <div className="ticket-event-name">
-                    {item.event_name}
+                    Mã sự kiện: {item.event_id}
                   </div>
+
                   <span className="ticket-zone">
                     {item.zone_code}
                   </span>
+
                 </div>
+
 
                 <div className="ticket-right">
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <div className="qty-control">
-                      <button
-                        className="qty-btn"
-                        onClick={() => updateQty(item.id, -1)}
-                      >
-                        −
-                      </button>
-                      <span className="qty-value">
-                        {item.quantity}
-                      </span>
-                      <button
-                        className="qty-btn"
-                        onClick={() => updateQty(item.id, 1)}
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <button
-                      className="delete-btn"
-                      onClick={() => removeItem(item.id)}
-                    >
-                      🗑
-                    </button>
-                  </div>
 
                   <div className="ticket-price">
+
                     <div className="price-unit">
-                      Unit Price: {formatUSD(item.unitPrice)}
+                      Unit Price:
+                      {" "}
+                      (item.zone_price)
                     </div>
+
                     <div className="price-subtotal">
-                      Subtotal:{" "}
+                      Quantity:
+                      {" "}
+                      {item.quantity}
+                    </div>
+
+                    <div className="price-subtotal">
+                      Subtotal:
+                      {" "}
                       <span>
-                        {formatUSD(item.unitPrice * item.quantity)}
+                        (
+                          item.zone_price *
+                          item.quantity
+                        )
                       </span>
                     </div>
+
                   </div>
+
                 </div>
+
               </div>
-            ))}
+
+            )}
+
 
             <div className="total-tickets-row">
-              Total tickets: <strong>{totalTickets}</strong>
+              Total tickets:
+              {" "}
+              <strong>
+                {totalTickets}
+              </strong>
             </div>
+
           </div>
 
-          {/* RIGHT — Order Summary */}
+
+
+          {/* RIGHT */}
           <aside className="order-summary">
-            <h2 className="summary-title">Order Summary</h2>
+
+            <h2 className="summary-title">
+              Order Summary
+            </h2>
+
 
             <div className="summary-line">
               <span>Subtotal:</span>
-              <span>{formatUSD(subtotal)}</span>
+              <span>
+                (subtotal)
+              </span>
             </div>
 
-            <div className="summary-line">
-              <span>Service Fees (15%):</span>
-              <span>{formatUSD(fees)}</span>
-            </div>
 
             <div className="summary-line">
-              <span>Order Fee:</span>
-              <span>{formatUSD(ORDER_FEE)}</span>
+              <span>
+                Service Fees (15%)
+              </span>
+
+              <span>
+                (fees)
+              </span>
             </div>
+
+
+            <div className="summary-line">
+              <span>Order Fee</span>
+              <span>
+                (ORDER_FEE)
+              </span>
+            </div>
+
 
             <hr className="summary-divider" />
 
+
             <div className="summary-total-row">
-              <span>TOTAL:</span>
-              <span>{formatUSD(total)}</span>
+
+              <span>
+                TOTAL
+              </span>
+
+              <span>
+                (total)
+              </span>
+
             </div>
 
+
             <p className="hint-text">
-              Complete payment within{" "}
-              <strong>{formatTime(timeLeft)}</strong>
+              Complete payment within
+              {" "}
+              <strong>
+                {formatTime(timeLeft)}
+              </strong>
             </p>
+
 
             <button
               className="btn-pay"
-              disabled={timeLeft <= 0 || items.length === 0}
-              onClick={() => alert("Proceeding to payment...")}
+              disabled={timeLeft <= 0 || !item}
+              onClick={() =>
+                alert("Proceed to payment")
+              }
             >
               Confirm & Pay Now
             </button>
+
           </aside>
+
         </div>
       </div>
-    </>
+    </div>
   );
 }
