@@ -41,7 +41,7 @@ export default function ManageOrder() {
     setLoading(true);
     try {
       const res = await fetch(
-        `${API_BASE}/api/admin/orders?month=${month}&year=${year}`
+        `${API_BASE}/api/admin/events/calendar?month=${month}&year=${year}`
       );
       const data = await res.json();
       setEvents(data);

@@ -707,7 +707,8 @@ VALUES
 
 CREATE TABLE chat_ai (
     chat_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id INT,
+    session_id VARCHAR(15),
     message TEXT,
     sender VARCHAR(100),
     intent VARCHAR(255) NOT NULL,

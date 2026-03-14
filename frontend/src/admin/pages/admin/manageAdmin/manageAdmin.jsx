@@ -13,7 +13,7 @@ export default function ManageAdmin() {
     useEffect(() => {
         const getAllAdmin = async () => {
             try {
-                const response = await fetch(`${API_BASE}/api/admin/`, {
+                const response = await fetch(`${API_BASE}/api/admin/auth/`, {
                     method: 'GET',
                     headers: {
                         'Content-type': 'application/json'
@@ -21,6 +21,7 @@ export default function ManageAdmin() {
                 })
 
                 const data = await response.json()
+                console.log(data)
                 if (data.success) {
                     setAdmin(data.admin)
                 }
@@ -52,8 +53,9 @@ export default function ManageAdmin() {
 
     const handleSetPass = async (id) => {
         setLoading(true)
+        if (!id) alert("Lỗi không tìm")
         try {
-            const response = await fetch(`${API_BASE}/api/admin/resetPass/${id}`, {
+            const response = await fetch(`${API_BASE}/api/admin/auth/resetPass/${id}`, {
                 method: 'GET',
                 headers: {
                     'Content-type': 'application/json'
@@ -193,7 +195,7 @@ export default function ManageAdmin() {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn-edit">Đặt lại mật khẩu</button>
+                            <button className="btn-edit" onClick={()=>handleSetPass(selectedAdmin.admin_id)}>Đặt lại mật khẩu</button>
                             <button className="btn-edit">Chỉnh Sửa</button>
                             <button className="btn-delete">Xóa</button>
                         </div>

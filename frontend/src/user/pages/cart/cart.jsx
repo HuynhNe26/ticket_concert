@@ -16,11 +16,9 @@ export default function CartPage() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // ─── FETCH CART & USER ─────────────────────────────
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 🔥 Fetch Cart
         const res = await fetch(`${API_BASE}/api/cart`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -34,11 +32,9 @@ export default function CartPage() {
 
         const cart = json.data[0];
 
-        // ⚠ Quan trọng: backend phải trả về items + expires_at
         setItems(cart.items || []);
         setExpiresAt(cart.expires_at);
 
-        // 🔥 Fetch User Profile
         const userRes = await fetch(`${API_BASE}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -56,7 +52,6 @@ export default function CartPage() {
     fetchData();
   }, [navigate, token]);
 
-  // ─── COUNTDOWN REALTIME ─────────────────────────────
   useEffect(() => {
     if (!expiresAt) return;
 
@@ -78,7 +73,6 @@ export default function CartPage() {
     return () => clearInterval(interval);
   }, [expiresAt, navigate]);
 
-  // ─── HELPERS ─────────────────────────────
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -88,7 +82,6 @@ export default function CartPage() {
   const formatUSD = (n) =>
     n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-  // ─── QUANTITY ─────────────────────────────
   const updateQty = (id, delta) => {
     setItems((prev) =>
       prev
@@ -104,7 +97,6 @@ export default function CartPage() {
   const removeItem = (id) =>
     setItems((prev) => prev.filter((i) => i.id !== id));
 
-  // ─── CALCULATIONS ─────────────────────────────
   const subtotal = items.reduce(
     (sum, i) => sum + i.unitPrice * i.quantity,
     0

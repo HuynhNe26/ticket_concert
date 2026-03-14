@@ -77,7 +77,7 @@ CREATE TABLE events (
     event_name VARCHAR(255) NOT NULL,
     event_description TEXT NOT NULL,
     event_location VARCHAR(255) NOT NULL,
-     event_age INT NOT NULL CHECK (event_age >= 0),
+    event_age INT NOT NULL CHECK (event_age >= 0),
     banner_url TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     event_start TIMESTAMP,
@@ -707,7 +707,8 @@ VALUES
 
 CREATE TABLE chat_ai (
     chat_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id INT,
+    session_id VARCHAR(15),
     message TEXT,
     sender VARCHAR(100),
     intent VARCHAR(255) NOT NULL,

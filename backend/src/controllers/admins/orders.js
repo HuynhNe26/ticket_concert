@@ -1,30 +1,35 @@
 import { pool } from "../../config/database.js";
 
-export const Orders_Controllers = {
-    async getEvent (res, req) {
+export const OrderControllers = {
+    async getOrderById(req, res) {
         try {
-            const {month, year} = req.query;
+            const { id } = req.params
 
-            let query = `
-                SELECT event_name, event_start, event_end, event_id
-                FROM event
-                WHERE EXTRACT(MONTH FROM event_date) = $1
-                EXTRACT(YEAR FROM event_date) = $2
+            let query = 
+            `   SELECT 
+                    p.*,
+                    pd. *,
+                    e.*
+                FROM payments p
+                JOIN payment_detail pd ON pd.payment_id = p.payment_id
+                JOIN events e ON pd.event_id = e.event_id
+                WHERE pd.event_id = $1
             `
 
-            const { data } = await pool.query(query, {month, year})
-            if (!data) {
+            const { rows } = await pool.query(query, id)
+
+            if (rows.length === 0) {
                 res.status(403).json({
-                    message: 'Không có sự kiện nào trong khoảng thời gian trên!',
-                    success: false
+                    success: false,
+                    message: "Không có dữ liệu đơn hàng cho sự kiện trên!"
+                })
+            } else {
+                res.status(200).json({
+                    success: true,
+                    message: "Lấy dữ liệu đơn hàng thành công!",
+                    data: rows
                 })
             }
-
-            res.status(200).json({
-                message: 'Lấy dữ liệu sự kiện thành công!',
-                success: true,
-                data: data
-            })
         } catch (err) {
 
         }
