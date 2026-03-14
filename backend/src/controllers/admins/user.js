@@ -22,7 +22,7 @@ export const Manage_userControllers = {
       
       const params = [];
       if (search) {
-        query += ` WHERE u.fullname ILIKE $1 OR u.email ILIKE $1 OR u.phonenumber ILIKE $1`;
+        query += ` WHERE u.fullName ILIKE $1 OR u.email ILIKE $1 OR u.phonenumber ILIKE $1`;
         params.push(`%${search}%`); 
       }
       query += ` ORDER BY u.user_id DESC`; 

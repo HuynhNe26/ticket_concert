@@ -11,18 +11,12 @@ export default function CartPage() {
   const [item, setItem] = useState([]);
   const [timeLeft, setTimeLeft] = useState(0);
   const [expiresAt, setExpiresAt] = useState(null);
+  const [user, setUser] = useState([])
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-<<<<<<< HEAD
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/cart`, {
-          headers: { Authorization: `Bearer ${token}` },
-=======
-  // ─── FETCH CART ─────────────────────────────
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -30,7 +24,6 @@ export default function CartPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
->>>>>>> baf5565edd46a0f55030eaf58703f3aa946cdaa7
         });
 
         const json = await res.json();
@@ -44,10 +37,6 @@ export default function CartPage() {
         console.log(json.data[0])
         setExpiresAt(json.data[0].expires_at);
 
-<<<<<<< HEAD
-        setItems(cart.items || []);
-        setExpiresAt(cart.expires_at);
-
         const userRes = await fetch(`${API_BASE}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -56,8 +45,6 @@ export default function CartPage() {
         if (userJson.success) {
           setUser(userJson.data);
         }
-=======
->>>>>>> baf5565edd46a0f55030eaf58703f3aa946cdaa7
       } catch (err) {
         console.error("Error fetching cart:", err);
         alert("Lỗi khi tải giỏ hàng");
@@ -68,10 +55,6 @@ export default function CartPage() {
     fetchData();
   }, [navigate, token]);
 
-<<<<<<< HEAD
-=======
-  // ─── TIMER ─────────────────────────────
->>>>>>> baf5565edd46a0f55030eaf58703f3aa946cdaa7
   useEffect(() => {
     if (!expiresAt) return;
 
@@ -99,38 +82,16 @@ export default function CartPage() {
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-<<<<<<< HEAD
   const formatUSD = (n) =>
     n.toLocaleString("en-US", { style: "currency", currency: "USD" });
 
-  const updateQty = (id, delta) => {
-    setItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? { ...item, quantity: item.quantity + delta }
-            : item
-        )
-        .filter((item) => item.quantity > 0)
-    );
-  };
 
-  const removeItem = (id) =>
-    setItems((prev) => prev.filter((i) => i.id !== id));
-
-  const subtotal = items.reduce(
-    (sum, i) => sum + i.unitPrice * i.quantity,
-    0
-  );
-=======
-  // ─── CALC ─────────────────────────────
   const subtotal = item ? item.zone_price * item.quantity : 0;
->>>>>>> baf5565edd46a0f55030eaf58703f3aa946cdaa7
+
   const fees = subtotal * FEE_RATE;
   const total = subtotal + fees + ORDER_FEE;
   const totalTickets = item ? item.quantity : 0;
 
-  // ─── RENDER ─────────────────────────────
   return (
     <div>
 

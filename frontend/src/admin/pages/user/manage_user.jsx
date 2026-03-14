@@ -3,6 +3,7 @@ import LoadingAdmin from "../../components/loading/loading";
 import { useAdminAuth } from "../../context/authAdmin"; 
 import "./manage_user.css";
 
+const API_BASE = process.env.REACT_APP_API_URL
 export default function UserManagement() {
     const { admin } = useAdminAuth(); 
     const [users, setUsers] = useState([]);
@@ -11,11 +12,11 @@ export default function UserManagement() {
     const [selectedUser, setSelectedUser] = useState(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-    const fetchUsers = async (keyword = "") => {
+    const fetchUsers = async (keyword = searchTerm) => {
         setLoading(true);
         try {
             const token = localStorage.getItem("authToken");
-            const response = await fetch(`http://localhost:5000/api/admin/users?search=${keyword}`, {
+            const response = await fetch(`${API_BASE}/api/admin/users?search=${keyword}`, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
@@ -34,7 +35,7 @@ export default function UserManagement() {
         setLoading(true);
         try {
             const token = localStorage.getItem("authToken");
-            const response = await fetch(`http://localhost:5000/api/admin/users/${userId}`, {
+            const response = await fetch(`${API_BASE}/api/admin/users/${userId}`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await response.json();
@@ -49,7 +50,7 @@ export default function UserManagement() {
         }
     };
 
-    useEffect(() => { fetchUsers(); }, []);
+    useEffect(() => { fetchUsers(); }, [searchTerm]);
 
     const handleSearch = (e) => {
         setSearchTerm(e.target.value);
