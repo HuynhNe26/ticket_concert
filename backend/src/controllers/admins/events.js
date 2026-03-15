@@ -331,8 +331,8 @@ export const EventControllers = {
       const { month, year } = req.query;
 
       let query = `
-        SELECT event_name, event_start, event_end, event_id
-        FROM event
+        SELECT event_name, event_start, event_end, event_id, event_status
+        FROM events
         WHERE 1=1
       `;
 
@@ -340,13 +340,13 @@ export const EventControllers = {
       let index = 1;
 
       if (month) {
-        query += ` AND EXTRACT(MONTH FROM event_date) = $${index}`;
+        query += ` AND EXTRACT(MONTH FROM event_start) = $${index}`;
         params.push(month);
         index++;
       }
 
       if (year) {
-        query += ` AND EXTRACT(YEAR FROM event_date) = $${index}`;
+        query += ` AND EXTRACT(YEAR FROM event_start) = $${index}`;
         params.push(year);
         index++;
       }

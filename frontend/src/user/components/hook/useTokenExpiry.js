@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import LoadingUser from '../loading/loading';
 
 export function useTokenExpiry() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ export function useTokenExpiry() {
     if (remaining <= 0) {
       clearAuth();
       navigate('/');
+      window.location.reload();
       return;
     }
 
@@ -31,5 +33,5 @@ export function useTokenExpiry() {
 
     return () => clearTimeout(timer);
 
-  }, []); // chạy 1 lần khi mount
+  }, [navigate]); 
 }
