@@ -20,7 +20,7 @@ export default function CartPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/cart/`, {
+        const res = await fetch(`${API_BASE}/api/cart`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -33,9 +33,9 @@ export default function CartPage() {
           return;
         }
 
-        setItem(json.data[0]);
-        console.log(json.data[0])
-        setExpiresAt(json.data[0].expires_at);
+        setItem(json.data);
+        console.log(json.data)
+        setExpiresAt(json.data.expires_at);
 
         const userRes = await fetch(`${API_BASE}/api/users/profile`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -143,7 +143,7 @@ export default function CartPage() {
                   </div>
 
                   <span className="ticket-zone">
-                    {item.zone_code}
+                    {item.zone_name}
                   </span>
 
                 </div>
@@ -154,9 +154,7 @@ export default function CartPage() {
                   <div className="ticket-price">
 
                     <div className="price-unit">
-                      Unit Price:
-                      {" "}
-                      (item.zone_price)
+                      Unit Price: {item.zone_price?.toLocaleString('vi-VN')}₫
                     </div>
 
                     <div className="price-subtotal">
@@ -166,14 +164,8 @@ export default function CartPage() {
                     </div>
 
                     <div className="price-subtotal">
-                      Subtotal:
-                      {" "}
-                      <span>
-                        (
-                          item.zone_price *
-                          item.quantity
-                        )
-                      </span>
+                      Subtotal: {(item.zone_price * item.quantity).toLocaleString('vi-VN')}₫
+                      
                     </div>
 
                   </div>
@@ -208,7 +200,7 @@ export default function CartPage() {
             <div className="summary-line">
               <span>Subtotal:</span>
               <span>
-                (subtotal)
+                {subtotal.toLocaleString('vi-VN')}₫
               </span>
             </div>
 
@@ -219,7 +211,7 @@ export default function CartPage() {
               </span>
 
               <span>
-                (fees)
+               {fees.toLocaleString('vi-VN')}₫
               </span>
             </div>
 
@@ -227,7 +219,7 @@ export default function CartPage() {
             <div className="summary-line">
               <span>Order Fee</span>
               <span>
-                (ORDER_FEE)
+                {ORDER_FEE.toLocaleString('vi-VN')}₫
               </span>
             </div>
 
@@ -242,7 +234,7 @@ export default function CartPage() {
               </span>
 
               <span>
-                (total)
+                {total.toLocaleString('vi-VN')}₫
               </span>
 
             </div>

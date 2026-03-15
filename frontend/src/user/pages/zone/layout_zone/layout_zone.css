@@ -3,6 +3,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
+  overflow: hidden;
 }
 
 .layout-canvas {
@@ -10,6 +12,7 @@
   box-shadow: 0 10px 40px rgba(0, 192, 88, 0.2);
   cursor: pointer;
   transition: transform 0.2s ease;
+  width: 100%;
   max-width: 100%;
   height: auto;
 }

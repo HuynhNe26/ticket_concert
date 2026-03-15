@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './layout_zone.css';
-import LoginPage from '../../login/Loginpage';
+import LoginPage from "../../login/Loginpage"
 import LoadingUser from '../../../components/loading/loading';
 
 const API_BASE = process.env.REACT_APP_API_URL;
@@ -12,12 +12,12 @@ export default function LayoutZone({ layout, zones, eventId }) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const token = localStorage.getItem("token");
   const [selectedZone, setSelectedZone] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [showOverlay, setShowOverlay] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
+
 
   useEffect(() => {
     if (!layout || !canvasRef.current) return;
@@ -226,7 +226,7 @@ export default function LayoutZone({ layout, zones, eventId }) {
     }
 
     if (!token) {
-      setShowLogin(true);
+      setShowLoginModal(true);
       setShowOverlay(false);
       return
     }
@@ -254,7 +254,7 @@ export default function LayoutZone({ layout, zones, eventId }) {
       return;
     }
 
-    navigate(`/event/${eventId}/cart?zone=${zone_code}&quantity=${quantity}`);
+    navigate(`my-cart`);
 
   } catch (err) {
     console.error(err);
@@ -336,9 +336,63 @@ export default function LayoutZone({ layout, zones, eventId }) {
         </div>
       )}
 
-      {showLogin && (
-        <LoginPage onClose={() => setShowLogin(false)} />
-      )}
+      {/* Modal hiển thị LoginPage */}
+            {showLoginModal && (
+                <div 
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.6)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999,
+                        backdropFilter: 'blur(4px)'
+                    }}
+                    onClick={() => setShowLoginModal(false)}
+                >
+                    
+                    <div 
+                        style={{
+                            position: 'relative',
+                            maxWidth: '350px',
+                            width: '90%',
+                            maxHeight: '90vh',
+                            overflow: 'auto'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Nút đóng */}
+                        <button
+                            onClick={() => setShowLoginModal(false)}
+                            style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                background: 'rgba(255, 255, 255, 0.9)',
+                                border: 'none',
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                cursor: 'pointer',
+                                fontSize: '20px',
+                                color: '#666',
+                                zIndex: 10,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            ✕
+                        </button>
+                        {/* Hiển thị LoginPage */}
+                        <LoginPage />
+                    </div>
+                </div>
+            )}
 
       {hoveredZone && hoveredData && (
         <div 
@@ -355,5 +409,6 @@ export default function LayoutZone({ layout, zones, eventId }) {
         </div>
       )}
     </div>
+    
   );
 }

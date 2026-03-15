@@ -16,7 +16,7 @@ export function UserRoutes() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/event/:id" element={<EventDetail />} />
         <Route path="/event/:id/booking" element={<ZonePage />} />
-        <Route  path='/event/:id/cart' element={<CartPage />} />
+        <Route  path='/my-cart' element={<CartPage />} />
       </Route>
     </>
   );

@@ -83,6 +83,9 @@ export default function Header() {
 
                     <div className="header-right">
                         <Link to="/my-tickets" className="header-link"><span>Vé của tôi</span></Link>
+                        <Link to="/my-cart"> 
+                            <img src="/logo1.png" alt="Cart Logo" className="logo"/>
+                        </Link>
                         <div className="auth-section">
                             {user ? (
                                 <div>Xin chào, {user.fullName} | <button onClick={handleLogout} style={{background:'none', border:'none', color:'white', cursor:'pointer'}}>Đăng xuất</button></div>
@@ -126,10 +129,11 @@ export default function Header() {
                     }}
                     onClick={() => setShowLoginModal(false)}
                 >
+                    
                     <div 
                         style={{
                             position: 'relative',
-                            maxWidth: '500px',
+                            maxWidth: '350px',
                             width: '90%',
                             maxHeight: '90vh',
                             overflow: 'auto'
@@ -159,7 +163,6 @@ export default function Header() {
                         >
                             ✕
                         </button>
-                        
                         {/* Hiển thị LoginPage */}
                         <LoginPage />
                     </div>

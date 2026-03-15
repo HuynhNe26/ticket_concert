@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import LoadingUser from "../../components/loading/loading";
-import LoginPage from "../login/Loginpage"; // Import LoginPage
 import "./home.css"; 
 
 const API_BASE = process.env.REACT_APP_API_URL;
@@ -119,9 +118,7 @@ export default function HomeUser() {
                             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
                         }}
                         onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* LoginPage với nút đóng và scroll bên trong */}
-                        <LoginPage isModal={true} onClose={() => setShowLoginModal(false)} />
+                    >         
                     </div>
                 </div>
             )}
