@@ -28,6 +28,7 @@ export function useTokenExpiry() {
     const timer = setTimeout(() => {
       clearAuth();
       alert('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!');
+      window.location.reload();
       navigate('/');
     }, remaining);
 
