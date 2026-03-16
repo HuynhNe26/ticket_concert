@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LoadingUser from '../loading/loading';
 
 export function useTokenExpiry() {
   const navigate = useNavigate();

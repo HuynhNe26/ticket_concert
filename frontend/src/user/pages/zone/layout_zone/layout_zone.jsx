@@ -254,7 +254,7 @@ export default function LayoutZone({ layout, zones, eventId }) {
       return;
     }
 
-    navigate(`my-cart`);
+    navigate(`/my-cart`);
 
   } catch (err) {
     console.error(err);
