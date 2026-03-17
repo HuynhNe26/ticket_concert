@@ -325,3 +325,76 @@ body {
 
 .hint-text { color: rgba(255,255,255,0.3); }
 .hint-text strong { color: #ffb347; }
+
+/* Customer card */
+.customer-card {
+  background: #111320;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.customer-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 14px;
+}
+
+.customer-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.customer-row:last-child {
+  border-bottom: none;
+}
+
+.customer-row span {
+  color: rgba(255,255,255,0.45);
+}
+
+.customer-row strong {
+  color: #f0f4f8;
+}
+
+/* Payment methods */
+.pay-method-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin: 16px 0 10px;
+}
+
+.pay-methods {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.pay-method-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pay-method-btn:hover,
+.pay-method-btn.active {
+  border-color: rgba(0,255,212,0.3);
+  color: #00FFD4;
+  background: rgba(0,255,212,0.05);
+}

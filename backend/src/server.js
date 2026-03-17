@@ -16,7 +16,9 @@ import eventsRouter from "./router/users/events.js";
 import userLayoutRouter from "./router/users/layout.js";
 import zoneRouter from "./router/users/zone.js";
 import cartRoutes from "./router/users/cart.js";
-
+import checkoutRouter from "./router/users/checkout.js";
+import momo from "./router/users/payment/Momo.js";
+import momoNotify from "./router/users/payment/MomoNotify.js";
 // admins
 import adminRouter from "./router/admins/admins.js";
 import eventRouter from "./router/admins/events.js";
@@ -30,7 +32,8 @@ const app = express();
 const httpServer = createServer(app);
 
 app.use(express.json());
-
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 app.use(
   cors({
     origin: "http://localhost:3000", 
@@ -44,6 +47,10 @@ app.use("/api/events", eventsRouter);
 app.use("/api/layout", userLayoutRouter);
 app.use("/api/zone", zoneRouter);
 app.use("/api/cart", cartRoutes);
+app.use("/api/checkout", checkoutRouter);
+app.use("/api/checkout/momo", momo);
+app.use("/api/checkout/momo", momoNotify);
+
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
