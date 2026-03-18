@@ -12,6 +12,11 @@ export default function EventDetail() {
     const [zones, setZones] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isDescExpanded, setIsDescExpanded] = useState(false);
+    const [openZoneId, setOpenZoneId] = useState(null);
+
+    const toggleZone = (id) => {
+        setOpenZoneId(openZoneId === id ? null : id);
+    };
 
     useEffect(() => {
         const fetchEventData = async () => {
@@ -64,7 +69,7 @@ export default function EventDetail() {
     const isLongDescription = descriptionLines.length > 10;
     const displayDescription = isDescExpanded || !isLongDescription 
         ? event.event_description 
-        : descriptionLines.slice(0, 10).join('\n');
+        : descriptionLines.slice(0, 3).join('\n');
 
 
     let buttonText = "Chọn lịch diễn";
@@ -78,7 +83,7 @@ export default function EventDetail() {
     const now = new Date();
     const eventEnd = new Date(event.event_end);
     const isEnded = eventEnd < now;
-
+    
     return (
         <div className="event-detail-page">
             <div className="event-container">
@@ -91,11 +96,22 @@ export default function EventDetail() {
                                 📅 <span>{new Date(event.event_start).toLocaleString('vi-VN')}</span>
                             </div>
                             <div className="event-meta-item">
-                                📍 <span>{event.event_location}</span>
+                                📍 <span>{(event.event_location).split(",")[0]}</span> <br />
+                                    <span
+                                    style={{
+                                        display: 'block',
+                                        marginLeft: '23px',
+                                        color: 'rgb(196,196,207)',
+                                        marginTop: '10px'
+                                    }}
+                                    >
+                                    {event.event_location}
+                                    </span>
                             </div>
                         </div>
                         
                         <div className="event-ticket-footer">
+                            <div className="event-line"></div>
                             <div className="event-price-section">
                                 <span className="event-price-label">Giá từ</span>
                                 <span className="event-price-value">
@@ -106,43 +122,34 @@ export default function EventDetail() {
                                 </span>
                             </div>
                             <button
-                            className={`event-btn-buy
-                                ${isEnded ? "ended" : ""}
-                                ${!isEnded && !isTicketAvailable ? "sold-out" : ""}
-                                ${!isEnded && isTicketAvailable && !event.event_status ? "coming-soon" : ""}
-                            `}
-                            onClick={() =>
-                                !isEnded && isTicketAvailable && event.event_status && navigate("booking")
-                            }
-                            disabled={isEnded || !isTicketAvailable || !event.event_status}
-                            >
-                            {isEnded
-                                ? "Đã kết thúc"
-                                : !isTicketAvailable
-                                ? "Hết vé"
-                                : !event.event_status
-                                ? "Sắp mở bán"
-                                : "Chọn lịch diễn"}
-                            </button>
+                        className={`event-btn-buy
+                            ${isEnded ? "ended" : ""}
+                            ${!isEnded && !isTicketAvailable ? "sold-out" : ""}
+                            ${!isEnded && isTicketAvailable && !event.event_status ? "coming-soon" : ""}
+                        `}
+                        onClick={() =>
+                            !isEnded && isTicketAvailable && event.event_status && navigate("booking")
+                        }
+                        disabled={isEnded || !isTicketAvailable || !event.event_status}
+                        >
+                        {isEnded
+                            ? "Đã kết thúc"
+                            : !isTicketAvailable
+                            ? "Hết vé"
+                            : !event.event_status
+                            ? "Sắp mở bán"
+                            : "Chọn lịch diễn"}
+                        </button>
                         </div>
                     </div>
-
+                    <div className="event-stub-line"></div>
                     <div className="event-ticket-divider">
                         <div className="event-stub-dot top"></div>
-                        <div className="event-stub-line"></div>
                         <div className="event-stub-dot bottom"></div>
                     </div>
 
                     <div className="event-ticket-right">
                         <img src={event.banner_url} alt={event.event_name} className="event-ticket-banner" />
-                        <div className="event-banner-overlay">
-                            <div className="event-overlay-dates">
-                                <p>Thời gian</p>
-                                <h3>{new Date(event.event_start).toLocaleDateString('vi-VN')}</h3>
-                                <p>Đến</p>
-                                <h3>{new Date(event.event_end).toLocaleDateString('vi-VN')}</h3>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -156,15 +163,49 @@ export default function EventDetail() {
                                 zones.map((zone) => {
                                     const available = zone.zone_quantity - zone.sold_quantity;
                                     const isSoldOut = available <= 0;
+                                    const isAlmostOver = available <= 20;
+
+                                        let statusClass = "available";
+                                        let statusText = "Còn vé";
+
+
+                                        if (isSoldOut) {
+                                            statusClass = "sold-out";
+                                            statusText = "Hết vé";
+                                        } else if (isAlmostOver) {
+                                            statusClass = "over";
+                                            statusText = "Sắp hết vé";
+                                        }
                                     
                                     return (
-                                        <div key={zone.zone_id} className={`ticket-item ${isSoldOut ? 'sold-out' : ''}`}>
+                                        <div 
+                                        key={zone.zone_id} 
+                                        className={`ticket-item`}
+                                        onClick={() => toggleZone(zone.zone_id)}
+                                        >
                                             <div className="ticket-info">
-                                                <h3 className="ticket-name">{zone.zone_name}</h3>
-                                                <p className="ticket-desc">{zone.zone_description}</p>
-                                            </div>
-                                            <div className="ticket-price-box">
-                                                <span className="ticket-price">{formatCurrency(zone.zone_price)}</span>
+                                                <div className="ticket-header">
+                                                    <span className={`arrow ${openZoneId === zone.zone_id ? "open" : ""}`}>
+                                                        ▶
+                                                    </span>
+                                                    <span className="ticket-name">{zone.zone_name}</span>
+
+                                                    <div style={{display: 'flex', flexDirection: 'column', marginLeft: '130px'}}>
+                                                        <span className="ticket-price">
+                                                            {formatCurrency(zone.zone_price)}
+                                                        </span>
+
+                                                        <span className={`ticket-status ${statusClass}`}>
+                                                            {statusText}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {openZoneId === zone.zone_id && (
+                                                    <div className="ticket-desc" style={{ whiteSpace: 'pre-line', marginTop: '15px'}}>
+                                                        {zone.zone_description}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     );
