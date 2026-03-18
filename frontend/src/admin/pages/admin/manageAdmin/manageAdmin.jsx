@@ -83,6 +83,12 @@ export default function ManageAdmin() {
                 <h2>Quản Lý Quản Trị Viên</h2>
             </div>
 
+            <div>
+                <input 
+                    placeholder="Tìm kiếm"
+                />
+                <button>Tìm kiếm</button>
+            </div>
             <div className="admin-table-wrapper">
                 <table className="admin-table">
                     <thead>

@@ -331,8 +331,17 @@ export const EventControllers = {
       const { month, year } = req.query;
 
       let query = `
-        SELECT event_name, event_start, event_end, event_id, event_status
-        FROM events
+        SELECT 
+          e.event_name, 
+          e.event_start, 
+          e.event_end, 
+          e.event_id, 
+          e.event_status,
+
+          c.category_id,
+          c.category_name
+        FROM events e
+        JOIN categories c ON c.category_id = e.category_id
         WHERE 1=1
       `;
 
@@ -352,13 +361,6 @@ export const EventControllers = {
       }
 
       const { rows } = await pool.query(query, params);
-
-      if (rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Không có sự kiện phù hợp!"
-        });
-      }
 
       return res.status(200).json({
         success: true,

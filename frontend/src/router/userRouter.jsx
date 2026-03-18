@@ -6,6 +6,7 @@ import SearchPage from "../user/pages/search/search";
 import ZonePage from "../user/pages/zone/zone/zone";
 import CartPage from "../user/pages/cart/cart";
 import { useTokenExpiry } from "../user/components/hook/useTokenExpiry";
+
 export function UserRoutes() {
   useTokenExpiry();
   return (

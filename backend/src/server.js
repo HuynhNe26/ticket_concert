@@ -16,6 +16,7 @@ import eventsRouter from "./router/users/events.js";
 import userLayoutRouter from "./router/users/layout.js";
 import zoneRouter from "./router/users/zone.js";
 import cartRoutes from "./router/users/cart.js";
+import categoryRouter from "./router/users/categories.js"
 
 // admins
 import adminRouter from "./router/admins/admins.js";
@@ -24,6 +25,7 @@ import userRouter from "./router/admins/user.js";
 import adminLayoutRouter from "./router/admins/layout.js";
 import categoriesRouter from "./router/admins/categories.js"
 import { ChatSocket } from "./socket/chat_ai.js";
+import orderRouter from "./router/admins/orders.js"
 
 
 const app = express();
@@ -44,12 +46,14 @@ app.use("/api/events", eventsRouter);
 app.use("/api/layout", userLayoutRouter);
 app.use("/api/zone", zoneRouter);
 app.use("/api/cart", cartRoutes);
+app.use("/api/categories", categoryRouter);
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
 app.use("/api/admin/events", eventRouter);
 app.use("/api/admin/layout", adminLayoutRouter);
 app.use("/api/admin/categories", categoriesRouter);
+app.use("/api/admin/orders", orderRouter);
 
 export const io = new Server(httpServer, {
   cors: {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-
+import './manage_order.css'
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = process.env.REACT_APP_API_URL || "";
 
@@ -89,6 +90,7 @@ export default function ManageOrder() {
   const [loading,  setLoading]  = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [searchQ,  setSearchQ]  = useState("");
+  const navigate = useNavigate()
 
   // ── Fetch events ────────────────────────────
   const handleSearch = async () => {
@@ -112,20 +114,6 @@ export default function ManageOrder() {
       setLoading(false);
     }
   };
-
-  // ── Select event → fetch orders ─────────────
-  const handleSelectEvent = async (eventId) => {
-    setActiveId(eventId);
-    try {
-      const res  = await fetch(`${API_BASE}/orders/event/${eventId}`);
-      const data = await res.json();
-      console.log("Orders:", data);
-      // TODO: setOrders(data) nếu bạn muốn hiển thị danh sách đơn hàng
-    } catch (err) {
-      console.error("Lỗi tải đơn hàng:", err);
-    }
-  };
-
   // ── Filter by search ─────────────────────────
   const filtered = searchQ
     ? events.filter(e =>
@@ -243,7 +231,7 @@ export default function ManageOrder() {
             key={event.event_id}
             event={event}
             isActive={activeId === event.event_id}
-            onClick={handleSelectEvent}
+            onClick={() => navigate(`/admin/orders/order-event?id=${event.event_id}&name=${event.event_name}`)}
           />
         ))}
       </div>

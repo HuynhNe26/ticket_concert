@@ -8,8 +8,16 @@ const API_BASE = process.env.REACT_APP_API_URL;
 export default function HomeUser() {
     const [loading, setLoading] = useState(false);
     const [events, setEvents] = useState([]);
+    const [trending, setTrendings] = useState([]);
+    const [eventMonth, setEventMonths] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [eventCategory, setEventCategory] = useState([])
     const [showLoginModal, setShowLoginModal] = useState(false); // State hiển thị modal
     const navigate = useNavigate();
+
+    const today = new Date();
+    const month = today.getMonth() + 1; // tháng (0-11 nên phải +1)
+    const year = today.getFullYear();
 
     useEffect(() => {
         setLoading(true);
@@ -26,6 +34,72 @@ export default function HomeUser() {
                 setLoading(false);
             }
         };
+
+        const getTopTrending = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/events/top-trending?month=${month}&year=${year}`);
+
+                const data = await res.json();
+                if (data.success) {
+                    setTrendings(data.data)
+                }
+            } catch (err) {
+                console.error("Lỗi tải trang chủ:", err);
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        const getEventInMonth = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/api/events/event-month?month=${month}&year=${year}`);
+
+                const data = await res.json();
+                if (data.success) {
+                    setEventMonths(data.data)
+                }
+            } catch (err) {
+                console.error("Lỗi tải trang chủ:", err);
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        const getCategories = async() => {
+            try {
+                const res = await fetch(`${API_BASE}/api/categories/`);
+
+                const data = await res.json();
+                if (data.success) {
+                    setCategories(data.data)
+                }
+            } catch (err) {
+                console.error("Lỗi tải trang chủ:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        const getEventInCategory = async () => {
+            const id = categories[0]?.category_id;
+            if (!id) {
+                alert("Lỗi lấy id category");
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/events/category/${id}`);
+
+                const data = await res.json();
+                if (data.success) {
+                    setEventCategory(data.data)
+                }
+            } catch (err) {
+                console.error("Lỗi tải trang chủ:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+
         getData();
     }, []);
 

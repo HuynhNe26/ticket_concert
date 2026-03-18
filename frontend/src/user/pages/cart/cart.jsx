@@ -145,6 +145,7 @@ export default function CartPage() {
                   <span className="ticket-zone">
                     {item.zone_name}
                   </span>
+                  
 
                 </div>
 
