@@ -39,6 +39,7 @@ export default function CartPage() {
     };
     fetchData();
   }, [navigate, token]);
+    console.log("expiresAt:", expiresAt);
 
   useEffect(() => {
     if (!expiresAt) return;

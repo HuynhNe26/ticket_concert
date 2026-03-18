@@ -127,9 +127,7 @@ export default function Header() {
                         zIndex: 9999,
                         backdropFilter: 'blur(4px)'
                     }}
-                    onClick={() => setShowLoginModal(false)}
                 >
-                    
                     <div 
                         style={{
                             position: 'relative',

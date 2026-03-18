@@ -100,7 +100,7 @@ export default function LoginPage({ isModal = false, onClose = null }) {
         className="auth-card" 
         style={isModal ? {
           position: 'relative',
-          maxHeight: '85vh',
+          maxHeight: '100vh',
           overflowY: 'auto',
           overflowX: 'hidden'
         } : {}}
