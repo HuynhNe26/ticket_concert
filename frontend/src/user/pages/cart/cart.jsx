@@ -5,64 +5,46 @@ import "./cart.css";
 const API_BASE = process.env.REACT_APP_API_URL;
 
 const FEE_RATE = 0.15;
-const ORDER_FEE = 10;
+const ORDER_FEE = 10000;
 
 export default function CartPage() {
-  const [item, setItem] = useState([]);
+  const [item, setItem] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [expiresAt, setExpiresAt] = useState(null);
-  const [user, setUser] = useState([])
+  const [paymentMethod, setPaymentMethod] = useState("MOMO");
+  const [paying, setPaying] = useState(false);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/cart`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
         const json = await res.json();
-
         if (!json.success || !json.data) {
           navigate("/");
           return;
         }
-
         setItem(json.data);
-        console.log(json.data)
         setExpiresAt(json.data.expires_at);
-
-        const userRes = await fetch(`${API_BASE}/api/users/profile`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const userJson = await userRes.json();
-        if (userJson.success) {
-          setUser(userJson.data);
-        }
       } catch (err) {
         console.error("Error fetching cart:", err);
         alert("Lỗi khi tải giỏ hàng");
         navigate("/");
       }
     };
-
     fetchData();
   }, [navigate, token]);
 
   useEffect(() => {
     if (!expiresAt) return;
-
     const interval = setInterval(() => {
       const diff = Math.floor(
         (new Date(expiresAt).getTime() - Date.now()) / 1000
       );
-
       if (diff <= 0) {
         clearInterval(interval);
         setTimeLeft(0);
@@ -72,7 +54,6 @@ export default function CartPage() {
         setTimeLeft(diff);
       }
     }, 1000);
-
     return () => clearInterval(interval);
   }, [expiresAt, navigate]);
 
@@ -82,186 +63,187 @@ export default function CartPage() {
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-  const formatUSD = (n) =>
-    n.toLocaleString("en-US", { style: "currency", currency: "USD" });
-
+  const fmt = (n) => n?.toLocaleString("vi-VN") + "₫";
 
   const subtotal = item ? item.zone_price * item.quantity : 0;
-
-  const fees = subtotal * FEE_RATE;
+  const fees = Math.round(subtotal * FEE_RATE);
   const total = subtotal + fees + ORDER_FEE;
-  const totalTickets = item ? item.quantity : 0;
+
+  const handleCheckout = async () => {
+    setPaying(true);
+    try {
+      if (paymentMethod === "MOMO") {
+        // Gia hạn cart trước
+        await fetch(`${API_BASE}/api/cart/extend`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        // Tạo link MoMo
+        const res = await fetch(`${API_BASE}/api/checkout/momo`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            amount: total,
+            orderId: `ORDER_${item.user_id}_${Date.now()}`
+          })
+        });
+
+        const data = await res.json();
+        if (data.payUrl) {
+          window.location.href = data.payUrl; // redirect sang MoMo
+        } else {
+          alert(data.error || "Lỗi tạo link MoMo");
+        }
+
+      } else if (paymentMethod === "VNPAY") {
+        // Tương tự khi làm VNPAY
+        alert("VNPAY đang phát triển");
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi kết nối");
+    } finally {
+      setPaying(false);
+    }
+  };
 
   return (
     <div>
-
       {/* TIMER */}
       <div className="timer-banner">
         <span className="timer-icon">⏱</span>
-
-        Complete payment within
-
-        <span
-          className={`timer-value ${
-            timeLeft > 0 && timeLeft <= 60 ? "warning" : ""
-          }`}
-        >
+        Hoàn tất thanh toán trong
+        <span className={`timer-value ${timeLeft > 0 && timeLeft <= 60 ? "warning" : ""}`}>
           {formatTime(timeLeft)}
         </span>
-
-        to reserve your tickets.
+        để giữ vé.
       </div>
 
-
       <div className="page-wrapper">
-
-        <h1 className="page-title">
-          GIỎ HÀNG
-        </h1>
-
+        <h1 className="page-title">GIỎ HÀNG</h1>
 
         <div className="cart-layout">
-
-
           {/* LEFT */}
-          <div
-            className="tickets-section"
-            style={{ color: "white" }}
-          >
+          <div className="tickets-section">
 
+            {/* Thông tin vé */}
             {item && (
-
-              <div
-                className="ticket-card"
-                key={item.cart_id}
-              >
-
+              <div className="ticket-card" key={item.id}>
                 <div className="ticket-info">
-
-                  <div className="ticket-event-name">
-                    Mã sự kiện: {item.event_id}
+                  <div className="ticket-event-name">{item.event_name}</div>
+                  <span className="ticket-zone">{item.zone_name}</span>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 6 }}>
+                    📍 {item.event_location}
                   </div>
-
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
+                    🎤 {item.event_actor}
+                  </div>
                   <span className="ticket-zone">
                     {item.zone_name}
                   </span>
                   
-
                 </div>
-
 
                 <div className="ticket-right">
-
                   <div className="ticket-price">
-
                     <div className="price-unit">
-                      Unit Price: {item.zone_price?.toLocaleString('vi-VN')}₫
+                      Đơn giá: {fmt(item.zone_price)}
                     </div>
-
                     <div className="price-subtotal">
-                      Quantity:
-                      {" "}
-                      {item.quantity}
+                      Số lượng: {item.quantity}
                     </div>
-
                     <div className="price-subtotal">
-                      Subtotal: {(item.zone_price * item.quantity).toLocaleString('vi-VN')}₫
-                      
+                      Thành tiền:{" "}
+                      <span>{fmt(item.zone_price * item.quantity)}</span>
                     </div>
-
                   </div>
-
                 </div>
-
               </div>
-
             )}
 
-
-            <div className="total-tickets-row">
-              Total tickets:
-              {" "}
-              <strong>
-                {totalTickets}
-              </strong>
-            </div>
-
+            {/* Thông tin khách hàng */}
+            {item && (
+              <div className="customer-card">
+                <div className="customer-title">Thông tin người mua</div>
+                <div className="customer-row">
+                  <span>Họ tên</span>
+                  <strong>{item.fullname}</strong>
+                </div>
+                <div className="customer-row">
+                  <span>Email</span>
+                  <strong>{item.email}</strong>
+                </div>
+                <div className="customer-row">
+                  <span>Số điện thoại</span>
+                  <strong>{item.phonenumber}</strong>
+                </div>
+                <div className="customer-row">
+                  <span>Giới tính</span>
+                  <strong>{item.gender}</strong>
+                </div>
+              </div>
+            )}
           </div>
-
-
 
           {/* RIGHT */}
           <aside className="order-summary">
-
-            <h2 className="summary-title">
-              Order Summary
-            </h2>
-
+            <h2 className="summary-title">Order Summary</h2>
 
             <div className="summary-line">
-              <span>Subtotal:</span>
-              <span>
-                {subtotal.toLocaleString('vi-VN')}₫
-              </span>
+              <span>Tạm tính ({item?.quantity} vé)</span>
+              <span>{fmt(subtotal)}</span>
             </div>
-
-
             <div className="summary-line">
-              <span>
-                Service Fees (15%)
-              </span>
-
-              <span>
-               {fees.toLocaleString('vi-VN')}₫
-              </span>
+              <span>Phí dịch vụ (15%)</span>
+              <span>{fmt(fees)}</span>
             </div>
-
-
             <div className="summary-line">
-              <span>Order Fee</span>
-              <span>
-                {ORDER_FEE.toLocaleString('vi-VN')}₫
-              </span>
+              <span>Phí xử lý</span>
+              <span>{fmt(ORDER_FEE)}</span>
             </div>
-
 
             <hr className="summary-divider" />
 
-
             <div className="summary-total-row">
-
-              <span>
-                TOTAL
-              </span>
-
-              <span>
-                {total.toLocaleString('vi-VN')}₫
-              </span>
-
+              <span>TỔNG CỘNG</span>
+              <span>{fmt(total)}</span>
             </div>
 
+            {/* Phương thức thanh toán */}
+            <div className="pay-method-title">Phương thức</div>
+            <div className="pay-methods">
+              {[
+                { id: "MOMO", logo: "/logoMoMo.png" },
+                { id: "VNPAY", logo: "/logoVNpay.png" }
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  className={`pay-method-btn ${paymentMethod === m.id ? "active" : ""}`}
+                  onClick={() => setPaymentMethod(m.id)}
+                >
+                  <img src={m.logo} alt={m.id} style={{ height: 28, objectFit: "contain" }} />
+                </button>
+              ))}
+            </div>
 
             <p className="hint-text">
-              Complete payment within
-              {" "}
-              <strong>
-                {formatTime(timeLeft)}
-              </strong>
+              Hoàn tất trong{" "}
+              <strong>{formatTime(timeLeft)}</strong>
             </p>
-
 
             <button
               className="btn-pay"
-              disabled={timeLeft <= 0 || !item}
-              onClick={() =>
-                alert("Proceed to payment")
-              }
+              disabled={timeLeft <= 0 || !item || paying}
+              onClick={handleCheckout}
             >
-              Confirm & Pay Now
+              {paying ? "Đang xử lý..." : "Xác nhận & Thanh toán"}
             </button>
-
           </aside>
-
         </div>
       </div>
     </div>
