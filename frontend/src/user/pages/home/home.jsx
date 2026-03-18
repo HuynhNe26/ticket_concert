@@ -40,6 +40,7 @@ export default function HomeUser() {
                 const res = await fetch(`${API_BASE}/api/events/top-trending?month=${month}&year=${year}`);
 
                 const data = await res.json();
+                console.log(data)
                 if (data.success) {
                     setTrendings(data.data)
                 }
@@ -101,6 +102,9 @@ export default function HomeUser() {
         }
 
         getData();
+        getTopTrending();
+        getEventInMonth();
+        getCategories();
     }, []);
 
     const formatCurrency = (amount) => 
@@ -118,7 +122,7 @@ export default function HomeUser() {
         <div className="home-wrapper">
             <div className="home-container">
                 {/* --- PHẦN 1: SỰ KIỆN XU HƯỚNG --- */}
-                <section className="section-home">
+                <section className="section-trending">
                     <h2 className="section-title">🔥 Sự kiện xu hướng</h2>
                     <div className="trending-list">
                         {trendingEvents.map((event, index) => (
@@ -126,13 +130,7 @@ export default function HomeUser() {
                                 <span className="trending-number" style={{ WebkitTextStroke: `1px ${index === 0 ? '#00c058' : '#333'}` }}>
                                     {index + 1}
                                 </span>
-                                <div className="trending-card">
-                                    <img src={event.banner_url} alt={event.event_name} />
-                                    <div className="trending-info">
-                                        <h3>{event.event_name}</h3>
-                                        <p className="t-date">{formatDate(event.event_start)}</p>
-                                    </div>
-                                </div>
+                                <img className="trending-card" src={event.banner_url} alt={event.event_name} />
                             </div>
                         ))}
                     </div>
@@ -150,14 +148,13 @@ export default function HomeUser() {
                             <div className="event-card-light" key={event.event_id} onClick={() => navigate(`/event/${event.event_id}`)}>
                                 <div className="card-thumb">
                                     <img src={event.banner_url} alt={event.event_name} />
-                                    <span className="card-tag">Đang bán</span>
                                 </div>
                                 <div className="card-body">
-                                    <h3 className="card-title">{event.event_name}</h3>
-                                    <p className="card-price">Từ {formatCurrency(event.min_price || 0)}</p>
-                                    <p className="card-meta">
+                                    <span className="card-title">{event.event_name}</span>
+                                    <span className="card-price">Từ {formatCurrency(event.min_price || 0)}</span>
+                                    <span className="card-meta">
                                         📅 {formatDate(event.event_start)}
-                                    </p>
+                                    </span>
                                 </div>
                             </div>
                         ))}

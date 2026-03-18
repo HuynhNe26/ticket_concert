@@ -2,7 +2,7 @@ import { pool } from "../../config/database.js";
 
 export async function addToCart(req, res) {
   const { userId } = req.user;
-  const { eventId, zone_code, quantity } = req.body;
+  const { eventId, zone_id, quantity } = req.body;
 
   if (quantity < 1 || quantity > 5) {
     return res.status(400).json({ message: "Chỉ được mua 1–5 vé" });
@@ -37,11 +37,11 @@ export async function addToCart(req, res) {
       `
       SELECT zone_quantity, sold_quantity
       FROM zones
-      WHERE zone_code = $1
+      WHERE zone_id = $1
       AND event_id = $2
       FOR UPDATE
       `,
-      [zone_code, eventId]
+      [zone_id, eventId]
     );
 
     if (!zoneResult.rows.length) {
@@ -56,11 +56,11 @@ export async function addToCart(req, res) {
       `
       SELECT COALESCE(SUM(quantity),0) AS reserved_quantity
       FROM cart_items
-      WHERE zone_code = $1
+      WHERE zone_id = $1
       AND event_id = $2
       AND expires_at > NOW()
       `,
-      [zone_code, eventId]
+      [zone_id, eventId]
     );
 
     const reserved_quantity = parseInt(reservedResult.rows[0].reserved_quantity);
@@ -81,11 +81,11 @@ export async function addToCart(req, res) {
       SELECT quantity
       FROM cart_items
       WHERE user_id = $1
-      AND zone_code = $2
+      AND zone_id = $2
       AND event_id = $3
       AND expires_at > NOW()
       `,
-      [userId, zone_code, eventId]
+      [userId, zone_id, eventId]
     );
 
     const currentQty = existingResult.rows[0]?.quantity || 0;
@@ -105,20 +105,20 @@ export async function addToCart(req, res) {
         SET quantity = quantity + $1,
             expires_at = NOW() + INTERVAL '20 minutes'
         WHERE user_id = $2
-        AND zone_code = $3
+        AND zone_id = $3
         AND event_id = $4
         AND expires_at > NOW()
         `,
-        [quantity, userId, zone_code, eventId]
+        [quantity, userId, zone_id, eventId]
       );
     } else {
       await client.query(
         `
         INSERT INTO cart_items
-        (user_id, event_id, zone_code, quantity, expires_at)
+        (user_id, event_id, zone_id, quantity, expires_at)
         VALUES ($1, $2, $3, $4, NOW() + INTERVAL '20 minutes')
         `,
-        [userId, eventId, zone_code, quantity]
+        [userId, eventId, zone_id, quantity]
       );
     }
 
@@ -169,7 +169,7 @@ export async function getCart(req, res) {
 
       FROM cart_items c
       JOIN events e ON c.event_id = e.event_id
-      JOIN zones z ON c.zone_code = z.zone_code
+      JOIN zones z ON c.zone_id = z.zone_id
       JOIN users u ON c.user_id = u.user_id
       WHERE c.user_id = $1
       AND c.expires_at > NOW()
@@ -178,6 +178,13 @@ export async function getCart(req, res) {
     `;
 
     const { rows } = await pool.query(query, [userId]);
+
+    if (rows.length === 0) {
+      return res.status(200).json({
+        success: false,
+        message: "Không có giỏ hàng"
+      });
+    }
 
     res.status(200).json({
       success: true,

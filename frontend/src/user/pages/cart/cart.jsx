@@ -28,6 +28,7 @@ export default function CartPage() {
           navigate("/");
           return;
         }
+        console.log(json)
         setItem(json.data);
         setExpiresAt(json.data.expires_at);
       } catch (err) {

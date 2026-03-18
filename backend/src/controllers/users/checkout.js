@@ -26,24 +26,24 @@ export async function checkout(req, res) {
       const { rows } = await client.query(
         `SELECT zone_quantity, sold_quantity
          FROM zones
-         WHERE zone_code = $1
+         WHERE zone_id = $1
          FOR UPDATE`,
-        [item.zone_code]
+        [item.zone_id]
       );
 
       const zone = rows[0];
       if (zone.sold_quantity + item.quantity > zone.zone_quantity) {
         await client.query("ROLLBACK");
         return res.status(400).json({
-          message: `Zone ${item.zone_code} đã hết vé`
+          message: `Zone ${item.zone_id} đã hết vé`
         });
       }
 
       await client.query(
         `UPDATE zones
          SET sold_quantity = sold_quantity + $1
-         WHERE zone_code = $2`,
-        [item.quantity, item.zone_code]
+         WHERE zone_id = $2`,
+        [item.quantity, item.zone_id]
       );
     }
 
@@ -66,9 +66,9 @@ export async function checkout(req, res) {
     for (const item of carts) {
       await client.query(
         `INSERT INTO payment_detail
-         (payment_id, event_id, ticket_quantity, zone_code)
+         (payment_id, event_id, ticket_quantity, zone_id)
          VALUES ($1, $2, $3, $4)`,
-        [payment_id, item.event_id, item.quantity, item.zone_code]
+        [payment_id, item.event_id, item.quantity, item.zone_id]
       );
     }
 

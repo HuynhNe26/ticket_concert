@@ -66,6 +66,19 @@ export default function EventDetail() {
         ? event.event_description 
         : descriptionLines.slice(0, 10).join('\n');
 
+
+    let buttonText = "Chọn lịch diễn";
+
+    if (!isTicketAvailable) {
+        buttonText = "Hết vé";
+    } else if (event.event_status === false) {
+        buttonText = "Sắp mở bán";
+    }
+
+    const now = new Date();
+    const eventEnd = new Date(event.event_end);
+    const isEnded = eventEnd < now;
+
     return (
         <div className="event-detail-page">
             <div className="event-container">
@@ -92,12 +105,24 @@ export default function EventDetail() {
                                     }
                                 </span>
                             </div>
-                            <button 
-                                className={`event-btn-buy ${!isTicketAvailable ? 'sold-out' : ''}`}
-                                onClick={() => isTicketAvailable && navigate(`booking`)}
-                                disabled={!isTicketAvailable}
+                            <button
+                            className={`event-btn-buy
+                                ${isEnded ? "ended" : ""}
+                                ${!isEnded && !isTicketAvailable ? "sold-out" : ""}
+                                ${!isEnded && isTicketAvailable && !event.event_status ? "coming-soon" : ""}
+                            `}
+                            onClick={() =>
+                                !isEnded && isTicketAvailable && event.event_status && navigate("booking")
+                            }
+                            disabled={isEnded || !isTicketAvailable || !event.event_status}
                             >
-                                {isTicketAvailable ? 'Chọn lịch diễn' : 'Hết vé'}
+                            {isEnded
+                                ? "Đã kết thúc"
+                                : !isTicketAvailable
+                                ? "Hết vé"
+                                : !event.event_status
+                                ? "Sắp mở bán"
+                                : "Chọn lịch diễn"}
                             </button>
                         </div>
                     </div>

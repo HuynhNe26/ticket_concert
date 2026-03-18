@@ -219,8 +219,8 @@ export default function LayoutZone({ layout, zones, eventId }) {
     }
   };
 
-  const handleAddToCart = async (eventId, zone_code, quantity) => {
-    if (!eventId || !zone_code || !quantity) {
+  const handleAddToCart = async (eventId, zone_id, quantity) => {
+    if (!eventId || !zone_id || !quantity) {
       alert('Thiếu dữ liệu');
       return
     }
@@ -241,7 +241,7 @@ export default function LayoutZone({ layout, zones, eventId }) {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          zone_code: zone_code,
+          zone_id: zone_id,
           eventId: eventId,
           quantity: quantity
         })
@@ -326,7 +326,7 @@ export default function LayoutZone({ layout, zones, eventId }) {
               <button
                 className="btn-confirm"
                 onClick={() =>
-                  handleAddToCart(eventId, selectedZone.zone_code, quantity)
+                  handleAddToCart(eventId, selectedZone.zone_id, quantity)
                 }
               >
                Thanh toán
