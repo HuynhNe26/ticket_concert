@@ -61,11 +61,10 @@ export default function Header() {
         <>
             <header className="header">
                 <div className="header-container">
-                    <div className="header-left">
-                        <Link to="/" className="logo-link">
-                            <img src="/logo.png" alt="Ticket Concert Logo" className="logo" />
-                        </Link>
-                        
+                    <Link to="/" className="logo-link">
+                        <img src="/logo.png" alt="Ticket Concert Logo" className="logo" />
+                    </Link>
+                    <div className="header-left">            
                         <div className="search-box">
                             <input 
                                 type="text" 

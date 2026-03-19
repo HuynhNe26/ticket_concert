@@ -122,7 +122,7 @@ export default function HomeUser() {
             <div className="home-container">
                 {/* --- PHẦN 1: SỰ KIỆN XU HƯỚNG --- */}
                 <section className="section-trending">
-                    <h2 className="section-title">🔥 Sự kiện xu hướng</h2>
+                    <h2 className="section-title" style={{color: 'white', fontSize: '14px'}}>🔥 Sự kiện xu hướng</h2>
                     <div className="trending-list">
                         {trending.map((event, index) => (
                             <div key={event.event_id} className="trending-item" onClick={() => navigate(`/event/${event.event_id}`)}>
@@ -138,7 +138,7 @@ export default function HomeUser() {
                 {/* --- PHẦN 2: THEO THÁNG --- */}
                 <section className="section-home">
                     <div className="section-header">
-                        <h2 className="section-title" style={{color: 'white'}}>Sự kiện tháng {month}</h2>
+                        <h2 className="section-title" style={{color: 'white', fontSize: '14px'}}>Sự kiện tháng {month}</h2>
                         <Link to="/search" className="view-more">Xem thêm ›</Link>
                     </div>
 
@@ -163,7 +163,7 @@ export default function HomeUser() {
                 {/* --- PHẦN 3: DÀNH CHO BẠN --- */}
                 <section className="section-home">
                     <div className="section-header">
-                        <h2 className="section-title" >Dành cho bạn</h2>
+                        <h2 className="section-title" style={{color: 'white', fontSize: '14px'}}>Dành cho bạn</h2>
                         <Link to="/search" className="view-more">Xem thêm ›</Link>
                     </div>
 

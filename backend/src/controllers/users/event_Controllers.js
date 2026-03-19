@@ -169,7 +169,8 @@ export const EventControllers = {
           banner_url, 
           event_start, 
           event_end, 
-          event_status
+          event_status,
+          (SELECT MIN(zone_price) FROM zones WHERE event_id = events.event_id) as min_price
       FROM events
       WHERE 
           event_start <= $2

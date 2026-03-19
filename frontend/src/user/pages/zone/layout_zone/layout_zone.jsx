@@ -279,7 +279,7 @@ export default function LayoutZone({ layout, zones, eventId }) {
       {showOverlay && selectedZone && (
         <div className="zone-overlay">
           <div className="zone-modal">
-            <h3>{selectedZone.zone_name}</h3>
+            <h3 style={{textAlign: 'center'}}>{selectedZone.zone_name}</h3>
 
             <p className="zone-desc">
               {selectedZone.zone_description || 'Chưa cập nhật!'}

@@ -168,6 +168,8 @@
   opacity: 0.8;
   font-size: 14px;
   margin: 8px 0 12px;
+  white-space: pre-line;
+  line-height: 1.5;
 }
 
 .zone-info,
@@ -182,6 +184,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-bottom: 10px;
 }
 
 .zone-quantity button {
