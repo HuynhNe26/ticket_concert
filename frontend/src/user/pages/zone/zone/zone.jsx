@@ -6,7 +6,7 @@ import Ticket from "../zone_ticket/zone_ticket";
 import "./zone.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
-const socket = io(`${API_BASE_URL}`)
+const socket = io(`${API_BASE_URL}`);
 
 export default function Zone() {
   const { id } = useParams();
@@ -14,7 +14,7 @@ export default function Zone() {
   const [layout, setLayout] = useState(null);
 
   useEffect(() => {
-    socket.emit("join_event", { eventId: id });
+    socket.emit("join_event_room", { eventId: id });
 
     const fetchData = async () => {
       try {
@@ -24,7 +24,7 @@ export default function Zone() {
         ]);
         const dataZones = await resZones.json();
         const dataLayout = await resLayout.json();
-        console.log(dataLayout)
+
         if (dataZones.success) setZones(dataZones.data);
         if (dataLayout.success) setLayout(dataLayout.data.layout_json);
       } catch (err) {

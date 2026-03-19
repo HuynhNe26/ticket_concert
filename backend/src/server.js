@@ -51,12 +51,11 @@ app.use("/api/events", eventsRouter);
 app.use("/api/layout", userLayoutRouter);
 app.use("/api/zone", zoneRouter);
 app.use("/api/cart", cartRoutes);
-app.use("/api/chat", chatRoutes);
 app.use("/api/categories", categoryRouter);
 app.use("/api/checkout", checkoutRouter);
 app.use("/api/checkout/momo", momo);
 app.use("/api/checkout/momo", momoNotify);
-
+app.use("/api/chat", chatRoutes);
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);

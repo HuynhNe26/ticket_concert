@@ -2,18 +2,16 @@ import { pool } from "../config/database.js";
 
 export const initZoneSocket = (io) => {
   io.on("connection", (socket) => {
-    // Người dùng tham gia vào phòng của Zone cụ thể
-    socket.on("event", ({ eventId }) => {
+    socket.on("join_event_room", ({ eventId }) => {
       const roomName = `room_${eventId}`;
       socket.join(roomName);
     });
 
-    // Rời phòng khi chuyển trang
-    socket.on("leave_zone", ({ eventId }) => {
+    socket.on("leave_event_room", ({ eventId }) => {
       socket.leave(`room_${eventId}`);
     });
 
-    socket.on("zone", async ({ eventId }) => {
+    socket.on("request_refresh_event_zones", async ({ eventId }) => {
       try {
         const query = `
           SELECT
@@ -29,13 +27,12 @@ export const initZoneSocket = (io) => {
           JOIN zones z
             ON z.zone_code = layout_zone ->> 'id'
           WHERE l.event_id = $1
-          LIMIT 1
-        `;
+        `; 
 
         const { rows } = await pool.query(query, [eventId]);
 
         if (rows.length) {
-          socket.emit("update_ticket_count", rows);
+          io.to(`room_${eventId}`).emit("update_ticket_count", rows);
         }
       } catch (err) {
         console.error("Socket Database Error:", err);
