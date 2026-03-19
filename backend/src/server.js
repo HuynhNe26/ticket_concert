@@ -16,6 +16,7 @@ import eventsRouter from "./router/users/events.js";
 import userLayoutRouter from "./router/users/layout.js";
 import zoneRouter from "./router/users/zone.js";
 import cartRoutes from "./router/users/cart.js";
+import chatRoutes from "./router/users/chat.js";
 
 // admins
 import adminRouter from "./router/admins/admins.js";
@@ -44,6 +45,7 @@ app.use("/api/events", eventsRouter);
 app.use("/api/layout", userLayoutRouter);
 app.use("/api/zone", zoneRouter);
 app.use("/api/cart", cartRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
