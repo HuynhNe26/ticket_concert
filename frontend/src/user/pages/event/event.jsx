@@ -21,11 +21,9 @@ export default function EventDetail() {
     useEffect(() => {
         const fetchEventData = async () => {
             try {
-                // Lấy thông tin sự kiện
                 const resEvent = await fetch(`${API_BASE}/api/events/${id}`);
                 const dataEvent = await resEvent.json();
-                
-                // Lấy thông tin zones để kiểm tra số vé
+            
                 const resZones = await fetch(`${API_BASE}/api/zone/${id}`);
                 const dataZones = await resZones.json();
                 
@@ -64,7 +62,6 @@ export default function EventDetail() {
     const formatCurrency = (amount) => 
         new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
 
-    // Kiểm tra mô tả dài hơn 10 dòng
     const descriptionLines = event.event_description ? event.event_description.split('\n') : [];
     const isLongDescription = descriptionLines.length > 10;
     const displayDescription = isDescExpanded || !isLongDescription 
@@ -93,10 +90,10 @@ export default function EventDetail() {
                         <h1 className="event-ticket-title">{event.event_name}</h1>
                         <div className="event-ticket-meta">
                             <div className="event-meta-item">
-                                📅 <span>{new Date(event.event_start).toLocaleString('vi-VN')}</span>
+                                <span>{new Date(event.event_start).toLocaleString('vi-VN')}</span>
                             </div>
                             <div className="event-meta-item">
-                                📍 <span>{(event.event_location).split(",")[0]}</span> <br />
+                                <span>{(event.event_location).split(",")[0]}</span> <br />
                                     <span
                                     style={{
                                         display: 'block',

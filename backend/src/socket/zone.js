@@ -43,7 +43,6 @@ export const initZoneSocket = (io) => {
     });
 
     socket.on("disconnect", () => {
-      // console.log("User disconnected");
     });
   });
 };

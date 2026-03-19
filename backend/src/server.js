@@ -74,7 +74,6 @@ export const io = new Server(httpServer, {
 });
 
 initZoneSocket(io);
-ChatSocket(io);
 await connectDB();
 
 const PORT = process.env.PORT ;

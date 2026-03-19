@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./chat_ai.css";
-
+const API_BASE = process.env.REACT_APP_API_URL;
 const QUICK_REPLIES = [
   "Còn vé VIP không?",
   "Giá vé bao nhiêu?",
@@ -48,7 +48,7 @@ export default function ChatAI() {
     setIsTyping(true);
 
     try {
-      const res = await fetch("http://localhost:4000/api/chat", {
+      const res = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: content }),

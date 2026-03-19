@@ -43,7 +43,7 @@ export async function ragChat(userMessage) {
     : "Không tìm thấy dữ liệu phù hợp trong kho kiến thức.";
 
   const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.0-pro"
+    model: "gemini-2.5-flash-lite"
   });
 
   const finalPrompt = `
