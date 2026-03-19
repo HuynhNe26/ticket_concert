@@ -13,12 +13,12 @@ INSERT INTO members (membership, member_point) VALUES
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
     fullName VARCHAR(255) NOT NULL,
-    birthOfDay DATE NOT NULL,
+    birthOfDay DATE NULL,
     email VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    phoneNumber VARCHAR(15) NOT NULL,
-    gender VARCHAR(10) NOT NULL,
-    point INT DEFAULT 10 NOT NULL,
+    phoneNumber VARCHAR(15) NULL,
+    gender VARCHAR(10) NULL,
+    point INT DEFAULT 10,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(50),
     favorite JSONB,
@@ -707,7 +707,8 @@ VALUES
 
 CREATE TABLE chat_ai (
     chat_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id INT,
+    session_id VARCHAR(15),
     message TEXT,
     sender VARCHAR(100),
     intent VARCHAR(255) NOT NULL,

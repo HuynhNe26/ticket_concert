@@ -194,4 +194,48 @@ export const AdminControllers = {
       return res.status(500).json({ message: "Lỗi server!" });
     }
   },
+
+  async resetPass(req, res) {
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        return res.status(403).json({
+          success: false,
+          message: "Lỗi không có id quản trị viên!"
+        });
+      }
+
+      const { rows } = await pool.query(
+        `SELECT fullName FROM admins WHERE admin_id = $1`,
+        [id]
+      );
+
+      let fullName = rows[0]?.fullname;
+
+      const query = `
+        UPDATE admins 
+        SET password = '123456'
+        WHERE admin_id = $1
+      `;
+
+      const result = await pool.query(query, [id]);
+
+      if (result.rowCount > 0) {
+        return res.status(200).json({
+          success: true,
+          message: `Thay đổi mật khẩu của quản trị viên ${fullName} thành công!`
+        });
+      }
+
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy quản trị viên"
+      });
+
+    } catch (err) {
+      console.error("Lỗi reset dữ liệu:", err);
+      return res.status(500).json({ message: "Lỗi server!" });
+    }
+  }
 };

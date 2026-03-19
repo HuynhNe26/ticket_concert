@@ -3,7 +3,7 @@ import './header.css';
 import { jwtDecode } from "jwt-decode";
 import { Link, useNavigate } from "react-router-dom"; 
 import LoginPage from "../../pages/login/Loginpage"; // Import LoginPage
-import SessionCountdown from "../Countdown/Countdown";
+import { useTokenExpiry } from "../hook/useTokenExpiry";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -83,6 +83,9 @@ export default function Header() {
 
                     <div className="header-right">
                         <Link to="/my-tickets" className="header-link"><span>Vé của tôi</span></Link>
+                        <Link to="/my-cart"> 
+                            <img src="/logo1.png" alt="Cart Logo" className="logoCart"/>
+                        </Link>
                         <div className="auth-section">
                             {user ? (
                                 <div>Xin chào, {user.fullName} | <button onClick={handleLogout} style={{background:'none', border:'none', color:'white', cursor:'pointer'}}>Đăng xuất</button></div>
@@ -90,16 +93,9 @@ export default function Header() {
                                 <div>
                                     <button 
                                         onClick={() => setShowLoginModal(true)}
-                                        style={{background:'none', border:'none', color:'white', cursor:'pointer', textDecoration:'underline'}}
+                                        style={{background:'none', border:'none', color:'white', cursor:'pointer'}}
                                     >
-                                        Đăng nhập
-                                    </button>
-                                    {' | '}
-                                    <button 
-                                        onClick={() => setShowLoginModal(true)}
-                                        style={{background:'none', border:'none', color:'white', cursor:'pointer', textDecoration:'underline'}}
-                                    >
-                                        Đăng ký
+                                        Đăng nhập | Đăng ký 
                                     </button>
                                 </div>
                             )}
@@ -124,12 +120,11 @@ export default function Header() {
                         zIndex: 9999,
                         backdropFilter: 'blur(4px)'
                     }}
-                    onClick={() => setShowLoginModal(false)}
                 >
                     <div 
                         style={{
                             position: 'relative',
-                            maxWidth: '500px',
+                            maxWidth: '350px',
                             width: '90%',
                             maxHeight: '90vh',
                             overflow: 'auto'
@@ -159,7 +154,6 @@ export default function Header() {
                         >
                             ✕
                         </button>
-                        
                         {/* Hiển thị LoginPage */}
                         <LoginPage />
                     </div>

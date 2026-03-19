@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './layout_zone.css';
-import LoginPage from '../../login/Loginpage';
+import LoginPage from "../../login/Loginpage"
 import LoadingUser from '../../../components/loading/loading';
 
 const API_BASE = process.env.REACT_APP_API_URL;
@@ -12,12 +12,12 @@ export default function LayoutZone({ layout, zones, eventId }) {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const token = localStorage.getItem("token");
   const [selectedZone, setSelectedZone] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [showOverlay, setShowOverlay] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
+
 
   useEffect(() => {
     if (!layout || !canvasRef.current) return;
@@ -219,14 +219,16 @@ export default function LayoutZone({ layout, zones, eventId }) {
     }
   };
 
-  const handleAddToCart = async (eventId, zone_code, quantity) => {
-    if (!eventId || !zone_code || !quantity) {
-      alert('Thiếu dữ liệu')
+  const handleAddToCart = async (eventId, zone_id, quantity) => {
+    if (!eventId || !zone_id || !quantity) {
+      alert('Thiếu dữ liệu');
+      return
     }
 
     if (!token) {
-      setShowLogin(true);
-      setShowOverlay(false)
+      setShowLoginModal(true);
+      setShowOverlay(false);
+      return
     }
 
     setLoading(true);
@@ -239,34 +241,27 @@ export default function LayoutZone({ layout, zones, eventId }) {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          zone_code: zone_code,
+          zone_id: zone_id,
           eventId: eventId,
           quantity: quantity
         })
       })
 
-      const data = await response.json();
-      if (!response.ok) {
-        const errorText = await response.text(); 
-        let errorData;
-        try {
-            errorData = JSON.parse(errorText);
-        } catch (e) {
-            errorData = { message: errorText || 'Lỗi server' };
-        }
-        
-        alert(errorData.message || 'Thêm vào giỏ thất bại');
-        return;
-      }
+      const data = await response.json(); // chỉ đọc 1 lần duy nhất
 
-      navigate(`/event/${eventId}/cart?zone=${zone_code}&quantity=${quantity}`);
-      
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false)
+    if (!response.ok) {
+      alert(data.message || 'Thêm vào giỏ thất bại');
+      return;
     }
+
+    navigate(`/my-cart`);
+
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
   }
+};
 
   if (loading) {
     return <LoadingUser />
@@ -331,7 +326,7 @@ export default function LayoutZone({ layout, zones, eventId }) {
               <button
                 className="btn-confirm"
                 onClick={() =>
-                  handleAddToCart(eventId, selectedZone.zone_code, quantity)
+                  handleAddToCart(eventId, selectedZone.zone_id, quantity)
                 }
               >
                Thanh toán
@@ -341,9 +336,61 @@ export default function LayoutZone({ layout, zones, eventId }) {
         </div>
       )}
 
-      {showLogin && (
-        <LoginPage onClose={() => setShowLogin(false)} />
-      )}
+      {/* Modal hiển thị LoginPage */}
+            {showLoginModal && (
+                <div 
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'rgba(0, 0, 0, 0.6)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 9999,
+                        backdropFilter: 'blur(4px)'
+                    }}
+                > 
+                    <div 
+                        style={{
+                            position: 'relative',
+                            maxWidth: '350px',
+                            width: '90%',
+                            maxHeight: '90vh',
+                            overflow: 'auto'
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Nút đóng */}
+                        <button
+                            onClick={() => setShowLoginModal(false)}
+                            style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                background: 'rgba(255, 255, 255, 0.9)',
+                                border: 'none',
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '50%',
+                                cursor: 'pointer',
+                                fontSize: '20px',
+                                color: '#666',
+                                zIndex: 10,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            ✕
+                        </button>
+                        {/* Hiển thị LoginPage */}
+                        <LoginPage />
+                    </div>
+                </div>
+            )}
 
       {hoveredZone && hoveredData && (
         <div 
@@ -360,5 +407,6 @@ export default function LayoutZone({ layout, zones, eventId }) {
         </div>
       )}
     </div>
+    
   );
 }

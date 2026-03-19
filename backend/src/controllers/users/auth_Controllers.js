@@ -258,13 +258,10 @@ export const authControllers = {
     }
   },
 
-  /**
-   * GET /api/users/profile
-   * Lấy thông tin profile của user đang đăng nhập
-   */
+
   async getProfile(req, res) {
     try {
-      const userId = req.user.user_id; // Từ middleware verifyToken
+      const userId = req.user;
 
       const result = await pool.query(
         "SELECT * FROM users WHERE user_id = $1",

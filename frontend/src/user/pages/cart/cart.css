@@ -1,0 +1,413 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg: #0d0f18;
+  --surface: #151824;
+  --card: #111320;
+  --card-hover: #161929;
+  --border: rgba(255,255,255,0.07);
+  --accent: #00FFD4;
+  --accent-hover: #00e0b8;
+  --text-primary: #f0f4f8;
+  --text-secondary: rgba(255,255,255,0.5);
+  --text-muted: rgba(255,255,255,0.25);
+  --summary-bg: #111320;
+  --summary-border: rgba(255,255,255,0.08);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background-color: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ─── TIMER BANNER ─── */
+.timer-banner {
+  background: rgba(255,179,71,0.06);
+  border-bottom: 1px solid rgba(255,179,71,0.15);
+  padding: 10px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255,200,80,0.8);
+}
+
+.timer-icon {
+  font-size: 15px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.timer-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: #ffb347;
+  letter-spacing: 2px;
+  min-width: 55px;
+  text-align: center;
+}
+
+.timer-value.warning {
+  color: #f87171;
+  animation: blink 0.7s step-end infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0.3; }
+}
+
+/* ─── PAGE LAYOUT ─── */
+.page-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+}
+
+.page-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 34px;
+  letter-spacing: 2px;
+  color: var(--text-primary);
+  margin-bottom: 28px;
+}
+
+.cart-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ─── TICKET CARD ─── */
+.tickets-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ticket-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.ticket-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #00b09b, #00FFD4);
+  border-radius: 3px 0 0 3px;
+}
+
+.ticket-card:hover {
+  border-color: rgba(0,255,212,0.2);
+}
+
+.ticket-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ticket-event-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 1.5px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  line-height: 1.1;
+}
+
+.ticket-zone {
+  display: inline-block;
+  background: rgba(0,255,212,0.08);
+  border: 1px solid rgba(0,255,212,0.2);
+  color: #00FFD4;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+
+/* ─── TICKET RIGHT ─── */
+.ticket-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.ticket-price { text-align: right; }
+
+.price-unit {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 3px;
+}
+
+.price-subtotal {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.price-subtotal span {
+  font-size: 16px;
+  font-weight: 700;
+  color: #00FFD4;
+}
+
+/* ─── TOTAL ROW ─── */
+.total-tickets-row {
+  text-align: right;
+  padding: 12px 4px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+.total-tickets-row strong {
+  color: var(--text-primary);
+}
+
+/* ─── ORDER SUMMARY ─── */
+.order-summary {
+  background: var(--summary-bg);
+  border: 1px solid var(--summary-border);
+  border-radius: 18px;
+  padding: 24px 22px;
+  position: sticky;
+  top: 24px;
+}
+
+.summary-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  letter-spacing: 2px;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.summary-line span:last-child {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.summary-divider {
+  border: none;
+  border-top: 1px solid var(--summary-border);
+  margin: 14px 0;
+}
+
+.summary-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0 20px;
+}
+
+.summary-total-row span:first-child {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--text-primary);
+}
+
+.summary-total-row span:last-child {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  letter-spacing: 1px;
+  color: #00FFD4;
+}
+
+/* ─── HINT & BUTTON ─── */
+.hint-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.hint-text strong {
+  color: #ffb347;
+}
+
+.btn-pay {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #00b09b, #00FFD4);
+  border: none;
+  border-radius: 12px;
+  color: #0a0f1e;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(0,255,212,0.2);
+}
+
+.btn-pay:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(0,255,212,0.35);
+}
+
+.btn-pay:active:not(:disabled) { transform: translateY(0); }
+
+.btn-pay:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,255,212,0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,255,212,0.35); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  .cart-layout { grid-template-columns: 1fr; }
+  .order-summary { position: static; }
+}
+
+@media (max-width: 600px) {
+  .page-wrapper { padding: 20px 16px 60px; }
+  .ticket-card { flex-wrap: wrap; }
+  .ticket-right { width: 100%; flex-direction: row; justify-content: space-between; }
+}
+
+.page-title { color: #f0f4f8; }
+.ticket-event-name { color: #f0f4f8; }
+.summary-title { color: #f0f4f8; }
+
+.summary-line { color: rgba(255,255,255,0.5); }
+.summary-line span:last-child { color: #f0f4f8; }
+
+.summary-total-row span:first-child { color: #f0f4f8; }
+.summary-total-row span:last-child { color: #00FFD4; }
+
+.price-unit { color: rgba(255,255,255,0.25); }
+.price-subtotal { color: rgba(255,255,255,0.5); }
+.price-subtotal span { color: #00FFD4; }
+
+.total-tickets-row { color: rgba(255,255,255,0.5); }
+.total-tickets-row strong { color: #f0f4f8; }
+
+.hint-text { color: rgba(255,255,255,0.3); }
+.hint-text strong { color: #ffb347; }
+
+/* Customer card */
+.customer-card {
+  background: #111320;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  padding: 20px;
+  margin-top: 16px;
+}
+
+.customer-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 14px;
+}
+
+.customer-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.customer-row:last-child {
+  border-bottom: none;
+}
+
+.customer-row span {
+  color: rgba(255,255,255,0.45);
+}
+
+.customer-row strong {
+  color: #f0f4f8;
+}
+
+/* Payment methods */
+.pay-method-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  margin: 16px 0 10px;
+}
+
+.pay-methods {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.pay-method-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pay-method-btn:hover,
+.pay-method-btn.active {
+  border-color: rgba(0,255,212,0.3);
+  color: #00FFD4;
+  background: rgba(0,255,212,0.05);
+}
+
+.login-popup{
+  position: fixed;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background: rgba(0,0,0,0.6);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}

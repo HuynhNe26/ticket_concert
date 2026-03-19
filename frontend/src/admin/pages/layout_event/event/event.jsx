@@ -102,10 +102,8 @@ export default function ManageEvent() {
     
     const getStatusBadge = (status) => {
         const statusConfig = {
-            active: { label: 'Đang bán', class: 'bg-green-100 text-green-700' },
-            completed: { label: 'Đã kết thúc', class: 'bg-gray-100 text-gray-700' },
-            draft: { label: 'Nháp', class: 'bg-yellow-100 text-yellow-700' },
-            cancelled: { label: 'Đã hủy', class: 'bg-red-100 text-red-700' }
+            true: { label: 'Đang bán', class: 'bg-green-100 text-green-700' },
+            false: { label: 'Đã kết thúc', class: 'bg-gray-100 text-gray-700' }, 
         };
         const config = statusConfig[status] || statusConfig.draft;
         return (
@@ -428,7 +426,7 @@ export default function ManageEvent() {
                                         <div style={{ display: 'flex', gap: '12px', fontSize: '14px', color: '#64748b', flexWrap: 'wrap' }}>
                                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 <Calendar size={16} />
-                                                {event.date ? new Date(event.date).toLocaleDateString('vi-VN') : 'Chưa có'}
+                                                {(event.event_start).toString().slice(0,10).split("-").reverse().join("-")}
                                             </span>
                                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 <MapPin size={16} />
@@ -436,7 +434,10 @@ export default function ManageEvent() {
                                             </span>
                                         </div>
                                     </div>
-                                    {getStatusBadge(event.status)}
+                                    {getStatusBadge(event.event_status)}
+                                    <button>
+                                        Change
+                                    </button>
                                 </div>
 
                                 <div>

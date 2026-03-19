@@ -2,6 +2,7 @@ body, html {
     margin: 0;
     padding: 0;
     height: 100%;
+    font-family: 'Inter', sans-serif;
 }
 
 #root {
@@ -16,13 +17,18 @@ body, html {
     min-height: 100vh;
 }
 
+header,
+main,
+footer {
+    display: grid;
+    grid-template-columns: 1fr minmax(auto, 1400px) 1fr;
+}
+
 header {
     grid-row: 1;
     background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     z-index: 100;
-    display: grid;
-    grid-template-columns: 1fr minmax(auto, 1200px) 1fr;
 }
 
 header > * {
@@ -32,9 +38,7 @@ header > * {
 
 main {
     grid-row: 2;
-    background-color: #000000;
-    display: grid;
-    grid-template-columns: 1fr minmax(auto, 1200px) 1fr;
+    background-color: rgba(39, 39, 42, 1);
 }
 
 main > * {
@@ -45,29 +49,27 @@ main > * {
 footer {
     grid-row: 3;
     background-color: #000000;
-    color: #000000;
-    display: grid;
-    grid-template-columns: 1fr minmax(auto, 1200px) 1fr;
+    color: #ffffff;
 }
 
 footer > * {
     grid-column: 2;
-    padding: 1rem 2rem;
+    padding: 1.5rem 2rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     header,
     main,
     footer {
-        grid-template-columns: 1rem 1fr 1rem;
+        grid-template-columns: 20px 1fr 20px;
     }
-    
+
     main > * {
-        padding: 1rem;
+        padding: 1.5rem 0;
     }
-    
+
     header > *,
     footer > * {
-        padding: 1rem;
+        padding: 1rem 0;
     }
 }

@@ -22,6 +22,7 @@ export default function LoginForm({ onSuccess, onGoogleLogin }) {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
+      console.log(data)
 
       if (!res.ok) {
         setMsg(data?.message || "Đăng nhập thất bại");

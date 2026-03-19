@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
 import "./order_detail.css";
+import LoadingAdmin from "../../../components/loading/loading";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -15,20 +16,29 @@ export default function OrderDetail() {
   const formatCurrency = (amount) => {
     if (amount == null) return "";
     return Number(amount).toLocaleString("vi-VN");
-  };
+  }; 
+
+  useEffect(() => {
+    const getOrderById = async () => {
+      setLoading(true);
+      // if (!id) {
+      //   if (confirm("Lỗi lấy thông tin! Thử lại?")) {
+      //     window.location.reload();
+      //   }
+      // }
+
+      const response = await fetch(`${API_BASE}/api/admins/orders/order-detail/${id}`)
+    }
+  }, [])
 
   if (loading) {
-    return (
-      <div className="loading-wrapper">
-        <p>Đang tải...</p>
-      </div>
-    );
+    return <LoadingAdmin />
   }
 
   if (!order) {
     return (
       <div className="loading-wrapper">
-        <p>Không tìm thấy đơn hàng.</p>
+        <p>Không có đơn hàng trong sự kiện này.</p>
         <button className="back-btn" onClick={() => navigate(-1)}>Quay lại</button>
       </div>
     );

@@ -1,7 +1,7 @@
 import { pool } from "../../config/database.js";
 import uploadCloud from "../../middlewares/upload.js";
+
 export const EventControllers = {
-  // ============ LẤY DANH SÁCH SỰ KIỆN ============
   async getAllEvent(req, res) {
     try {
       const query = `
@@ -29,17 +29,13 @@ export const EventControllers = {
     }
   },
 
-  // ============ TẠO SỰ KIỆN MỚI (CHỈ EVENT, KHÔNG CÓ LAYOUT/ZONES) ============
     async createEvent(req, res) {
     try {
-      // 🔥 multer + cloudinary đã xử lý xong ở đây
       const bannerUrl =
         req.files?.banner?.[0]?.path ||
         'https://via.placeholder.com/800x400';
-      // ❗ form-data => req.body.event là STRING
       const event = JSON.parse(req.body.event);
 
-      // ===== VALIDATION =====
       const requiredFields = ['name', 'category', 'date', 'address', 'age', 'description', 'actor', 'artist'];
       for (const field of requiredFields) {
         if (!event[field]) {
@@ -50,7 +46,6 @@ export const EventControllers = {
         }
       }
 
-      // ===== TIME =====
       const eventStart = event.time
         ? `${event.date} ${event.time}:00`
         : `${event.date} 00:00:00`;
@@ -61,7 +56,6 @@ export const EventControllers = {
           ? `${event.endDate} 23:59:59`
           : null;
 
-      // ===== INSERT EVENT =====
       const eventInsertQuery = `
         INSERT INTO events (
           event_name,
@@ -113,7 +107,6 @@ export const EventControllers = {
   }
   ,
 
-  // ============ LẤY CHI TIẾT 1 SỰ KIỆN ============
   async getEventById(req, res) {
     try {
       const { id } = req.params;
@@ -330,6 +323,54 @@ export const EventControllers = {
         success: false,
         message: 'Lỗi khi cập nhật trạng thái',
         error: err.message
+      });
+    }
+  },
+  async getEvent(req, res) {
+    try {
+      const { month, year } = req.query;
+
+      let query = `
+        SELECT 
+          e.event_name, 
+          e.event_start, 
+          e.event_end, 
+          e.event_id, 
+          e.event_status,
+
+          c.category_id,
+          c.category_name
+        FROM events e
+        JOIN categories c ON c.category_id = e.category_id
+        WHERE 1=1
+      `;
+
+      let params = [];
+      let index = 1;
+
+      if (month) {
+        query += ` AND EXTRACT(MONTH FROM event_start) = $${index}`;
+        params.push(month);
+        index++;
+      }
+
+      if (year) {
+        query += ` AND EXTRACT(YEAR FROM event_start) = $${index}`;
+        params.push(year);
+        index++;
+      }
+
+      const { rows } = await pool.query(query, params);
+
+      return res.status(200).json({
+        success: true,
+        data: rows
+      });
+
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        message: "Lỗi server"
       });
     }
   }

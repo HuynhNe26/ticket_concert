@@ -100,7 +100,7 @@ export default function LoginPage({ isModal = false, onClose = null }) {
         className="auth-card" 
         style={isModal ? {
           position: 'relative',
-          maxHeight: '85vh',
+          maxHeight: '100vh',
           overflowY: 'auto',
           overflowX: 'hidden'
         } : {}}
@@ -141,26 +141,24 @@ export default function LoginPage({ isModal = false, onClose = null }) {
         )}
 
         <div className="brand">
-          <img src="/logo.svg" alt="Logo" />
+          <img src="/Logo.png" alt="Logo" />
         </div>
 
-        {/* Tabs */}
-        <div className="tabs">
+        {/* Tabs - Toggle Switch */}
+        <div className="toggle-switch">
+          <div
+            className="toggle-thumb"
+            style={{ transform: tab === "login" ? "translateX(0%)" : "translateX(100%)" }}
+          />
           <button
-            className={`tab ${tab === "login" ? "active" : ""}`}
-            onClick={() => {
-              hideNotification();
-              setTab("login");
-            }}
+            className={`toggle-option ${tab === "login" ? "active" : ""}`}
+            onClick={() => { hideNotification(); setTab("login"); }}
           >
             Đăng nhập
           </button>
           <button
-            className={`tab ${tab === "register" ? "active" : ""}`}
-            onClick={() => {
-              hideNotification();
-              setTab("register");
-            }}
+            className={`toggle-option ${tab === "register" ? "active" : ""}`}
+            onClick={() => { hideNotification(); setTab("register"); }}
           >
             Đăng ký
           </button>

@@ -1,33 +1,70 @@
 import { pool } from "../../config/database.js";
 
-export const Orders_Controllers = {
-    async getEvent (res, req) {
+export const OrderControllers = {
+
+    async getOrderById(req, res) {
         try {
-            const {month, year} = req.query;
+            const { id } = req.params;
 
-            let query = `
-                SELECT event_name, event_start, event_end, event_id
-                FROM event
-                WHERE EXTRACT(MONTH FROM event_date) = $1
-                EXTRACT(YEAR FROM event_date) = $2
-            `
+            const query = `
+                SELECT p.*,
+                       pd.*,
+                       e.*
+                FROM payments p
+                JOIN payment_detail pd ON pd.payment_id = p.payment_id
+                JOIN events e ON pd.event_id = e.event_id
+                WHERE pd.event_id = $1
+            `;
 
-            const { data } = await pool.query(query, {month, year})
-            if (!data) {
-                res.status(403).json({
-                    message: 'Không có sự kiện nào trong khoảng thời gian trên!',
-                    success: false
-                })
-            }
+            const { rows } = await pool.query(query, [id]);
 
             res.status(200).json({
-                message: 'Lấy dữ liệu sự kiện thành công!',
                 success: true,
-                data: data
-            })
-        } catch (err) {
+                message: "Lấy dữ liệu đơn hàng thành công!",
+                data: rows
+            });
 
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({
+                message: "Lỗi server"
+            });
+        }
+    },
+
+    async seeOrderDetail(req, res) {
+        try {
+            const { id } = req.params;
+
+            if (!id) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Không lấy được id đơn hàng!"
+                });
+            }
+
+            const query = `
+                SELECT p.*,
+                       pd.*
+                FROM payments p
+                JOIN payment_detail pd ON pd.payment_id = p.payment_id
+                WHERE p.payment_id = $1
+            `;
+
+            const { rows } = await pool.query(query, [id]);
+
+            res.status(200).json({
+                success: true,
+                message: "Lấy chi tiết đơn hàng thành công!",
+                data: rows
+            });
+
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({
+                message: "Lỗi server"
+            });
         }
     }
-}
 
+};

@@ -1,4 +1,3 @@
-/* login.css - Modern & Premium Design */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 * {
@@ -7,93 +6,32 @@
   box-sizing: border-box;
 }
 
-.login-wrap {
-  display: flex;
-  min-height: 100vh;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Animated background particles */
-.login-wrap::before {
-  content: '';
-  position: absolute;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-  border-radius: 50%;
-  top: -100px;
-  left: -100px;
-  animation: float 20s infinite ease-in-out;
-}
-
-.login-wrap::after {
-  content: '';
-  position: absolute;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
-  border-radius: 50%;
-  bottom: -150px;
-  right: -150px;
-  animation: float 15s infinite ease-in-out reverse;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(30px, 30px) scale(1.1);
-  }
-}
-
-.login-side {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-  position: relative;
-  z-index: 1;
-}
-
-/* Card form với glassmorphism effect */
+/* ===== AUTH CARD ===== */
 .auth-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  padding: 45px 40px;
+  background: #1a1d29;
+  font-family: 'Inter', sans-serif;
+  padding: 40px 36px;
   width: 100%;
   max-width: 440px;
   border-radius: 24px;
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.5);
-  animation: slideUp 0.6s ease-out;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  animation: slideUp 0.4s ease-out;
 }
 
 @keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ===== BRAND ===== */
 .brand {
   text-align: center;
-  margin-bottom: 35px;
+  margin-bottom: 28px;
 }
 
 .brand img {
-  width: 140px;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+  width: 130px;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
   transition: transform 0.3s ease;
 }
 
@@ -101,42 +39,51 @@
   transform: scale(1.05);
 }
 
-/* Tabs với modern design */
-.tabs {
-  display: flex;
-  margin-bottom: 30px;
-  background: #f5f7fa;
-  border-radius: 12px;
-  padding: 4px;
+/* ===== TOGGLE SWITCH ===== */
+.toggle-switch {
   position: relative;
+  display: flex;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50px;
+  padding: 4px;
+  margin: 0 auto 24px;
+  width: fit-content;
 }
 
-.tab {
-  flex: 1;
-  padding: 12px 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 15px;
-  color: #6b7280;
-  border-radius: 10px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.toggle-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  background: linear-gradient(135deg, #3d8dbc 0%, #00b872 100%);
+  border-radius: 50px;
+  transition: transform 0.3s ease;
+  z-index: 0;
+  box-shadow: 0 2px 12px rgba(0, 255, 212, 0.25);
+}
+
+.toggle-option {
   position: relative;
   z-index: 1;
+  padding: 8px 28px;
+  border: none;
+  background: transparent;
+  border-radius: 50px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.3s ease;
+  white-space: nowrap;
 }
 
-.tab.active {
-  color: #667eea;
-  background: white;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+.toggle-option.active {
+  color: #0a0f1e;
 }
 
-.tab:hover:not(.active) {
-  color: #4b5563;
-}
-
-/* Form inputs với floating labels style */
+/* ===== FORM ===== */
 .form {
   display: flex;
   flex-direction: column;
@@ -145,45 +92,84 @@
 .form input,
 .form select {
   width: 100%;
-  padding: 14px 16px;
-  margin-bottom: 18px;
-  border: 2px solid #e5e7eb;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 14px;
   font-family: inherit;
   transition: all 0.3s ease;
-  background: white;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e5e7eb;
 }
 
 .form input:focus,
 .form select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-  transform: translateY(-2px);
+  border-color: #00FFD4;
+  box-shadow: 0 0 0 3px rgba(0, 255, 212, 0.1);
+  background: rgba(0, 255, 212, 0.04);
 }
 
 .form input::placeholder {
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.25);
 }
 
-.label {
-  font-size: 13px;
+.form select option {
+  background: #1a1d29;
+  color: #e5e7eb;
+}
+
+/* Autofill fix */
+.form input:-webkit-autofill,
+.form input:-webkit-autofill:hover,
+.form input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #1e2130 inset !important;
+  -webkit-text-fill-color: #e5e7eb !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ===== FIELD (label + input) ===== */
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.field-label {
+  font-size: 12px;
   font-weight: 600;
-  color: #374151;
-  margin-bottom: 8px;
-  margin-top: 5px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
 }
 
-/* Input with addon (password show/hide) */
+.field input,
+.field select {
+  margin-bottom: 0;
+}
+
+/* 2 cột ngày sinh + giới tính */
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field-row .field {
+  margin-bottom: 14px;
+}
+
+/* ===== INPUT WITH ADDON ===== */
 .input-with-addon {
   position: relative;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .input-with-addon input {
   margin-bottom: 0;
-  padding-right: 55px;
+  padding-right: 60px;
 }
 
 .input-with-addon .addon {
@@ -194,53 +180,39 @@
   background: none;
   border: none;
   cursor: pointer;
-  color: #667eea;
-  font-size: 13px;
+  color: #00FFD4;
+  font-size: 12px;
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
   transition: all 0.2s ease;
 }
 
 .input-with-addon .addon:hover {
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(0, 255, 212, 0.1);
 }
 
-/* Submit button với gradient và hover effects */
+/* ===== SUBMIT BUTTON ===== */
 button[type="submit"] {
   width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
+  padding: 14px;
+  background: linear-gradient(135deg, #3d8dbc 0%, #00b872 100%);
+  color: #0a0f1e;
   border: none;
   border-radius: 12px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 255, 212, 0.25);
   position: relative;
   overflow: hidden;
-}
-
-button[type="submit"]::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  transition: left 0.5s ease;
+  margin-top: 4px;
 }
 
 button[type="submit"]:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-}
-
-button[type="submit"]:hover::before {
-  left: 100%;
+  box-shadow: 0 6px 25px rgba(0, 255, 212, 0.4);
 }
 
 button[type="submit"]:active {
@@ -248,23 +220,23 @@ button[type="submit"]:active {
 }
 
 button[disabled] {
-  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.25);
   cursor: not-allowed;
   box-shadow: none;
   transform: none !important;
 }
 
-/* Divider với modern style */
+/* ===== DIVIDER ===== */
 .divider {
   text-align: center;
-  margin: 25px 0;
-  font-size: 13px;
+  margin: 20px 0;
+  font-size: 12px;
   font-weight: 500;
-  color: #9ca3af;
-  position: relative;
+  color: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
 .divider::before,
@@ -272,156 +244,50 @@ button[disabled] {
   content: '';
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+  background: rgba(255, 255, 255, 0.08);
 }
 
-/* Google login button */
+/* ===== GOOGLE LOGIN ===== */
 .google-login {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.google-login > div {
   display: flex;
   justify-content: center;
+  margin-bottom: 8px;
 }
 
-/* Custom styling for Google button if needed */
-.google-login button {
-  border-radius: 12px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-  transition: all 0.3s ease !important;
-}
-
-.google-login button:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-  transform: translateY(-2px) !important;
-}
-
-/* Message với animations */
+/* ===== MESSAGE ===== */
 .msg {
   padding: 12px 16px;
   border-radius: 10px;
   text-align: center;
-  margin: 15px 0 0 0;
-  font-size: 14px;
+  margin-top: 14px;
+  font-size: 13px;
   font-weight: 500;
-  animation: fadeInScale 0.3s ease;
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #dc2626;
-  border: 1px solid #fca5a5;
+  animation: fadeIn 0.3s ease;
+  background: rgba(220, 38, 38, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(220, 38, 38, 0.2);
 }
 
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Success message */
 .msg.success {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
-  border: 1px solid #6ee7b7;
+  background: rgba(0, 255, 212, 0.08);
+  color: #00FFD4;
+  border: 1px solid rgba(0, 255, 212, 0.2);
 }
 
-/* Links */
-.muted {
-  font-size: 13px;
-  color: #6b7280;
-  text-align: center;
-  margin-top: 20px;
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
-.muted .link {
-  background: none;
-  border: none;
-  color: #667eea;
-  cursor: pointer;
-  text-decoration: none;
-  padding: 0;
-  font-size: 13px;
-  font-weight: 600;
-  transition: color 0.2s ease;
-}
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0, 255, 212, 0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 255, 212, 0.4); }
 
-.muted .link:hover {
-  color: #764ba2;
-  text-decoration: underline;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .login-wrap::before,
-  .login-wrap::after {
-    display: none;
-  }
-
-  .auth-card {
-    padding: 35px 25px;
-    max-width: 100%;
-    border-radius: 20px;
-  }
-
-  .brand img {
-    width: 120px;
-  }
-
-  button[type="submit"] {
-    padding: 14px;
-  }
-}
-
-/* Dark mode support (optional) */
-@media (prefers-color-scheme: dark) {
-  .auth-card {
-    background: rgba(30, 30, 40, 0.95);
-    color: #e5e7eb;
-  }
-
-  .form input,
-  .form select {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
-    color: #e5e7eb;
-  }
-
-  .form input::placeholder {
-    color: #6b7280;
-  }
-
-  .tabs {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .tab.active {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .label {
-    color: #d1d5db;
-  }
-}
-
-/* Smooth scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.3);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(102, 126, 234, 0.5);
+/* ===== RESPONSIVE ===== */
+@media (max-width: 480px) {
+  .auth-card { padding: 28px 20px; }
+  .field-row { grid-template-columns: 1fr; }
+  .toggle-option { padding: 8px 20px; }
 }

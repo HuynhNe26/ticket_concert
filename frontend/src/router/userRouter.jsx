@@ -1,14 +1,15 @@
 import { Route } from "react-router-dom";
 import HomeUser from "../user/pages/home/home";
 import LayoutUser from "../user/components/layout/layout";
-import LoginPage from "../user/pages/login/Loginpage";
 import EventDetail from "../user/pages/event/event";
 import SearchPage from "../user/pages/search/search";
 import ZonePage from "../user/pages/zone/zone/zone";
 import CartPage from "../user/pages/cart/cart";
-
+import CheckoutResult from "../user/pages/checkout/CheckoutResult";
+import { useTokenExpiry } from "../user/components/hook/useTokenExpiry";
 
 export function UserRoutes() {
+  useTokenExpiry();
   return (
     <>
       <Route path="/" element={<LayoutUser />}>
@@ -16,7 +17,8 @@ export function UserRoutes() {
         <Route path="/search" element={<SearchPage />} />
         <Route path="/event/:id" element={<EventDetail />} />
         <Route path="/event/:id/booking" element={<ZonePage />} />
-        <Route  path='/event/:id/cart' element={<CartPage />} />
+        <Route path='/my-cart' element={<CartPage />} />
+        <Route path='/result' element={<CheckoutResult />} />
       </Route>
     </>
   );
