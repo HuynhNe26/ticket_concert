@@ -19,6 +19,7 @@ export const initZoneSocket = (io) => {
             z.zone_code,
             z.zone_name,
             z.zone_quantity,
+            z.zone_price,
             z.sold_quantity,
             (z.zone_quantity - z.sold_quantity) AS available_tickets,
             z.status
@@ -26,6 +27,7 @@ export const initZoneSocket = (io) => {
           JOIN LATERAL jsonb_array_elements(l.layout_json->'zones') AS layout_zone ON true
           JOIN zones z
             ON z.zone_code = layout_zone ->> 'id'
+            AND z.event_id = $1
           WHERE l.event_id = $1
         `; 
 

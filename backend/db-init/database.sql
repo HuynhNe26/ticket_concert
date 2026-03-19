@@ -647,7 +647,7 @@ CREATE TABLE cart_items (
     id SERIAL PRIMARY KEY,
     user_id INT,
     event_id INT,
-    zone_code VARCHAR(50),
+    zone_id INT,
     quantity INT,
     expires_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT NOW(),
@@ -685,7 +685,9 @@ CREATE TABLE payment_detail (
     payment_id INT NOT NULL,
     event_id INT NOT NULL,
     ticket_quantity INT NOT NULL,
-    zone_code VARCHAR(50) NOT NULL,
+    zone_id INT NOT NULL,
+    price INT NULL,
+    total_price INT NULL,
     CONSTRAINT fk_events 
         FOREIGN KEY (event_id)
         REFERENCES events(event_id),
@@ -695,13 +697,13 @@ CREATE TABLE payment_detail (
 );
 
 INSERT INTO payment_detail 
-(payment_id, event_id, ticket_quantity, zone_code)
+(payment_id, event_id, ticket_quantity, zone_id)
 VALUES
 (
   1,
   1,
   1,
-  'GA_1A'
+  1
 );
 
 
@@ -752,7 +754,7 @@ CREATE TABLE rag_documents (
   source_id INT,
   title TEXT,
   content TEXT,
-  embedding VECTOR(1536),
+  embedding VECTOR(768),
   meta JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

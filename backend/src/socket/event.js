@@ -32,7 +32,7 @@ export const EventSocket = (io) => {
                     e.event_status,
                     SUM(z.zone_quantity) AS totalTickets,
                     SUM(z.sold_quantity) AS ticketsSold,
-                    SUM(z.sold_quantity * z.price) AS revenue
+                    SUM(z.sold_quantity * z.zone_price) AS revenue
                 FROM events e
                 JOIN zones z ON e.event_id = z.event_id
                 WHERE e.event_status = 'active'

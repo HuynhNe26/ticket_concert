@@ -5,6 +5,8 @@ import "./zone_ticket.css";
 export default function Ticket({ zones, eventId }) {
     const navigate = useNavigate();
 
+    console.log(zones)
+
     const formatCurrency = (amount) =>
         new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
 

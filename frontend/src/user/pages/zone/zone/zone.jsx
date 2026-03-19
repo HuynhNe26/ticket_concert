@@ -24,7 +24,7 @@ export default function Zone() {
         ]);
         const dataZones = await resZones.json();
         const dataLayout = await resLayout.json();
-
+        console.log(dataZones)
         if (dataZones.success) setZones(dataZones.data);
         if (dataLayout.success) setLayout(dataLayout.data.layout_json);
       } catch (err) {
