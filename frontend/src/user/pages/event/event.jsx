@@ -62,7 +62,7 @@ export default function EventDetail() {
     const isTicketAvailable = checkTicketAvailability();
 
     const formatCurrency = (amount) => 
-        new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
 
     // Kiểm tra mô tả dài hơn 10 dòng
     const descriptionLines = event.event_description ? event.event_description.split('\n') : [];
@@ -185,12 +185,14 @@ export default function EventDetail() {
                                         >
                                             <div className="ticket-info">
                                                 <div className="ticket-header">
-                                                    <span className={`arrow ${openZoneId === zone.zone_id ? "open" : ""}`}>
-                                                        ▶
-                                                    </span>
-                                                    <span className="ticket-name">{zone.zone_name}</span>
+                                                    <div className="ticket-header-left" style={{flex: 1}}>
+                                                        <span className={`arrow ${openZoneId === zone.zone_id ? "open" : ""}`}>
+                                                            ▶
+                                                        </span>
+                                                        <span className="ticket-name">{zone.zone_name}</span>
+                                                    </div>
 
-                                                    <div style={{display: 'flex', flexDirection: 'column', marginLeft: '130px'}}>
+                                                    <div style={{display: 'flex', flexDirection: 'column', marginLeft: '180px'}}>
                                                         <span className="ticket-price">
                                                             {formatCurrency(zone.zone_price)}
                                                         </span>

@@ -102,9 +102,10 @@ export const EventControllers = {
     const { month, year } = req.query;
 
     try {
-      const startDate = `${year}-${month}-01 00:00:00`;
+      const formattedMonth = String(month).padStart(2, '0');
+      const startDate = `${year}-${formattedMonth}-01 00:00:00`;
 
-      const endDate = new Date(year, month, 0)
+      const endDate = new Date(year, formattedMonth, 0)
         .toISOString()
         .split("T")[0] + " 23:59:59";
 
@@ -114,6 +115,7 @@ export const EventControllers = {
           e.event_name,
           e.event_start,
           e.event_end,
+          e.banner_url,
           SUM(z.zone_quantity) AS total_quantity,
           SUM(z.sold_quantity) AS total_sold,
           SUM(z.sold_quantity)::float / SUM(z.zone_quantity) AS sold_percent
@@ -128,16 +130,17 @@ export const EventControllers = {
           e.event_id,
           e.event_name,
           e.event_start,
-          e.event_end
+          e.event_end,
+          e.banner_url
       ORDER BY sold_percent DESC
       LIMIT 10;
       `;
 
-      const result = await pool.query(query, [startDate, endDate]);
+      const { rows } = await pool.query(query, [startDate, endDate]);
 
       res.status(200).json({
         success: true,
-        data: result.rows
+        data: rows
       });
 
     } catch (error) {

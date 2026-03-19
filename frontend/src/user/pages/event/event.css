@@ -147,7 +147,7 @@
 /* --- LAYOUT 2 CỘT: VÉ + MÔ TẢ --- */
 .event-detail-page .event-content-wrapper {
     display: grid;
-    grid-template-columns: 400px 1fr;
+    grid-template-columns: 500px 1fr;
     gap: 30px;
     align-items: start;
 }
@@ -233,7 +233,7 @@
     color: #fff;
     font-weight: 700;
     font-size: 15px;
-    margin: 0 0 8px 0;
+    margin-left: 10px;
 }
 
 .event-detail-page .ticket-desc {
@@ -459,16 +459,19 @@
 .ticket-status.available {
     background: rgba(0, 192, 88, 0.15);
     color: #00c058;
+    margin-top: 10px;
 }
 
 /* hết vé */
 .ticket-status.sold-out {
     background: rgba(255, 77, 79, 0.15);
     color: #ff4d4f;
+    margin-top: 10px;
 }
 
 /* sắp mở */
 .ticket-status.over {
     background: rgba(255, 193, 7, 0.15);
     color: #ffc107;
+    margin-top: 10px;
 }

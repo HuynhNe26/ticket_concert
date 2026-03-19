@@ -31,7 +31,7 @@
 }
 
 .section-title {
-    font-size: 24px;
+    font-size: 14px;
     font-weight: 800;
     color: #ffffff; 
     margin: 0;
@@ -162,3 +162,4 @@
         grid-template-columns: 1fr;
     }
 }
+

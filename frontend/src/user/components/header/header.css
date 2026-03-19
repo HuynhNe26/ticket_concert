@@ -20,11 +20,23 @@
 .header-left {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 100px;
     flex: 1;
 }
 
+.logo-link {
+    width: 140px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+}
+
 .logo {
+    height: 100%;
+    width: 100%;
+}
+
+.logoCart {
     height: 40px;
     width: 60px;
 }

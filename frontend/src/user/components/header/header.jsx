@@ -84,7 +84,7 @@ export default function Header() {
                     <div className="header-right">
                         <Link to="/my-tickets" className="header-link"><span>Vé của tôi</span></Link>
                         <Link to="/my-cart"> 
-                            <img src="/logo1.png" alt="Cart Logo" className="logo"/>
+                            <img src="/logo1.png" alt="Cart Logo" className="logoCart"/>
                         </Link>
                         <div className="auth-section">
                             {user ? (
@@ -93,16 +93,9 @@ export default function Header() {
                                 <div>
                                     <button 
                                         onClick={() => setShowLoginModal(true)}
-                                        style={{background:'none', border:'none', color:'white', cursor:'pointer', textDecoration:'underline'}}
+                                        style={{background:'none', border:'none', color:'white', cursor:'pointer'}}
                                     >
-                                        Đăng nhập
-                                    </button>
-                                    {' | '}
-                                    <button 
-                                        onClick={() => setShowLoginModal(true)}
-                                        style={{background:'none', border:'none', color:'white', cursor:'pointer', textDecoration:'underline'}}
-                                    >
-                                        Đăng ký
+                                        Đăng nhập | Đăng ký 
                                     </button>
                                 </div>
                             )}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./cart.css";
+import LoginPage from "../login/Loginpage";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -13,12 +14,19 @@ export default function CartPage() {
   const [expiresAt, setExpiresAt] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("MOMO");
   const [paying, setPaying] = useState(false);
+  const [text, setText] = useState("")
+  const [openLogin, setOpenLogin] = useState(false);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!token) {
+        setText("Vui lòng đăng nhập để xem!")
+        return;
+      }
+
       try {
         const res = await fetch(`${API_BASE}/api/cart`, {
           headers: { Authorization: `Bearer ${token}` },
@@ -113,9 +121,38 @@ export default function CartPage() {
     }
   };
 
+  if (!token) {
+    return (
+      <div style={{color: 'white', textAlign: 'center', alignContent: 'center', fontSize: '20px'}}>
+        {text}
+        <br />
+        {/* {item.length === 0 (() => { */}
+          <button 
+          style={{
+            backgroundColor: 'transparent', 
+            color: 'white', 
+            border: 'none', 
+            cursor: 'pointer',
+            fontSize: '18px'
+          }}
+          onClick={() => setOpenLogin(true)}>
+              Đăng nhập
+          </button>
+          {openLogin && (
+            <div className="login-popup" onClick={() => setOpenLogin(false)}>
+              <div onClick={(e) => e.stopPropagation()}>
+                <LoginPage />
+              </div>
+            </div>
+          )}
+        {/* })} */}
+      </div>
+    )
+  }
+
   return (
     <div>
-      {/* TIMER */}
+        {/* TIMER */}
       <div className="timer-banner">
         <span className="timer-icon">⏱</span>
         Hoàn tất thanh toán trong

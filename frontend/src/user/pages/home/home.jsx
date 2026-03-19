@@ -40,7 +40,6 @@ export default function HomeUser() {
                 const res = await fetch(`${API_BASE}/api/events/top-trending?month=${month}&year=${year}`);
 
                 const data = await res.json();
-                console.log(data)
                 if (data.success) {
                     setTrendings(data.data)
                 }
@@ -116,7 +115,7 @@ export default function HomeUser() {
     if (loading) return <LoadingUser />;
 
     const trendingEvents = events.slice(0, 4);
-    const forYouEvents = events.slice(4); 
+    const forYouEvents = events.slice(12); 
 
     return (
         <div className="home-wrapper">
@@ -125,7 +124,7 @@ export default function HomeUser() {
                 <section className="section-trending">
                     <h2 className="section-title">🔥 Sự kiện xu hướng</h2>
                     <div className="trending-list">
-                        {trendingEvents.map((event, index) => (
+                        {trending.map((event, index) => (
                             <div key={event.event_id} className="trending-item" onClick={() => navigate(`/event/${event.event_id}`)}>
                                 <span className="trending-number" style={{ WebkitTextStroke: `1px ${index === 0 ? '#00c058' : '#333'}` }}>
                                     {index + 1}
@@ -136,10 +135,35 @@ export default function HomeUser() {
                     </div>
                 </section>
 
-                {/* --- PHẦN 2: DÀNH CHO BẠN --- */}
+                {/* --- PHẦN 2: THEO THÁNG --- */}
                 <section className="section-home">
                     <div className="section-header">
-                        <h2 className="section-title">Dành cho bạn</h2>
+                        <h2 className="section-title" style={{color: 'white'}}>Sự kiện tháng {month}</h2>
+                        <Link to="/search" className="view-more">Xem thêm ›</Link>
+                    </div>
+
+                    <div className="event-grid">
+                        {eventMonth.map((event) => (
+                            <div className="event-card-light" key={event.event_id} onClick={() => navigate(`/event/${event.event_id}`)}>
+                                <div className="card-thumb">
+                                    <img src={event.banner_url} alt={event.event_name} />
+                                </div>
+                                <div className="card-body">
+                                    <span className="card-title">{event.event_name}</span>
+                                    <span className="card-price">Từ {formatCurrency(event.min_price || 0)}</span>
+                                    <span className="card-meta">
+                                        📅 {formatDate(event.event_start)}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* --- PHẦN 3: DÀNH CHO BẠN --- */}
+                <section className="section-home">
+                    <div className="section-header">
+                        <h2 className="section-title" >Dành cho bạn</h2>
                         <Link to="/search" className="view-more">Xem thêm ›</Link>
                     </div>
 
