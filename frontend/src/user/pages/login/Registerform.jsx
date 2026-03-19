@@ -29,7 +29,6 @@ export default function RegisterForm({ onSuccess }) {
       });
       const data = await res.json();
       if (!res.ok) { setMsg(data?.message || "Đăng ký thất bại"); return; }
-      setMsg("Đăng ký thành công! Chuyển đến trang đăng nhập...");
       setTimeout(() => onSuccess(), 1000);
     } catch (err) {
       setMsg("Lỗi mạng: " + err.message);
