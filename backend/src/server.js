@@ -7,8 +7,8 @@ import { connectDB } from "./config/database.js";
 
 dotenv.config();
 
-import { initZoneSocket } from "./socket/zone.js";
-// import { initCartWatcher } from "./redis/redisExpiredListener.js";
+import { initZoneSocket } from "./socket/user/zone.js";
+import { EventSocket } from "./socket/admin/event.js";
 
 // users
 import authRouter from "./router/users/user.js";
@@ -28,7 +28,6 @@ import eventRouter from "./router/admins/events.js";
 import userRouter from "./router/admins/user.js";
 import adminLayoutRouter from "./router/admins/layout.js";
 import categoriesRouter from "./router/admins/categories.js"
-import { ChatSocket } from "./socket/chat_ai.js";
 import orderRouter from "./router/admins/orders.js"
 
 
@@ -73,6 +72,7 @@ export const io = new Server(httpServer, {
 });
 
 initZoneSocket(io);
+EventSocket(io)
 await connectDB();
 
 const PORT = process.env.PORT ;

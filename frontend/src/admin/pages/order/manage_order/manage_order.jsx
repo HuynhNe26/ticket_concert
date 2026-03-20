@@ -75,7 +75,7 @@ function EventCard({ event, isActive, onClick }) {
         </div>
       </div>
 
-      <span className={`mo-event-badge ${badgeClass(event.status)}`}>
+      <span className={`mo-event-badge ${badgeClass(event.event_status)}`}>
         {badgeLabel(event.event_status)}
       </span>
     </div>
@@ -189,6 +189,7 @@ export default function ManageOrder() {
               <path d="m21 21-4.35-4.35" />
             </svg>
             <input
+              className="search-event-input"
               type="text"
               placeholder="Tìm kiếm tên sự kiện..."
               value={searchQ}

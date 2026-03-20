@@ -5,6 +5,7 @@ import LoadingAdmin from '../../../components/loading/loading';
 import io from 'socket.io-client';
 
 const API_BASE = process.env.REACT_APP_API_URL;
+
 const LIMIT = 2;
 export default function ManageEvent() {
     const navigate = useNavigate(); // Thêm navigate
@@ -17,36 +18,40 @@ export default function ManageEvent() {
     const [yearFilter, setYearFilter] = useState('');
     const [offset, setOffset] = useState(0);
     const [stats, setStats] = useState({
-        totalEvents: 0,
-        activeEvents: 0,
         totalTicketsSold: 0,
-        totalRevenue: 0
+        revenue: 0
     });
 
     useEffect(() => {
         setOffset(0);
-        getAllEvents();
-        
-        // Setup Socket.IO connection for hot events
+
         const socket = io(API_BASE);
-        
+
+        getAllEvents();
+
         socket.on('connect', () => {
-            console.log('Connected to socket server');
+            socket.emit("join_admin");
         });
 
         // Listen for hot events updates
         socket.on('hotEvents', (data) => {
-            console.log('Hot events updated:', data);
             setHotEvents(data);
+            calculateStats(data);
         });
 
         // Listen for ticket sold updates
         socket.on('ticketSold', (data) => {
-            console.log('Ticket sold:', data);
             updateEventTickets(data.eventId, data.ticketsSold);
         });
 
+        const timer = setInterval(() => {
+            socket.emit("request");
+        }, 1000);
+
         return () => {
+            clearInterval(timer);
+            socket.off("hotEvents");
+            socket.off("ticketSold");
             socket.disconnect();
         };
     }, [searchTerm, filterStatus, yearFilter]);
@@ -65,7 +70,6 @@ export default function ManageEvent() {
             const data = await response.json();
             if (data.success) {
                 setEvents(data.data);
-                calculateStats(data.data);
             } else {
                 setError(data.message || 'Không thể tải dữ liệu');
             }
@@ -77,26 +81,37 @@ export default function ManageEvent() {
     };
 
     const updateEventTickets = (eventId, newTicketsSold) => {
-        setEvents(prevEvents => 
-            prevEvents.map(event => 
-                event.id === eventId 
+
+        setEvents(prev =>
+            prev.map(event =>
+                event.id === eventId
+                    ? { ...event, ticketsSold: newTicketsSold }
+                    : event
+            )
+        );
+
+        setHotEvents(prev =>
+            prev.map(event =>
+                event.event_id === eventId
                     ? { ...event, ticketsSold: newTicketsSold }
                     : event
             )
         );
     };
 
-    const calculateStats = (eventsData) => {
-        const total = eventsData.length;
-        const active = eventsData.filter(e => e.status === 'active').length;
-        const ticketsSold = eventsData.reduce((sum, e) => sum + (e.ticketsSold || 0), 0);
-        const revenue = eventsData.reduce((sum, e) => sum + (e.revenue || 0), 0);
+    const calculateStats = (events) => {
+
+        const totalTicketsSold = events.reduce((sum, event) => {
+            return sum + Number(event.ticketssold || 0);
+        }, 0);
+
+        const revenue = events.reduce((sum, event) => {
+            return sum + Number(event.revenue || 0);
+        }, 0);
 
         setStats({
-            totalEvents: total,
-            activeEvents: active,
-            totalTicketsSold: ticketsSold,
-            totalRevenue: revenue
+            totalTicketsSold,
+            revenue
         });
     };
     
@@ -114,16 +129,7 @@ export default function ManageEvent() {
     };
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND'
-        }).format(amount);
-    };
-
-    const formatNumber = (num) => {
-        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-        return num.toString();
+        return new Intl.NumberFormat('vi-VN').format(amount);
     };
 
     const filteredEvents = events.filter(event => {
@@ -172,10 +178,10 @@ export default function ManageEvent() {
     }
 
     const statsCards = [
-        { label: 'Tổng Sự Kiện', value: stats.totalEvents.toString(), icon: Calendar, color: 'bg-blue-500' },
-        { label: 'Đang Diễn Ra', value: stats.activeEvents.toString(), icon: Users, color: 'bg-green-500' },
-        { label: 'Vé Đã Bán', value: formatNumber(stats.totalTicketsSold), icon: Users, color: 'bg-purple-500' },
-        { label: 'Doanh Thu', value: formatNumber(stats.totalRevenue) + ' VNĐ', icon: DollarSign, color: 'bg-orange-500' }
+        { label: 'Tổng Sự Kiện', value: events.length, icon: Calendar, color: 'bg-blue-500' },
+        { label: 'Đang Diễn Ra', value: hotEvents.length, icon: Users, color: 'bg-green-500' },
+        { label: 'Vé Đã Bán', value: stats.totalTicketsSold, icon: Users, color: 'bg-purple-500' },
+        { label: 'Doanh Thu', value: formatCurrency(stats.revenue), icon: DollarSign, color: 'bg-orange-500' }
     ];
 
     return (
@@ -221,7 +227,7 @@ export default function ManageEvent() {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
                         {hotEvents.map((event, index) => (
-                            <div key={event.id} style={{
+                            <div key={event.event_id} style={{
                                 background: 'rgba(255, 255, 255, 0.15)',
                                 backdropFilter: 'blur(10px)',
                                 borderRadius: '12px',
@@ -229,7 +235,8 @@ export default function ManageEvent() {
                                 border: '1px solid rgba(255, 255, 255, 0.2)'
                             }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                                    <div style={{ fontSize: '15px', fontWeight: '600' }}>{event.name}</div>
+                                    <div style={{ fontSize: '15px', fontWeight: '600' }}>{event.event_name}</div>
+                                    <div style={{ fontSize: '15px', fontWeight: '600' }}>Thể loại: {event.category_name}</div>
                                     <div style={{ 
                                         background: 'rgba(255, 255, 255, 0.3)',
                                         padding: '4px 10px',
@@ -242,7 +249,7 @@ export default function ManageEvent() {
                                 </div>
                                 <div style={{ fontSize: '13px', opacity: '0.9', marginBottom: '12px' }}>
                                     <TrendingUp size={14} style={{ display: 'inline', marginRight: '6px' }} />
-                                    {event.ticketsSold} vé đã bán
+                                    Đã bán {event.ticketssold} / {event.totaltickets} vé
                                 </div>
                                 <div style={{ 
                                     background: 'rgba(255, 255, 255, 0.2)',
@@ -253,8 +260,11 @@ export default function ManageEvent() {
                                     <div style={{
                                         background: 'white',
                                         height: '100%',
-                                        width: `${(event.ticketsSold / event.totalTickets) * 100}%`,
-                                        transition: 'width 0.3s'
+                                        width: `${Math.min(
+                                            (Number(event.ticketssold || 0) / Number(event.totaltickets || 1)) * 100,
+                                            100
+                                        )}%`,
+                                        transition: 'width 0.3s ease'
                                     }} />
                                 </div>
                             </div>

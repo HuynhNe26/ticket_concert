@@ -14,7 +14,7 @@ export default function Zone() {
   const [layout, setLayout] = useState(null);
 
   useEffect(() => {
-    socket.emit("join_event_room", { eventId: id });
+    socket.emit("", { eventId: id });
 
     const fetchData = async () => {
       try {
@@ -24,7 +24,7 @@ export default function Zone() {
         ]);
         const dataZones = await resZones.json();
         const dataLayout = await resLayout.json();
-        console.log(dataZones)
+        console.log(dataLayout)
         if (dataZones.success) setZones(dataZones.data);
         if (dataLayout.success) setLayout(dataLayout.data.layout_json);
       } catch (err) {
@@ -52,7 +52,7 @@ export default function Zone() {
     <div className="booking-page-wrapper">
       <div className="zone-container">
         <div className="zone-layout">
-          <LayoutZone layout={layout} zones={zones} />
+          <LayoutZone layout={layout} zones={zones} eventId={id} />
         </div>
         <div className="zone-ticket">
           <Ticket zones={zones} eventId={id} />

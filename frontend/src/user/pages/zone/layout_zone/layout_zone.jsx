@@ -220,6 +220,7 @@ export default function LayoutZone({ layout, zones, eventId }) {
   };
 
   const handleAddToCart = async (eventId, zone_id, quantity) => {
+    console.log(eventId, zone_id, quantity)
     if (!eventId || !zone_id || !quantity) {
       alert('Thiếu dữ liệu');
       return
