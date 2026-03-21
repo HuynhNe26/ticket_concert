@@ -6,10 +6,8 @@ import LoadingUser from '../../../components/loading/loading';
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
-export default function LayoutZone({ layout, zones, eventId }) {
+export default function LayoutZone({ layout, zones, eventId}) {
   const canvasRef = useRef(null);
-  const [hoveredZone, setHoveredZone] = useState(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -24,17 +22,14 @@ export default function LayoutZone({ layout, zones, eventId }) {
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const dpr = window.devicePixelRatio || 1;
 
-    const canvasWidth = layout.canvas?.width || 1200;
-    const canvasHeight = layout.canvas?.height || 700;
+    const canvasWidth = layout.canvas?.width || 1200; const canvasHeight = layout.canvas?.height || 700;
 
-    canvas.width = canvasWidth * dpr;
-    canvas.height = canvasHeight * dpr;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
     canvas.style.width = `${canvasWidth}px`;
     canvas.style.height = `${canvasHeight}px`;
 
-    ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
     ctx.fillStyle = layout.canvas?.background || '#000000';
@@ -73,12 +68,6 @@ export default function LayoutZone({ layout, zones, eventId }) {
         ctx.lineWidth = 2;
         ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
 
-        if (hoveredZone === zone.id) {
-          ctx.strokeStyle = '#00FFD4';
-          ctx.lineWidth = 3;
-          ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
-        }
-
         ctx.fillStyle = 'white';
         ctx.font = 'bold 14px Inter';
         ctx.textAlign = 'center';
@@ -98,12 +87,6 @@ export default function LayoutZone({ layout, zones, eventId }) {
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        if (hoveredZone === zone.id) {
-          ctx.strokeStyle = '#00FFD4';
-          ctx.lineWidth = 3;
-          ctx.stroke();
-        }
-
         const centerX = zone.points.reduce((sum, p) => sum + p[0], 0) / zone.points.length;
         const centerY = zone.points.reduce((sum, p) => sum + p[1], 0) / zone.points.length;
 
@@ -117,48 +100,8 @@ export default function LayoutZone({ layout, zones, eventId }) {
       ctx.restore();
     });
 
-  }, [layout, zones, hoveredZone]);
+  }, [layout, zones]);
 
-  const handleMouseMove = (e) => {
-    if (!layout || !canvasRef.current) return;
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    setMousePos({ x: e.clientX, y: e.clientY });
-
-    const mergedZones = (layout.zones || []).map(layoutZone => {
-      const apiZone = zones.find(z => z.zone_code === layoutZone.id);
-      return apiZone ? { ...layoutZone, ...apiZone } : layoutZone;
-    });
-
-    let found = null;
-    for (const zone of mergedZones) {
-      if (zone.shape === 'rect') {
-        if (x >= zone.x && x <= zone.x + zone.width && 
-            y >= zone.y && y <= zone.y + zone.height) {
-          found = zone;
-          break;
-        }
-      } else if (zone.shape === 'polygon' && zone.points) {
-        let inside = false;
-        for (let i = 0, j = zone.points.length - 1; i < zone.points.length; j = i++) {
-          const xi = zone.points[i][0], yi = zone.points[i][1];
-          const xj = zone.points[j][0], yj = zone.points[j][1];
-          const intersect = ((yi > y) !== (yj > y)) && 
-                           (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
-          if (intersect) inside = !inside;
-        }
-        if (inside) {
-          found = zone;
-          break;
-        }
-      }
-    }
-
-    setHoveredZone(found?.id || null);
-  };
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', { 
@@ -175,14 +118,17 @@ export default function LayoutZone({ layout, zones, eventId }) {
     );
   }
 
-  const hoveredData = zones.find(z => z.zone_code === hoveredZone);
-
   const handleCanvasClick = (e) => {
     if (!layout || !canvasRef.current) return;
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
 
     const mergedZones = (layout.zones || []).map(layoutZone => {
       const apiZone = zones.find(z => z.zone_code === layoutZone.id);
@@ -271,8 +217,6 @@ export default function LayoutZone({ layout, zones, eventId }) {
   return (
     <div className="layout-zone-wrapper">
       <canvas ref={canvasRef} 
-        onMouseMove={handleMouseMove} 
-        onMouseLeave={() => setHoveredZone(null)} 
         onClick={handleCanvasClick} 
         className="layout-canvas" 
       />
@@ -283,41 +227,34 @@ export default function LayoutZone({ layout, zones, eventId }) {
             <h3 style={{textAlign: 'center'}}>{selectedZone.zone_name}</h3>
 
             <p className="zone-desc">
-              {selectedZone.zone_description || 'Chưa cập nhật!'}
+              {selectedZone.description || 'Chưa cập nhật!'}
             </p>
-
-            <div className="zone-info">
-              <span>Giá vé:</span>
-              <strong>{formatPrice(selectedZone.zone_price)}</strong>
-            </div>
 
             <div className="zone-quantity">
               <span>Số lượng:</span>
-              <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>−</button>
-              <span>{quantity}</span>
-              <button
-                disabled={
-                  quantity >= 5 ||
-                  quantity >= selectedZone.available
-                }
-                onClick={() =>
-                  setQuantity(q =>
-                    Math.min(
-                      5,
-                      selectedZone.zone_quantity - selectedZone.sold_quantity,
-                      q + 1
+              <div>
+                <button style={{marginRight: '20px'}} onClick={() => setQuantity(q => Math.max(1, q - 1))}>−</button>
+                <span style={{marginRight: '20px'}}>{quantity}</span>
+                <button
+                  disabled={
+                    quantity >= 5 ||
+                    quantity >= selectedZone.available
+                  }
+                  onClick={() =>
+                    setQuantity(q =>
+                      Math.min(
+                        5,
+                        selectedZone.zone_quantity - selectedZone.sold_quantity,
+                        q + 1
+                      )
                     )
-                  )
-                }
-              >
-                +
-              </button>
+                  }
+                >
+                  +
+                </button>
+              </div>
             </div>
             <span style={{color: 'red', padding: '10px'}}>*Lưu ý: Được mua tối đa 5 ghế</span>
-            <div className="zone-total">
-              Tổng tiền:{" "}
-              <strong>{formatPrice(quantity * selectedZone.zone_price)}</strong>
-            </div>
 
             <div className="zone-actions">
               <button className="btn-cancel" onClick={() => setShowOverlay(false)}>
@@ -330,7 +267,7 @@ export default function LayoutZone({ layout, zones, eventId }) {
                   handleAddToCart(eventId, selectedZone.zone_id, quantity)
                 }
               >
-               Thanh toán
+               Tiếp tục - {formatPrice(quantity * selectedZone.zone_price)} 
               </button>
             </div>
           </div>
@@ -392,21 +329,6 @@ export default function LayoutZone({ layout, zones, eventId }) {
                     </div>
                 </div>
             )}
-
-      {hoveredZone && hoveredData && (
-        <div 
-          className="zone-tooltip"
-          style={{ 
-            left: mousePos.x + 15, 
-            top: mousePos.y + 15 
-          }}
-        >
-          <div className="tooltip-header">{hoveredData.zone_name}</div>
-          <div className="tooltip-price">{formatPrice(hoveredData.zone_price)}</div>
-          <div className="tooltip-stock">
-          </div>
-        </div>
-      )}
     </div>
     
   );

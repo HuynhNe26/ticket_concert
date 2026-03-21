@@ -2,6 +2,7 @@ import { pool } from "../../config/database.js";
 
 export const initZoneSocket = (io) => {
   io.on("connection", (socket) => {
+    console.log("User connected:", socket.id);
     socket.on("join_event_room", ({ eventId }) => {
       const roomName = `room_${eventId}`;
       socket.join(roomName);

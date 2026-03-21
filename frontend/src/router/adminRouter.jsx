@@ -10,7 +10,6 @@ import AdminDetail from "../admin/pages/admin/adminDetail/adminDetail";
 import ManageEvent from "../admin/pages/layout_event/event/event";
 import AddEvent from "../admin/pages/layout_event/add_event/add_event";
 import EventDetail from "../admin/pages/layout_event/event_detail/event_detail";
-import ManageLayout from "../admin/pages/layout_event/layout/layout";
 import AddLayout from "../admin/pages/layout_event/add_layout/add_layout";
 import LayoutDetail from "../admin/pages/layout_event/layout_detail/layout_detail";
 import ManageCategories from "../admin/pages/category/manageCategories/categories";

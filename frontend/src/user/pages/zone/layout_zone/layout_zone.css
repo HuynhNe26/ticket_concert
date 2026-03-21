@@ -16,10 +16,6 @@
   height: auto;
 }
 
-.layout-canvas:hover {
-  transform: scale(1.01);
-}
-
 /* Loading State */
 .layout-loading {
   display: flex;

@@ -12,33 +12,11 @@
     letter-spacing: 1px;
 }
 
-/* Card vé */
-.ticket-item-card {
-    background: #252525; /* Xám đen nhẹ hơn nền chính */
-    border: 1px solid #333;
-    border-radius: 12px;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: all 0.3s ease;
-}
-
-.ticket-item-card:hover:not(.sold-out) {
-    border-color: #00c058;
-    background: #2a2a2a;
-}
-
-.ticket-item-card.sold-out {
-    opacity: 0.5;
-    filter: grayscale(1);
-}
-
 /* Thông tin vé */
 .ticket-item-name {
     color: #fff;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 12px;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -54,7 +32,7 @@
 
 .ticket-item-price {
     color: #00c058;
-    font-size: 20px;
+    font-size: 13px;
     font-weight: 800;
     margin: 5px 0;
 }
@@ -101,11 +79,15 @@
     display: flex;             
     justify-content: space-between;
     align-items: center;       
-    width: 100%;  
-    margin-top: 5%;             
+    width: 100%;          
 }
 
 .ticket-item-name, 
 .ticket-item-price {
     margin: 0;
+}
+
+.ticket-box {
+    display: flex;
+    margin-top: 20px;
 }

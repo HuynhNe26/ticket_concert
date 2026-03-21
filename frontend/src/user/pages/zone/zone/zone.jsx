@@ -12,25 +12,33 @@ export default function Zone() {
   const { id } = useParams();
   const [zones, setZones] = useState([]);
   const [layout, setLayout] = useState(null);
+  const [event, setEvent] = useState({})
 
   useEffect(() => {
-    socket.emit("", { eventId: id });
+    socket.emit("join_event_room", { eventId: id });
 
     const fetchData = async () => {
       try {
-        const [resZones, resLayout] = await Promise.all([
+        const [resZones, resLayout, resEvent] = await Promise.all([
           fetch(`${API_BASE_URL}/api/zone/${id}`),
-          fetch(`${API_BASE_URL}/api/layout/${id}`)
+          fetch(`${API_BASE_URL}/api/layout/${id}`),
+          fetch(`${API_BASE_URL}/api/events/${id}`)
         ]);
+
         const dataZones = await resZones.json();
         const dataLayout = await resLayout.json();
-        console.log(dataLayout)
+        const dataEvent = await resEvent.json();
+
+        console.log(dataZones)
+
         if (dataZones.success) setZones(dataZones.data);
         if (dataLayout.success) setLayout(dataLayout.data.layout_json);
+        if (dataEvent.success) setEvent(dataEvent.data);
       } catch (err) {
         console.error(err);
       }
     };
+
     fetchData();
 
     socket.on("update_ticket_count", (updatedZones) => {
@@ -52,10 +60,10 @@ export default function Zone() {
     <div className="booking-page-wrapper">
       <div className="zone-container">
         <div className="zone-layout">
-          <LayoutZone layout={layout} zones={zones} eventId={id} />
+          <LayoutZone layout={layout} zones={zones} eventId={id} event={event} />
         </div>
         <div className="zone-ticket">
-          <Ticket zones={zones} eventId={id} />
+          <Ticket zones={zones} layout={layout} eventId={id} event={event} />
         </div>
       </div>
     </div>
