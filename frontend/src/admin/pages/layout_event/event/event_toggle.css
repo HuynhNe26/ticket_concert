@@ -5,7 +5,7 @@
   height: 24px;
 }
 
-.status input {
+.status .status-input {
   opacity: 0;
   width: 0;
   height: 0;
@@ -35,10 +35,10 @@
   border-radius: 50%;
 }
 
-input:checked + .toggle-slider1 {
+.status-input:checked + .toggle-slider1 {
   background-color: #00c058; /* màu khi bật */
 }
 
-input:checked + .toggle-slider1:before {
+.status-input:checked + .toggle-slider1:before {
   transform: translateX(26px); /* dịch nút tròn sang phải */
 }

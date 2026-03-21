@@ -9,10 +9,12 @@ export const OrderControllers = {
             const query = `
                 SELECT p.*,
                        pd.*,
-                       e.*
+                       e.*,
+                       u.*
                 FROM payments p
                 JOIN payment_detail pd ON pd.payment_id = p.payment_id
                 JOIN events e ON pd.event_id = e.event_id
+                JOIN users u ON u.user_id = p.user_id
                 WHERE pd.event_id = $1
             `;
 
@@ -45,9 +47,17 @@ export const OrderControllers = {
 
             const query = `
                 SELECT p.*,
-                       pd.*
+                       pd.*,
+                       u.*,
+                       e.*,
+                       z.*,
+                       m.*
                 FROM payments p
                 JOIN payment_detail pd ON pd.payment_id = p.payment_id
+                JOIN users u ON u.user_id = p.user_id
+                JOIN zones z ON z.zone_id = pd.zone_id
+                JOIN events e ON e.event_id = pd.event_id
+                JOIN members m ON m.member_id = u.member_id
                 WHERE p.payment_id = $1
             `;
 

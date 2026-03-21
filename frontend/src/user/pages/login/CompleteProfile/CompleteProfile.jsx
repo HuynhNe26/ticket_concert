@@ -1,4 +1,5 @@
 import { useState  } from "react";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -8,6 +9,7 @@ export default function CompleteProfile({ onDone }) {
   const [birthOfDay, setBirthOfDay] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSave = async () => {
     if (!phoneNumber || !gender || !birthOfDay) {
@@ -32,7 +34,8 @@ export default function CompleteProfile({ onDone }) {
       });
       const data = await res.json();
       if (!res.ok) { setError(data?.message || "Cập nhật thất bại"); return; }
-      onDone();
+      
+      navigate("/")
     } catch (err) {
       setError("Lỗi kết nối");
     } finally {

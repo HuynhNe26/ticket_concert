@@ -1,8 +1,9 @@
 .order-detail-page {
   padding: 24px 40px;
   font-family: 'Segoe UI', sans-serif;
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
+  height:100%;
+  margin: 150px auto;
 }
 
 /* Loading / Error */
@@ -54,7 +55,7 @@
 .info-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 0;
+  gap: 20px 0;
 }
 
 .info-field {
@@ -62,19 +63,19 @@
   flex-direction: column;
   min-width: 160px;
   flex: 1 1 160px;
-  margin-right: 24px;
+  margin-right: 40px;
 }
 
 .field-label {
-  font-size: 12px;
-  color: #555;
+  font-size: 16px;
+  color: #000000;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
 }
 
 .field-value {
-  font-size: 14px;
-  color: #222;
+  font-size: 15px;
+  color: #2b2b2b;
 }
 
 .field-value.highlight {
@@ -92,12 +93,13 @@
 /* QR Code */
 .qr-wrapper {
   position: absolute;
-  top: 32px;
+  top: 90px;
   right: 40px;
   background-color: #fff;
   padding: 8px;
   border-radius: 8px;
   border: 1px solid #ddd;
+  z-index: 1;
 }
 
 .qr-placeholder {

@@ -187,7 +187,8 @@ export default function LoginPage({ isModal = false, onClose = null }) {
 
       {/* Notifications */}
       {notification.type === 'success' && notification.show && (
-        <Success 
+        <Success
+          style={{zIndex: 100}} 
           message={notification.message}
           onClose={hideNotification}
         />
@@ -195,6 +196,7 @@ export default function LoginPage({ isModal = false, onClose = null }) {
 
       {notification.type === 'error' && notification.show && (
         <Error 
+          style={{zIndex: 100}} 
           message={notification.message}
           onClose={hideNotification}
         />
@@ -202,6 +204,7 @@ export default function LoginPage({ isModal = false, onClose = null }) {
 
       {notification.type === 'warning' && notification.show && (
         <Warning 
+          style={{zIndex: 100}} 
           message={notification.message}
           onClose={hideNotification}
         />

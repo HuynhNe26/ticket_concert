@@ -20,16 +20,26 @@ export default function OrderDetail() {
 
   useEffect(() => {
     const getOrderById = async () => {
-      setLoading(true);
-      // if (!id) {
-      //   if (confirm("Lỗi lấy thông tin! Thử lại?")) {
-      //     window.location.reload();
-      //   }
-      // }
+      try {
+        setLoading(true);
 
-      const response = await fetch(`${API_BASE}/api/admins/orders/order-detail/${id}`)
-    }
-  }, [])
+        const response = await fetch(`${API_BASE}/api/admin/orders/order-detail/${id}`);
+        const data = await response.json();
+
+        if (data.success) {
+          setOrder(data.data);
+          console.log(data.data);
+        }
+
+      } catch (err) {
+        console.error("Lỗi lấy đơn:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) getOrderById();
+  }, [id]);
 
   if (loading) {
     return <LoadingAdmin />
@@ -48,23 +58,24 @@ export default function OrderDetail() {
     <div className="order-detail-page">
       <button className="back-btn" onClick={() => navigate(-1)}>Quay lại</button>
 
-      <div className="detail-card">
-        {/* QR Code */}
+      {/* QR Code */}
         <div className="qr-wrapper">
-          {order.qrValue ? (
-            <QRCodeCanvas value={order.qrValue} size={200} />
+          {order[0].ticket_qr ? (
+            <QRCodeCanvas value={order[0].ticket_qr} size={150} />
           ) : (
             <div className="qr-placeholder">QR</div>
           )}
         </div>
+
+      <div className="detail-card">
         <section className="detail-section">
           <h3 className="section-title">Thông tin người dùng</h3>
           <div className="info-grid">
-            <Field label="Họ và tên" value={order.fullName} />
-            <Field label="Số điện thoại" value={order.phone} />
-            <Field label="Giới tính" value={order.gender} />
-            <Field label="Ngày sinh" value={order.birthday} />
-            <Field label="Hạng thành viên" value={order.member} />
+            <Field label="Họ và tên" value={order[0].fullname} />
+            <Field label="Số điện thoại" value={order[0].phonenumber} />
+            <Field label="Giới tính" value={order[0].gender} />
+            <Field label="Ngày sinh" value={new Date(order[0].birthofday).toLocaleString().slice(0, 9)} />
+            <Field label="Hạng thành viên" value={order[0].membership} />
           </div>
         </section>
 
@@ -74,12 +85,12 @@ export default function OrderDetail() {
         <section className="detail-section">
           <h3 className="section-title">Thông tin vé</h3>
           <div className="info-grid">
-            <Field label="Tên sự kiện" value={order.eventName} />
-            <Field label="Khu vé" value={order.zone} />
-            <Field label="Tổng số vé" value={order.totalTickets} />
-            <Field label="Đơn giá" value={formatCurrency(order.unitPrice)} />
-            <Field label="Tổng tiền" value={formatCurrency(order.totalAmount)} />
-            <Field label="Điểm tích lũy" value={order.Points} />
+            <Field label="Tên sự kiện" value={order[0].event_name} />
+            <Field label="Khu vé" value={order[0].zone_name} />
+            <Field label="Tổng số vé" value={order[0].ticket_quantity} />
+            <Field label="Đơn giá" value={formatCurrency(order[0].price)} />
+            <Field label="Tổng tiền" value={formatCurrency(order[0].total_price)} />
+            <Field label="Điểm tích lũy" value={order[0].total_price * 0.1} />
           </div>
         </section>
 
@@ -89,15 +100,15 @@ export default function OrderDetail() {
         <section className="detail-section">
           <h3 className="section-title">Thông tin giao dịch</h3>
           <div className="info-grid">
-            <Field label="Trạng thái vé" value={order.ticketStatus} />
-            <Field label="Mã giao dịch" value={order.transactionCode} />
+            <Field label="Trạng thái vé" value={order[0].ticket_status} />
+            <Field label="Mã giao dịch" value={order[0].payment_ref} />
             <Field
               label="Trạng thái giao dịch"
-              value={order.transactionStatus}
-              highlight={order.transactionStatus === "Thành công"}
+              value={order[0].payment_status}
+              highlight={order[0].transactionStatus === "Thành công"}
             />
-            <Field label="Thời gian sử dụng" value={order.usedAt} />
-            <Field label="Thời gian mua" value={order.purchasedAt} />
+            <Field label="Thời gian sử dụng" value={order[0].usedat} />
+            <Field label="Thời gian mua" value={new Date(order[0].created_at).toLocaleString().slice(0,21).split(",").reverse().join(", ")} />
           </div>
         </section>
       </div>

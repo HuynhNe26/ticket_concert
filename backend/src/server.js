@@ -7,8 +7,10 @@ import { connectDB } from "./config/database.js";
 
 dotenv.config();
 
+// Socket
 import { initZoneSocket } from "./socket/user/zone.js";
 import { EventSocket } from "./socket/admin/event.js";
+import { OrderSocket } from "./socket/admin/order.js";
 
 // users
 import authRouter from "./router/users/user.js";
@@ -73,6 +75,7 @@ export const io = new Server(httpServer, {
 
 initZoneSocket(io);
 EventSocket(io)
+OrderSocket(io)
 await connectDB();
 
 const PORT = process.env.PORT ;
