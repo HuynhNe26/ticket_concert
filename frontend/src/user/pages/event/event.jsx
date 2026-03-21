@@ -90,10 +90,10 @@ export default function EventDetail() {
                         <h1 className="event-ticket-title">{event.event_name}</h1>
                         <div className="event-ticket-meta">
                             <div className="event-meta-item">
-                                <span>{new Date(event.event_start).toLocaleString('vi-VN')}</span>
+                                <span>📅 {new Date(event.event_start).toLocaleString('vi-VN')}</span>
                             </div>
                             <div className="event-meta-item">
-                                <span>{(event.event_location).split(",")[0]}</span> <br />
+                                <span>📍 {(event.event_location).split(",")[0]}</span> <br />
                                     <span
                                     style={{
                                         display: 'block',

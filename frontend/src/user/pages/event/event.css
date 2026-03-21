@@ -475,3 +475,86 @@
     color: #ffc107;
     margin-top: 10px;
 }
+
+/* --- Bổ sung responsive cho màn hình nhỏ hơn 480px --- */
+@media (max-width: 480px) {
+
+    /* Giảm padding tổng thể để vừa màn hình */
+    .event-detail-page {
+        padding: 40px 15px;
+    }
+
+    /* Giảm kích thước tiêu đề vé */
+    .event-detail-page .event-ticket-title {
+        font-size: 18px;
+    }
+
+    /* Layout vé chính: xếp theo cột */
+    .event-detail-page .event-ticket-main {
+        height: auto; /* tự động chiều cao theo nội dung */
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    /* Phần răng cưa và dot ẩn trên mobile */
+    .event-detail-page .event-ticket-divider,
+    .event-detail-page .event-stub-line,
+    .event-detail-page .event-stub-dot {
+        display: none;
+    }
+
+    /* Ảnh banner bên phải thu nhỏ */
+    .event-detail-page .event-ticket-right {
+        width: 100%;
+        height: 200px;
+        margin-top: 15px;
+    }
+
+    /* Chỉnh font meta và giá nhỏ hơn */
+    .event-detail-page .event-ticket-meta {
+        font-size: 12px;
+    }
+
+    .event-detail-page .event-price-label {
+        font-size: 16px;
+    }
+
+    .event-detail-page .event-price-value {
+        font-size: 20px;
+    }
+
+    /* Layout danh sách vé & mô tả xếp cột trên mobile */
+    .event-detail-page .event-content-wrapper {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    /* Ticket item nhỏ gọn hơn */
+    .event-detail-page .ticket-item {
+        padding: 8px;
+    }
+
+    .event-detail-page .ticket-name {
+        font-size: 14px;
+    }
+
+    .event-detail-page .ticket-desc {
+        font-size: 12px;
+    }
+
+    .event-detail-page .ticket-price {
+        font-size: 14px;
+    }
+
+    /* Button mua vé full width nhỏ hơn */
+    .event-btn-buy {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    /* Nút thu gọn mô tả */
+    .event-detail-page .btn-toggle-desc {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+}

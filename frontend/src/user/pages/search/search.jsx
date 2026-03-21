@@ -1,153 +1,451 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import "./search.css";
 
 const API_BASE = process.env.REACT_APP_API_URL;
+
+const DAYS_OF_WEEK = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+const LOCATIONS = ["Toàn quốc", "Hồ Chí Minh", "Hà Nội", "Đà Lạt", "Vị trí khác"];
+const GENRES = ["Nhạc sống", "Sân khấu & Nghệ thuật", "Thể Thao", "Hội thảo & Workshop", "Tham quan & Trải nghiệm", "Khác"];
+
+function getDaysInMonth(year, month) {
+    return new Date(year, month + 1, 0).getDate();
+}
+
+function getFirstDayOfWeek(year, month) {
+    // 0=Sun..6=Sat → convert to Mon-first (0=Mon..6=Sun)
+    const d = new Date(year, month, 1).getDay();
+    return (d + 6) % 7;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return "";
+    const [y, m, d] = dateStr.split("-");
+    return `${d}/${m}/${y}`;
+}
+
+function toDateStr(year, month, day) {
+    return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function MonthCalendar({ year, month, selectedStart, selectedEnd, hoverDate, onDayClick, onDayHover, showPrev, showNext, onPrev, onNext }) {
+    const today = new Date();
+    const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+
+    const firstDow = getFirstDayOfWeek(year, month);
+    const daysInMonth = getDaysInMonth(year, month);
+
+    const cells = [];
+    for (let i = 0; i < firstDow; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+    const monthName = new Date(year, month, 1).toLocaleDateString("vi-VN", { month: "long", year: "numeric" });
+
+    const getClass = (dayStr) => {
+        let cls = "calendar-day";
+        if (dayStr === todayStr) cls += " today";
+        if (selectedStart && selectedEnd) {
+            if (dayStr === selectedStart && dayStr === selectedEnd) cls += " selected";
+            else if (dayStr === selectedStart) cls += " range-start selected";
+            else if (dayStr === selectedEnd) cls += " range-end selected";
+            else if (dayStr > selectedStart && dayStr < selectedEnd) cls += " in-range";
+        } else if (selectedStart && !selectedEnd) {
+            if (dayStr === selectedStart) cls += " selected";
+            else if (hoverDate && dayStr > selectedStart && dayStr <= hoverDate) cls += " in-range";
+        }
+        return cls;
+    };
+
+    return (
+        <div className="date-calendar">
+            <div className="calendar-header">
+                {showPrev ? (
+                    <button className="cal-nav-btn" onClick={onPrev}>&#8249;</button>
+                ) : <span className="cal-nav-btn hidden">&#8249;</span>}
+                <h3>{monthName.charAt(0).toUpperCase() + monthName.slice(1)}</h3>
+                {showNext ? (
+                    <button className="cal-nav-btn" onClick={onNext}>&#8250;</button>
+                ) : <span className="cal-nav-btn hidden">&#8250;</span>}
+            </div>
+            <div className="calendar-grid">
+                {DAYS_OF_WEEK.map(d => (
+                    <div key={d} className="calendar-dow">{d}</div>
+                ))}
+                {cells.map((day, i) => {
+                    if (!day) return <div key={`e-${i}`} className="calendar-day empty" />;
+                    const dayStr = toDateStr(year, month, day);
+                    return (
+                        <div
+                            key={dayStr}
+                            className={getClass(dayStr)}
+                            onClick={() => onDayClick(dayStr)}
+                            onMouseEnter={() => onDayHover(dayStr)}
+                        >
+                            {day}
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
 
 export default function SearchPage() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    
     const queryFromUrl = searchParams.get("q") || "";
 
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [showDateFilter, setShowDateFilter] = useState(false);
-    const [showLocationFilter, setShowLocationFilter] = useState(false);
-    const [dateRange, setDateRange] = useState({ start: "", end: "" });
-    const [location, setLocation] = useState("Toàn quốc");
 
-    const fetchEvents = async () => {
+    // Date filter state
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [quickTab, setQuickTab] = useState("all"); // all | today | tomorrow | weekend | thismonth
+    const [selectedStart, setSelectedStart] = useState("");
+    const [selectedEnd, setSelectedEnd] = useState("");
+    const [hoverDate, setHoverDate] = useState("");
+    const today = new Date();
+    const [calYear, setCalYear] = useState(today.getFullYear());
+    const [calMonth, setCalMonth] = useState(today.getMonth()); // left calendar month
+
+    // Filter (bộ lọc) state
+    const [showFilter, setShowFilter] = useState(false);
+    const [location, setLocation] = useState("Toàn quốc");
+    const [freeOnly, setFreeOnly] = useState(false);
+    const [genres, setGenres] = useState([]);
+
+    // Temp state (applied only on "Áp dụng")
+    const [tempLocation, setTempLocation] = useState("Toàn quốc");
+    const [tempFreeOnly, setTempFreeOnly] = useState(false);
+    const [tempGenres, setTempGenres] = useState([]);
+
+    const dateRef = useRef();
+    const filterRef = useRef();
+
+    // Close popups on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (dateRef.current && !dateRef.current.contains(e.target)) setShowDatePicker(false);
+            if (filterRef.current && !filterRef.current.contains(e.target)) setShowFilter(false);
+        };
+        document.addEventListener("mousedown", handler);
+        return () => document.removeEventListener("mousedown", handler);
+    }, []);
+
+    const fetchEvents = async (start = selectedStart, end = selectedEnd, loc = location, free = freeOnly, g = genres) => {
         setLoading(true);
         try {
             let url = `${API_BASE}/api/events/search?q=${encodeURIComponent(queryFromUrl)}`;
-            if (dateRange.start) url += `&dateStart=${dateRange.start}`;
-            if (dateRange.end) url += `&dateEnd=${dateRange.end}`;
-            if (location && location !== "Toàn quốc") url += `&location=${encodeURIComponent(location)}`;
-            
+            if (start) url += `&dateStart=${start}`;
+            if (end)   url += `&dateEnd=${end}`;
+            if (loc && loc !== "Toàn quốc") url += `&location=${encodeURIComponent(loc)}`;
+            if (free) url += `&free=true`;
+            if (g.length) url += `&genres=${encodeURIComponent(g.join(","))}`;
+
             const res = await fetch(url);
             const data = await res.json();
-            if (data.success) {
-                setEvents(data.data);
-            }
-        } catch (error) {
-            console.error("Lỗi tìm kiếm:", error);
+            if (data.success) setEvents(data.data);
+        } catch (err) {
+            console.error("Lỗi tìm kiếm:", err);
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchEvents();
-    }, [queryFromUrl]); 
+    useEffect(() => { fetchEvents(); }, [queryFromUrl]); // eslint-disable-line
 
-    // Handlers
-    const handleApplyDate = () => { setShowDateFilter(false); fetchEvents(); };
-    const handleApplyLocation = () => { setShowLocationFilter(false); fetchEvents(); };
-
-    const handleResetFilters = () => {
-        setDateRange({ start: "", end: "" });
-        setLocation("Toàn quốc");
-        setShowDateFilter(false);
-        setShowLocationFilter(false);
-        setTimeout(() => fetchEvents(), 100); 
+    // ---- Quick tab helpers ----
+    const applyQuickTab = (tab) => {
+        setQuickTab(tab);
+        const t = new Date();
+        const fmt = (d) => toDateStr(d.getFullYear(), d.getMonth(), d.getDate());
+        if (tab === "all") { setSelectedStart(""); setSelectedEnd(""); }
+        else if (tab === "today") { setSelectedStart(fmt(t)); setSelectedEnd(fmt(t)); }
+        else if (tab === "tomorrow") {
+            const tm = new Date(t); tm.setDate(t.getDate() + 1);
+            setSelectedStart(fmt(tm)); setSelectedEnd(fmt(tm));
+        } else if (tab === "weekend") {
+            const day = t.getDay(); // 0=Sun
+            const diffSat = (6 - day + 7) % 7 || 7;
+            const sat = new Date(t); sat.setDate(t.getDate() + diffSat);
+            const sun = new Date(sat); sun.setDate(sat.getDate() + 1);
+            setSelectedStart(fmt(sat)); setSelectedEnd(fmt(sun));
+        } else if (tab === "thismonth") {
+            const first = new Date(t.getFullYear(), t.getMonth(), 1);
+            const last = new Date(t.getFullYear(), t.getMonth() + 1, 0);
+            setSelectedStart(fmt(first)); setSelectedEnd(fmt(last));
+        }
     };
 
-    const formatCurrency = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    // ---- Calendar day click (range selection) ----
+    const handleDayClick = (dayStr) => {
+        if (!selectedStart || (selectedStart && selectedEnd)) {
+            setSelectedStart(dayStr);
+            setSelectedEnd("");
+            setQuickTab("custom");
+        } else {
+            if (dayStr < selectedStart) {
+                setSelectedEnd(selectedStart);
+                setSelectedStart(dayStr);
+            } else {
+                setSelectedEnd(dayStr);
+            }
+            setQuickTab("custom");
+        }
+    };
+
+    // ---- Apply date ----
+    const handleApplyDate = () => {
+        setShowDatePicker(false);
+        fetchEvents(selectedStart, selectedEnd);
+    };
+
+    const handleResetDate = () => {
+        setSelectedStart(""); setSelectedEnd(""); setQuickTab("all");
+        setShowDatePicker(false);
+        fetchEvents("", "");
+    };
+
+    // ---- Filter ----
+    const openFilter = () => {
+        setTempLocation(location);
+        setTempFreeOnly(freeOnly);
+        setTempGenres([...genres]);
+        setShowFilter(true);
+        setShowDatePicker(false);
+    };
+
+    const handleApplyFilter = () => {
+        setLocation(tempLocation);
+        setFreeOnly(tempFreeOnly);
+        setGenres(tempGenres);
+        setShowFilter(false);
+        fetchEvents(selectedStart, selectedEnd, tempLocation, tempFreeOnly, tempGenres);
+    };
+
+    const handleResetFilter = () => {
+        setTempLocation("Toàn quốc");
+        setTempFreeOnly(false);
+        setTempGenres([]);
+    };
+
+    const toggleGenre = (g) => {
+        setTempGenres(prev => prev.includes(g) ? prev.filter(x => x !== g) : [...prev, g]);
+    };
+
+    // ---- Derived states ----
+    const isDateActive = !!(selectedStart);
+    const isFilterActive = location !== "Toàn quốc" || freeOnly || genres.length > 0;
+
+    const datePillLabel = () => {
+        if (!selectedStart) return "Tất cả các ngày";
+        if (selectedEnd && selectedEnd !== selectedStart) return `${formatDate(selectedStart)} - ${formatDate(selectedEnd)}`;
+        return formatDate(selectedStart);
+    };
+
+    const filterPillLabel = "Bộ lọc";
+
+    const formatCurrency = (amount) =>
+        new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
+
+    // Right calendar is always the month after left
+    const rightMonth = (calMonth + 1) % 12;
+    const rightYear = calMonth === 11 ? calYear + 1 : calYear;
 
     return (
         <div className="search-page-wrapper">
-            {/* Header Filter Section */}
+            {/* ===== Filter Header ===== */}
             <div className="search-filter-header">
                 <div className="search-container">
                     <div className="search-result-info">
-                        <h2>Kết quả cho: <span className="search-highlight">"{queryFromUrl}"</span></h2>
-                        <p>{events.length} sự kiện được tìm thấy</p>
-                    </div>
+                        <h2>Kết quả tìm kiếm:</h2>
 
-                    <div className="search-actions-bar">
-                        {/* Date Filter */}
-                        <div className="search-filter-group">
-                            <button 
-                                className={`search-filter-pill ${dateRange.start ? 'active' : ''}`}
-                                onClick={() => {setShowDateFilter(!showDateFilter); setShowLocationFilter(false);}}
-                            >
-                                📅 {dateRange.start ? `${dateRange.start} - ${dateRange.end}` : "Thời gian"}
-                            </button>
+                            <div className="search-actions-bar">
+                            {/* Date Picker */}
+                            <div className="search-filter-group" ref={dateRef}>
+                                <button
+                                    className={`search-filter-pill ${isDateActive ? "active" : ""}`}
+                                    onClick={() => { setShowDatePicker(v => !v); setShowFilter(false); }}
+                                >
+                                    <span className="pill-icon">📅</span>
+                                    {datePillLabel()}
+                                    {isDateActive
+                                        ? <span className="pill-close" onClick={(e) => { e.stopPropagation(); handleResetDate(); }}>✕</span>
+                                        : <span className="pill-arrow">▾</span>
+                                    }
+                                </button>
 
-                            {showDateFilter && (
-                                <div className="search-popup">
-                                    <h4>Chọn khoảng thời gian</h4>
-                                    <div className="search-popup-inputs">
-                                        <label>Từ ngày: <input type="date" value={dateRange.start} onChange={e => setDateRange({...dateRange, start: e.target.value})} /></label>
-                                        <label>Đến ngày: <input type="date" value={dateRange.end} onChange={e => setDateRange({...dateRange, end: e.target.value})} /></label>
+                                {showDatePicker && (
+                                    <div className="date-picker-popup">
+                                        {/* Quick tabs */}
+                                        <div className="date-quick-tabs">
+                                            {[
+                                                { key: "all", label: "Tất cả các ngày" },
+                                                { key: "today", label: "Hôm nay" },
+                                                { key: "tomorrow", label: "Ngày mai" },
+                                                { key: "weekend", label: "Cuối tuần này" },
+                                                { key: "thismonth", label: "Tháng này" },
+                                            ].map(({ key, label }) => (
+                                                <button
+                                                    key={key}
+                                                    className={`date-quick-tab ${quickTab === key ? "active" : ""}`}
+                                                    onClick={() => applyQuickTab(key)}
+                                                >
+                                                    {label}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Dual calendar */}
+                                        <div className="date-calendars">
+                                            <MonthCalendar
+                                                year={calYear} month={calMonth}
+                                                selectedStart={selectedStart} selectedEnd={selectedEnd}
+                                                hoverDate={hoverDate}
+                                                onDayClick={handleDayClick}
+                                                onDayHover={setHoverDate}
+                                                showPrev={true} showNext={false}
+                                                onPrev={() => {
+                                                    if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
+                                                    else setCalMonth(m => m - 1);
+                                                }}
+                                            />
+                                            <MonthCalendar
+                                                year={rightYear} month={rightMonth}
+                                                selectedStart={selectedStart} selectedEnd={selectedEnd}
+                                                hoverDate={hoverDate}
+                                                onDayClick={handleDayClick}
+                                                onDayHover={setHoverDate}
+                                                showPrev={false} showNext={true}
+                                                onNext={() => {
+                                                    if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
+                                                    else setCalMonth(m => m + 1);
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="search-popup-footer">
+                                            <button className="btn-reset" onClick={handleResetDate}>Thiết lập lại</button>
+                                            <button className="btn-apply" onClick={handleApplyDate} disabled={!selectedStart}>Áp dụng</button>
+                                        </div>
                                     </div>
-                                    <div className="search-popup-footer">
-                                        <button className="btn-reset" onClick={handleResetFilters}>Đặt lại</button>
-                                        <button className="btn-apply" onClick={handleApplyDate}>Áp dụng</button>
+                                )}
+                            </div>
+
+                            {/* Filter popup */}
+                            <div className="search-filter-group" ref={filterRef}>
+                                <button
+                                    className={`search-filter-pill ${isFilterActive ? "active" : ""}`}
+                                    onClick={() => { openFilter(); }}
+                                >
+                                    <span className="pill-icon">🔽</span>
+                                    {filterPillLabel}
+                                    {isFilterActive
+                                        ? <span className="pill-close" onClick={(e) => {
+                                            e.stopPropagation();
+                                            setLocation("Toàn quốc"); setFreeOnly(false); setGenres([]);
+                                            fetchEvents(selectedStart, selectedEnd, "Toàn quốc", false, []);
+                                        }}>✕</span>
+                                        : <span className="pill-arrow">▾</span>
+                                    }
+                                </button>
+
+                                {showFilter && (
+                                    <div className="filter-popup">
+                                        <div className="filter-popup-body">
+                                            {/* Vị trí */}
+                                            <div className="filter-section">
+                                                <div className="filter-section-title">Vị trí</div>
+                                                <div className="filter-radio-list">
+                                                    {LOCATIONS.map(loc => (
+                                                        <label key={loc} className="filter-radio-item">
+                                                            <input
+                                                                type="radio"
+                                                                name="filterLocation"
+                                                                checked={tempLocation === loc}
+                                                                onChange={() => setTempLocation(loc)}
+                                                            />
+                                                            {loc}
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Giá tiền */}
+                                            <div className="filter-section">
+                                                <div className="filter-section-title">Giá tiền</div>
+                                                <div className="filter-toggle-row">
+                                                    <span className="filter-toggle-label">Miễn phí</span>
+                                                    <label className="toggle-switch">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={tempFreeOnly}
+                                                            onChange={e => setTempFreeOnly(e.target.checked)}
+                                                        />
+                                                        <span className="toggle-slider" />
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {/* Thể loại */}
+                                            <div className="filter-section">
+                                                <div className="filter-section-title">Thể loại</div>
+                                                <div className="filter-genre-list">
+                                                    {GENRES.map(g => (
+                                                        <button
+                                                            key={g}
+                                                            className={`filter-genre-chip ${tempGenres.includes(g) ? "active" : ""}`}
+                                                            onClick={() => toggleGenre(g)}
+                                                        >
+                                                            {g}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="search-popup-footer">
+                                                <button className="btn-reset" onClick={handleResetFilter}>Thiết lập lại</button>
+                                                <button className="btn-apply" onClick={handleApplyFilter}>Áp dụng</button>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
-
-                        {/* Location Filter */}
-                        <div className="search-filter-group">
-                            <button 
-                                className={`search-filter-pill ${location !== 'Toàn quốc' ? 'active' : ''}`}
-                                onClick={() => {setShowLocationFilter(!showLocationFilter); setShowDateFilter(false);}}
-                            >
-                                📍 {location}
-                            </button>
-
-                            {showLocationFilter && (
-                                <div className="search-popup">
-                                    <h4>Chọn địa điểm</h4>
-                                    <div className="search-radio-list">
-                                        {["Toàn quốc", "Hồ Chí Minh", "Hà Nội", "Đà Nẵng", "Cần Thơ"].map(loc => (
-                                            <label key={loc} className="search-radio-item">
-                                                <input 
-                                                    type="radio" 
-                                                    name="location" 
-                                                    checked={location === loc} 
-                                                    onChange={() => setLocation(loc)} 
-                                                /> {loc}
-                                            </label>
-                                        ))}
-                                    </div>
-                                    <div className="search-popup-footer">
-                                        <button className="btn-reset" onClick={handleResetFilters}>Đặt lại</button>
-                                        <button className="btn-apply" onClick={handleApplyLocation}>Áp dụng</button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Clear Filter Button */}
-                        {(dateRange.start || location !== "Toàn quốc") && (
-                            <button className="btn-search-clear" onClick={handleResetFilters}>✕ Xóa bộ lọc</button>
-                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Results Body */}
+            {/* ===== Results Body ===== */}
             <div className="search-container search-body">
-                {loading && <div className="search-loading">Đang tải...</div>}
+                {loading && <div className="search-loading">Đang tải</div>}
 
                 {!loading && (
                     <div className="search-grid">
                         {events.length > 0 ? (
                             events.map((event) => (
-                                <div className="search-card" key={event.event_id} onClick={() => navigate(`/event/${event.event_id}`)}>
+                                <div
+                                    className="search-card"
+                                    key={event.event_id}
+                                    onClick={() => navigate(`/event/${event.event_id}`)}
+                                >
                                     <div className="search-card-img">
                                         <img src={event.banner_url} alt={event.event_name} />
-                                        <span className="search-tag-status">Đang bán</span>
+                                        <span className="search-tag-status">Đã diễn ra</span>
                                     </div>
                                     <div className="search-card-content">
                                         <h3 className="search-event-title">{event.event_name}</h3>
                                         <p className="search-event-price">Từ {formatCurrency(event.min_price || 0)}</p>
                                         <p className="search-event-info">
-                                            🗓 {new Date(event.event_start).toLocaleDateString('vi-VN')} <br/>
-                                            📍 {event.event_location}
+                                            🗓{" "}
+                                            {(() => {
+                                                const date = new Date(event.event_start);
+                                                const day = date.getDate();      
+                                                const month = date.getMonth() + 1; 
+                                                const year = date.getFullYear();   
+                                                return `${day} tháng ${month}, ${year}`;
+                                            })()}
+                                            <br />
                                         </p>
                                     </div>
                                 </div>

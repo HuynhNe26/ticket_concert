@@ -16,7 +16,6 @@ export default function LayoutAdmin() {
 
     const [alerts, setAlerts] = useState([]);
 
-    // lưu event đã cảnh báo
     const alertedEvents = useRef(new Set());
 
     useEffect(() => {
@@ -28,7 +27,6 @@ export default function LayoutAdmin() {
         });
 
         socket.on("hotEvents", (events) => {
-            console.log(events)
             events.forEach(event => {
 
             const percent =

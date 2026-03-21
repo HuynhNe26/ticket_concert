@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'; // Thêm useNavigate
 import { Search, Plus, Calendar, MapPin, Users, DollarSign, Edit2, Trash2, Eye, Filter, TrendingUp, Flame } from 'lucide-react';
 import LoadingAdmin from '../../../components/loading/loading';
 import io from 'socket.io-client';
+import EventToggle from './event_toggle';
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -27,7 +28,6 @@ export default function ManageEvent() {
 
         const socket = io(API_BASE);
 
-        getAllEvents();
 
         socket.on('connect', () => {
             socket.emit("join_admin");
@@ -39,67 +39,46 @@ export default function ManageEvent() {
             calculateStats(data);
         });
 
-        // Listen for ticket sold updates
-        socket.on('ticketSold', (data) => {
-            updateEventTickets(data.eventId, data.ticketsSold);
+        socket.on('allEvents', (data) => {
+            setEvents(data);
+            calculateAllEvent(data)
         });
 
+
         const timer = setInterval(() => {
-            socket.emit("request");
+            socket.emit("requestHotEvents");
+            socket.emit("requestAllEvents");
         }, 1000);
 
         return () => {
             clearInterval(timer);
             socket.off("hotEvents");
+            socket.off("allEventsz1");
             socket.off("ticketSold");
             socket.disconnect();
         };
     }, [searchTerm, filterStatus, yearFilter]);
 
-    const getAllEvents = async () => {
-        setLoading(true);
-        setError('');
-        try {
-            const response = await fetch(`${API_BASE}/api/admin/events`, {
-                method: 'GET',
-                headers: {
-                    "Content-Type": 'application/json'
-                }
-            });
+    if (!events || !hotEvents) return <LoadingAdmin />
 
-            const data = await response.json();
-            if (data.success) {
-                setEvents(data.data);
-            } else {
-                setError(data.message || 'Không thể tải dữ liệu');
-            }
-        } catch (e) {
-            setError('Lỗi kết nối server: ' + e.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const updateEventTickets = (eventId, newTicketsSold) => {
-
-        setEvents(prev =>
-            prev.map(event =>
-                event.id === eventId
-                    ? { ...event, ticketsSold: newTicketsSold }
-                    : event
-            )
-        );
-
-        setHotEvents(prev =>
-            prev.map(event =>
-                event.event_id === eventId
-                    ? { ...event, ticketsSold: newTicketsSold }
-                    : event
-            )
-        );
-    };
 
     const calculateStats = (events) => {
+
+        const totalTicketsSold = events.reduce((sum, event) => {
+            return sum + Number(event.ticketssold || 0);
+        }, 0);
+
+        const revenue = events.reduce((sum, event) => {
+            return sum + Number(event.revenue || 0);
+        }, 0);
+
+        setStats({
+            totalTicketsSold,
+            revenue
+        });
+    };
+
+    const calculateAllEvent = (events) => {
 
         const totalTicketsSold = events.reduce((sum, event) => {
             return sum + Number(event.ticketssold || 0);
@@ -183,6 +162,26 @@ export default function ManageEvent() {
         { label: 'Vé Đã Bán', value: stats.totalTicketsSold, icon: Users, color: 'bg-purple-500' },
         { label: 'Doanh Thu', value: formatCurrency(stats.revenue), icon: DollarSign, color: 'bg-orange-500' }
     ];
+
+    const handleChangeStatus = async (eventId, newStatus) => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE}/api/events/${eventId}/status`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ isActive: newStatus }),
+            });
+
+            if (!res.ok) throw new Error("Cập nhật thất bại");
+
+            console.log("Cập nhật trạng thái thành công!");
+        } catch (err) {
+            console.log(err);
+        }
+    };
 
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '24px' }}>
@@ -402,7 +401,7 @@ export default function ManageEvent() {
 
             {/* Events List */}
             <div style={{ display: 'grid', gap: '20px' }}>
-                {visibleEvents.map((event) => (
+                {events.map((event) => (
                     <div key={event.id} style={{
                         background: 'white',
                         borderRadius: '16px',
@@ -428,7 +427,7 @@ export default function ManageEvent() {
                             )}
 
                             <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <div>
                                         <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b', marginBottom: '8px' }}>
                                             {event.event_name}
@@ -443,23 +442,29 @@ export default function ManageEvent() {
                                                 {event.event_location || 'Chưa có'}
                                             </span>
                                         </div>
+                                        {getStatusBadge(event.event_status)}
                                     </div>
-                                    {getStatusBadge(event.event_status)}
-                                    <button>
-                                        Change
-                                    </button>
+                                    <EventToggle
+                                        initialStatus={event.event_status} 
+                                        onChange={(newStatus) => {
+                                            handleChangeStatus(event.event_id, newStatus);
+                                        }}
+                                    />
                                 </div>
 
                                 <div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px' }}>
                                         <span style={{ color: '#64748b' }}>Vé đã bán</span>
                                         <span style={{ fontWeight: '600', color: '#1e293b' }}>
-                                            {event.ticketsSold || 0} / {event.totalTickets || 0}
+                                            {event.ticketssold || 0} / {event.totaltickets || 0}
                                         </span>
                                     </div>
                                     <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
                                         <div style={{
-                                            width: `${event.totalTickets ? (event.ticketsSold / event.totalTickets) * 100 : 0}%`,
+                                            width: `${Math.min(
+                                                (Number(event.ticketssold || 0) / Number(event.totaltickets || 1)) * 100,
+                                                100
+                                            )}%`,
                                             height: '100%',
                                             background: 'linear-gradient(90deg, #667eea, #764ba2)',
                                             transition: 'width 0.3s'

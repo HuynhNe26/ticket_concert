@@ -1,7 +1,6 @@
 /* --- CONTAINER CHÍNH --- */
 .booking-page-wrapper {
     grid-column: 1 / -1;
-    width: 100vw;
     margin-left: calc(-50vw + 50%);
 }
 .zone-container {
@@ -10,7 +9,7 @@
     max-width: none;    /* bỏ giới hạn */
     margin: 0;
     gap: 40px;
-    padding: 0 40px;    /* nếu muốn có khoảng cách 2 bên */
+    /* nếu muốn có khoảng cách 2 bên */
 }
 
 /* --- PHẦN BÊN TRÁI: LAYOUT (KHÔNG KHUNG) --- */

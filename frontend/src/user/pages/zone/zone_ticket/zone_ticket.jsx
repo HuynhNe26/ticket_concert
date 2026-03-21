@@ -46,12 +46,12 @@ export default function Ticket({ zones  = [], eventId, layout = {}, event={}}) {
 
     return (
         <div className="ticket-list-wrapper">
-            <div style={{color: 'white', height: '250px'}}>
+            <div style={{color: 'white', height: 'auto'}}>
                 <h4>{event.event_name}</h4>
-                <span style={{marginTop: '10px'}}>{eventEnd.slice(0, 5)}, {eventEnd.slice(6, 8)} Tháng {eventEnd.slice(9, 11)}, {eventEnd.slice(12, 17)}</span>
+                <span>📅 {eventEnd.slice(0, 5)}, {eventEnd.slice(6, 8)} Tháng {eventEnd.slice(9, 11)}, {eventEnd.slice(12, 17)}</span>
                 <br />
-                <span>{event?.event_location?.split(",")[0]}</span>
-                <img style={{width: '100%', height: 'auto'}} src={event.banner_url} />
+                <span>📍 {event?.event_location?.split(",")[0]}</span>
+                <img style={{width: '100%', height: 'auto', marginTop: '20px'}} src={event.banner_url} />
             </div>
             <div style={{width: '100%', backgroundColor: 'white', height: '1px', marginTop: '20px'}}></div>
 

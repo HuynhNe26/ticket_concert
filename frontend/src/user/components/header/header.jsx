@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import './header.css';
 import { jwtDecode } from "jwt-decode";
-import { Link, useNavigate } from "react-router-dom"; 
+import { Link, useLocation, useNavigate } from "react-router-dom"; 
 import LoginPage from "../../pages/login/Loginpage"; // Import LoginPage
 import { useTokenExpiry } from "../hook/useTokenExpiry";
 
@@ -27,6 +27,14 @@ export default function Header() {
         }
     }, []);
 
+    const location = useLocation();
+
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const q = params.get("q") || "";
+        setKeyword(q);
+    }, [location.search]); 
+
     const handleLogout = async () => {
         const token = localStorage.getItem("token");
 
@@ -50,7 +58,7 @@ export default function Header() {
     };
 
     const handleSearch = () => {
-        navigate(`/search?q=${encodeURIComponent(keyword)}`);
+        navigate(`/search?q=${keyword}`);
     };
 
     const handleKeyPress = (e) => {

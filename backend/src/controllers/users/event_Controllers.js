@@ -225,4 +225,33 @@ export const EventControllers = {
     }
   },
 
+  async changeStatusEvent (req, res) {
+    const eventId = req.params.id;
+    const { isActive } = req.body;
+
+    if (typeof isActive !== "boolean") {
+      return res.status(400).json({ message: "isActive phải là true hoặc false" });
+    }
+
+    try {
+      const query = `
+        UPDATE events
+        SET event_status = $1
+        WHERE event_id = $2
+        RETURNING *;
+      `;
+      const values = [isActive, eventId];
+
+      const result = await pool.query(query, values);
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({ message: "Event không tồn tại" });
+      }
+
+      res.json({ message: "Cập nhật thành công", event: result.rows[0] }); 
+    } catch (err) {
+      console.error("Lỗi thay đổi trạng thái sự kiện:", err);
+      return res.status(500).json({ message: "Lỗi server" });
+    } 
+  }
 };

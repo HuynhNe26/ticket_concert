@@ -18,7 +18,7 @@ export const EventSocket = (io) => {
             console.log(`Left event_${eventId}`);
         });
 
-        socket.on("request", async () => {
+        socket.on("requestHotEvents", async () => {
             try {
                 const { rows } = await pool.query(`
                     SELECT 
@@ -32,13 +32,42 @@ export const EventSocket = (io) => {
                     FROM events e
                     JOIN zones z ON e.event_id = z.event_id
                     JOIN categories c ON e.category_id = c.category_id
-                    WHERE e.event_status = true
+                    WHERE  e.event_end >= NOW()
+                            AND e.event_status = true
                     GROUP BY e.event_id, c.category_name
                     ORDER BY ticketsSold DESC
                     LIMIT 5
                 `);
 
                 io.to("admin_dashboard").emit("hotEvents", rows);
+
+            } catch (err) {
+                console.error("🔥 Hot events error:", err);
+            }
+        });
+
+        socket.on("requestAllEvents", async () => {
+            try {
+                const { rows } = await pool.query(`
+                    SELECT 
+                        e.event_id,
+                        e.event_name,
+                        e.event_status,
+                        e.event_start,
+                        e.event_location,
+                        SUM(z.zone_quantity) AS totalTickets,
+                        SUM(z.sold_quantity) AS ticketsSold,
+                        SUM(z.sold_quantity * z.zone_price) AS revenue,
+                        c.category_name
+                    FROM events e
+                    JOIN zones z ON e.event_id = z.event_id
+                    JOIN categories c ON e.category_id = c.category_id
+                    GROUP BY e.event_id, c.category_name
+                    ORDER BY e.event_start DESC
+                    LIMIT 5
+                `);
+
+                io.to("admin_dashboard").emit("allEvents", rows);
 
             } catch (err) {
                 console.error("🔥 Hot events error:", err);
