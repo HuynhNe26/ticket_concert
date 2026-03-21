@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import LoadingAdmin from "../../../components/loading/loading";
+import io from 'socket.io-client';
 import "./order_event.css";
 
 const API_BASE = process.env.REACT_APP_API_URL;
@@ -46,24 +47,31 @@ export default function OrderEvent() {
     const name = searchParams.get("name")
 
     useEffect(() => {
-        const getOrder = async () => {
-            try {
-                setLoading(true);
-                const res = await fetch(`${API_BASE}/api/admin/orders/order-event/${id}`);
-                const data = await res.json();
-                
-                if (data.success) {
-                    setOrders(data.data);
-                }
-            } catch (err) {
-                console.error("Lỗi tải đơn hàng:", err);
-                setOrders([]);
-            } finally {
-                setLoading(false);
-            }
+        const socket = io(API_BASE);
+
+        socket.on('connect', () => {
+            socket.emit("join_admin");
+        });
+
+        socket.emit("join_event", { eventId: id });
+
+        socket.on('orderEvent', (data) => {
+            setOrders(data);
+            console.log(data)
+            setLoading(false);
+        });
+
+
+        const timer = setInterval(() => {
+            socket.emit("requestOrderEvents", { eventId: id });
+        }, 1000);
+
+        return () => {
+            clearInterval(timer);
+            socket.off("orderEvent");
+            socket.disconnect();
         };
-        getOrder();
-    }, [id]);
+    },[]);
 
     const handleSort = (key) => {
         setSortConfig((prev) =>
@@ -75,17 +83,19 @@ export default function OrderEvent() {
     };
 
     const filtered = orders
-        .filter((o) => {
-            const q = search.toLowerCase();
-            const matchSearch =
-                !q ||
-                o._id?.toLowerCase().includes(q) ||
-                o.customerName?.toLowerCase().includes(q) ||
-                o.customerEmail?.toLowerCase().includes(q) ||
-                o.customerPhone?.toLowerCase().includes(q);
-            const matchStatus = filterStatus === "all" || o.status === filterStatus;
-            return matchSearch && matchStatus;
-        })
+    .filter((o) => {
+        const q = search.toLowerCase();
+
+        const matchSearch =
+        !q ||
+        o.payment_ref?.toLowerCase().includes(q) ||
+        o.event_name?.toLowerCase().includes(q);
+
+        const matchStatus =
+        filterStatus === "all" || o.payment_status === filterStatus;
+
+        return matchSearch && matchStatus;
+    })
         .sort((a, b) => {
             let va = a[sortConfig.key];
             let vb = b[sortConfig.key];
@@ -105,8 +115,8 @@ export default function OrderEvent() {
     const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     const totalRevenue = orders
-        .filter((o) => o.status !== "cancelled")
-        .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+        .filter((o) => o.payment_status !== "cancelled")
+        .reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
 
     const SortIcon = ({ col }) => {
         if (sortConfig.key !== col) return <span className="sort-icon sort-icon--idle">⇅</span>;
@@ -123,7 +133,7 @@ export default function OrderEvent() {
         <div className="oe-wrapper">
             {/* Header */}
             <div className="oe-header">
-                <button className="oe-back-btn" onClick={() => navigate(-1)}>
+                <button className="oe-back-btn" onClick={() => navigate("/admin/orders")}>
                     ← Quay lại
                 </button>
                 <div className="oe-title-block">
@@ -141,13 +151,13 @@ export default function OrderEvent() {
                 <div className="oe-stat-card">
                     <span className="oe-stat-label">Đã thanh toán</span>
                     <span className="oe-stat-value oe-stat-value--green">
-                        {orders.filter((o) => o.status === "paid" || o.status === "completed").length}
+                        {orders.filter((o) => o.payment_status === "paid" || o.payment_status === "completed").length}
                     </span>
                 </div>
                 <div className="oe-stat-card">
                     <span className="oe-stat-label">Đã huỷ</span>
                     <span className="oe-stat-value oe-stat-value--red">
-                        {orders.filter((o) => o.status === "cancelled").length}
+                        {orders.filter((o) => o.payment_status === "cancelled").length}
                     </span>
                 </div>
                 <div className="oe-stat-card oe-stat-card--accent">
@@ -199,7 +209,7 @@ export default function OrderEvent() {
                             <thead>
                                 <tr>
                                     <th className="oe-th" onClick={() => handleSort("_id")}>
-                                        Mã đơn <SortIcon col="_id" />
+                                        Mã đơn <SortIcon col="payment_ref" />
                                     </th>
                                     <th className="oe-th" onClick={() => handleSort("customerName")}>
                                         Khách hàng <SortIcon col="customerName" />
@@ -219,36 +229,39 @@ export default function OrderEvent() {
                             </thead>
                             <tbody>
                                 {paginated.map((order, idx) => {
-                                    const status = STATUS_MAP[order.status] || { label: order.status, class: "" };
+                                    const STATUS_MAP = {
+                                        "Thành công": { label: "Đã thanh toán", class: "status--paid" },
+                                        "Chờ thanh toán": { label: "Chờ thanh toán", class: "status--pending" },
+                                        "Huỷ": { label: "Đã huỷ", class: "status--cancelled" }
+                                    };
                                     return (
-                                        <tr key={order._id} className={`oe-tr ${idx % 2 === 0 ? "oe-tr--even" : ""}`}>
+                                        <tr key={order.payment_id} className={`oe-tr ${idx % 2 === 0 ? "oe-tr--even" : ""}`}>
                                             <td className="oe-td oe-td--id">
                                                 <span className="oe-order-id" title={order._id}>
-                                                    #{order._id?.slice(-8).toUpperCase()}
+                                                    {order.payment_ref}
                                                 </span>
                                             </td>
                                             <td className="oe-td">
-                                                <span className="oe-customer-name">{order.customerName || "—"}</span>
+                                                <span className="oe-customer-name">{order.fullname || "—"}</span>
                                             </td>
                                             <td className="oe-td oe-td--contact">
-                                                <div>{order.customerEmail || "—"}</div>
-                                                <div className="oe-phone">{order.customerPhone || ""}</div>
+                                                <div>{order.email || "—"}</div>
                                             </td>
                                             <td className="oe-td oe-td--amount">
-                                                {formatCurrency(order.totalAmount)}
+                                                {formatCurrency(order.total_price)}
                                             </td>
                                             <td className="oe-td">
-                                                <span className={`oe-status ${status.class}`}>
-                                                    {status.label}
+                                                <span className={`oe-status`}>
+                                                    
                                                 </span>
                                             </td>
                                             <td className="oe-td oe-td--date">
-                                                {formatDate(order.createdAt)}
+                                                {formatDate(order.created_at)}
                                             </td>
                                             <td className="oe-td oe-td--actions">
                                                 <button
                                                     className="oe-btn-detail"
-                                                    onClick={() => navigate(`/admin/orders/${order._id}`)}
+                                                    onClick={() => navigate(`/admin/orders/${order.payment_id}`)}
                                                 >
                                                     Chi tiết
                                                 </button>
