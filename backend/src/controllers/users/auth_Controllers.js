@@ -213,11 +213,17 @@ export const authControllers = {
       // Tạo token
       const token = authControllers.generateToken(user.user_id);
 
+      const needUpdateProfile =
+        !user.phonenumber ||
+        !user.gender ||
+        !user.birthofday;
+
       return res.json({
         success: true,
         message: "Đăng nhập Google thành công",
         token,
-        user: authControllers.formatUserResponse(user)
+        user: authControllers.formatUserResponse(user),
+        needUpdateProfile
       });
     } catch (err) {
       console.error("Google login error:", err);
@@ -282,5 +288,27 @@ export const authControllers = {
       console.error("Get profile error:", err);
       return res.status(500).json({ message: "Lỗi server" });
     }
-  }
+  },
+  // chinh sua ho so gg
+  async updateProfile(req, res) {
+
+  const userId = req.user;
+
+  const {
+    phoneNumber,
+    gender,
+    birthOfDay
+  } = req.body;
+
+  await pool.query(
+    `UPDATE users
+     SET phonenumber=$1,
+         gender=$2,
+         birthofday=$3
+     WHERE user_id=$4`,
+    [phoneNumber, gender, birthOfDay, userId]
+  );
+
+  res.json({ success: true });
+}
 };

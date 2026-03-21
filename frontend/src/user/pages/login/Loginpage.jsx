@@ -77,14 +77,18 @@ export default function LoginPage({ isModal = false, onClose = null }) {
     try {
       const data = await handleGoogleLoginAPI(credentialResponse);
       saveToken(data);
+      if (data.needUpdateProfile) {
+        navigate("/complete-profile");
+        return;
+      }
       showSuccess("Đăng nhập Google thành công!");
       setTimeout(() => {
-        hideNotification(); // Tắt thông báo
+        hideNotification();
         if (isModal && onClose) {
-          onClose(); // Đóng modal
+          onClose();
         }
         setTimeout(() => {
-          window.location.reload(); // Reload sau khi đóng modal
+          window.location.reload();
         }, 300);
       }, 1000);
     } catch (err) {
@@ -202,6 +206,7 @@ export default function LoginPage({ isModal = false, onClose = null }) {
           onClose={hideNotification}
         />
       )}
+      
     </GoogleOAuthProvider>
   );
 }

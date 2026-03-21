@@ -7,7 +7,7 @@ import ZonePage from "../user/pages/zone/zone/zone";
 import CartPage from "../user/pages/cart/cart";
 import CheckoutResult from "../user/pages/checkout/CheckoutResult";
 import { useTokenExpiry } from "../user/components/hook/useTokenExpiry";
-
+import CompleteProfile from "../user/pages/login/CompleteProfile/CompleteProfile";
 export function UserRoutes() {
   useTokenExpiry();
   return (
@@ -19,6 +19,7 @@ export function UserRoutes() {
         <Route path="/event/:id/booking" element={<ZonePage />} />
         <Route path='/my-cart' element={<CartPage />} />
         <Route path='/result' element={<CheckoutResult />} />
+        <Route path='/complete-profile' element={<CompleteProfile />} />
       </Route>
     </>
   );

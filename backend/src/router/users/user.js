@@ -6,8 +6,8 @@ const router = express.Router();
 
 router.post("/login", authControllers.login);
 router.post("/login-google", authControllers.loginGoogle);
+router.post("/update-profile-gg", authMiddleware,authControllers.updateProfile)
 router.post("/register", authControllers.register);
 router.get("/profile",authMiddleware, authControllers.getProfile);
 router.post("/logout", authControllers.logout);
-
 export default router;

@@ -291,3 +291,81 @@ button[disabled] {
   .field-row { grid-template-columns: 1fr; }
   .toggle-option { padding: 8px 20px; }
 }
+.overlay-lock {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 99999;
+}
+
+.profile-popup {
+  width: 420px;
+  background: #1a1d29;
+  padding: 30px;
+  border-radius: 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-popup input {
+  padding: 10px;
+}
+
+.profile-popup button {
+  padding: 10px;
+  background: orange;
+  border: none;
+  cursor: pointer;
+}
+
+.complete-profile-wrapper {
+  padding: 8px 0;
+}
+
+.complete-profile-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f0f4f8;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.complete-profile-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  text-align: center;
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+.btn-complete {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #3d8dbc 0%, #00b872 100%);
+  color: #0a0f1e;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+  box-shadow: 0 4px 20px rgba(0,255,212,0.2);
+}
+
+.btn-complete:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(0,255,212,0.35);
+}
+
+.btn-complete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
