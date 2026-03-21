@@ -11,13 +11,13 @@ export default function EventToggle({ initialStatus = false, onChange }) {
   };
 
   return (
-    <label className="toggle-switch">
+    <label className="status">
       <input
         type="checkbox"
         checked={isActive}     // đồng bộ checkbox với state
         onChange={handleToggle} 
       />
-      <span className="toggle-slider" />
+      <span className="toggle-slider1" />
       <span style={{marginLeft: '10px', color: 'white'}}>
         {isActive ? "Đang mở" : "Đã tắt"}
       </span>

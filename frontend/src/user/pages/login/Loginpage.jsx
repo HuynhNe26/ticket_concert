@@ -149,7 +149,7 @@ export default function LoginPage({ isModal = false, onClose = null }) {
         </div>
 
         {/* Tabs - Toggle Switch */}
-        <div className="toggle-switch">
+        <div className="toggle-btn">
           <div
             className="toggle-thumb"
             style={{ transform: tab === "login" ? "translateX(0%)" : "translateX(100%)" }}
