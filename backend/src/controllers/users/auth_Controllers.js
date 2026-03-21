@@ -292,7 +292,7 @@ export const authControllers = {
   // chinh sua ho so gg
   async updateProfile(req, res) {
 
-  const userId = req.user;
+  const userId = req.user.userId;
 
   const {
     phoneNumber,

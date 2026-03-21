@@ -47,13 +47,12 @@ export default function CartPage() {
     };
     fetchData();
   }, [navigate, token]);
-    console.log("expiresAt:", expiresAt);
 
   useEffect(() => {
     if (!expiresAt) return;
     const interval = setInterval(() => {
       const diff = Math.floor(
-        (new Date(expiresAt).getTime() - Date.now()) / 1000
+        (new Date(expiresAt ).getTime() - Date.now()) / 1000
       );
       if (diff <= 0) {
         clearInterval(interval);
@@ -76,19 +75,19 @@ export default function CartPage() {
   const fmt = (n) => n?.toLocaleString("vi-VN") + "₫";
 
   const subtotal = item ? item.zone_price * item.quantity : 0;
-  const fees = Math.round(subtotal * FEE_RATE);
-  const total = subtotal + fees + ORDER_FEE;
+  const total = subtotal;
 
   const handleCheckout = async () => {
     setPaying(true);
+   const payload = {
+     amount: total,
+            orderId: `ORDER_${item.user_id}_${Date.now()}`,
+            price: item.zone_price,
+            total_price: total
+  }
+  console.log("Send",payload);  
     try {
       if (paymentMethod === "MOMO") {
-        // Gia hạn cart trước
-        await fetch(`${API_BASE}/api/cart/extend`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
         // Tạo link MoMo
         const res = await fetch(`${API_BASE}/api/checkout/momo`, {
           method: "POST",
@@ -96,15 +95,12 @@ export default function CartPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`
           },
-          body: JSON.stringify({
-            amount: total,
-            orderId: `ORDER_${item.user_id}_${Date.now()}`
-          })
+          body: JSON.stringify(payload)
         });
 
         const data = await res.json();
         if (data.payUrl) {
-          window.location.href = data.payUrl; // redirect sang MoMo
+          window.location.href = data.payUrl; 
         } else {
           alert(data.error || "Lỗi tạo link MoMo");
         }
@@ -237,14 +233,7 @@ export default function CartPage() {
               <span>Tạm tính ({item?.quantity} vé)</span>
               <span>{fmt(subtotal)}</span>
             </div>
-            <div className="summary-line">
-              <span>Phí dịch vụ (15%)</span>
-              <span>{fmt(fees)}</span>
-            </div>
-            <div className="summary-line">
-              <span>Phí xử lý</span>
-              <span>{fmt(ORDER_FEE)}</span>
-            </div>
+            
 
             <hr className="summary-divider" />
 

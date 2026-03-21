@@ -27,6 +27,8 @@ momoNotify.post("/notify", async (req, res) => {
     }
 
     const userId = parsedExtra.userId;
+    const price = parsedExtra.price;
+    const total_price = parsedExtra.total_price;
     if (!userId) {
       console.error("Không có userId");
       return res.status(200).json({ message: "ok" });
@@ -117,13 +119,15 @@ momoNotify.post("/notify", async (req, res) => {
       for (const item of carts) {
         await client.query(
           `INSERT INTO payment_detail
-           (payment_id, event_id, ticket_quantity, zone_code)
-           VALUES ($1, $2, $3, $4)`,
+           (payment_id, event_id, ticket_quantity, zone_id, price, total_price)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
           [
             payment_id,
             item.event_id,
             item.quantity,
-            item._zone_code // ✅ FIX QUAN TRỌNG
+            item.zone_id,
+            price,
+            total_price 
           ]
         );
       }
