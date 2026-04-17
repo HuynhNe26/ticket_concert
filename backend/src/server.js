@@ -1,0 +1,89 @@
+import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { connectDB } from "./config/database.js";
+import cookieParser from "cookie-parser";
+
+dotenv.config();
+
+// Socket
+import { initZoneSocket } from "./socket/user/zone.js";
+import { EventSocket } from "./socket/admin/event.js";
+import { OrderSocket } from "./socket/admin/order.js";
+
+// users
+import authRouter from "./router/users/user.js";
+import eventsRouter from "./router/users/events.js";
+import userLayoutRouter from "./router/users/layout.js";
+import zoneRouter from "./router/users/zone.js";
+import cartRoutes from "./router/users/cart.js";
+import chatRoutes from "./router/users/chat.js";
+import categoryRouter from "./router/users/categories.js";
+import checkoutRouter from "./router/users/checkout.js";
+import voucherRouteruser from "./router/users/voucher.js"
+import ticketRouter from "./router/users/ticket.js"
+import agentRoutes from "./router/users/agent.js"
+import recommendationsRoutes from "./router/users/recommendations.js"
+// admins
+import adminRouter from "./router/admins/admins.js";
+import eventRouter from "./router/admins/events.js";
+import userRouter from "./router/admins/user.js";
+import adminLayoutRouter from "./router/admins/layout.js";
+import categoriesRouter from "./router/admins/categories.js"
+import orderRouter from "./router/admins/orders.js"
+import voucherRouter from "./router/admins/voucher.js"
+
+const app = express();
+const httpServer = createServer(app);
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: "http://localhost:3000", 
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    credentials: true,
+  })
+);
+app.use(cookieParser());
+
+app.use("/api/users", authRouter);
+app.use("/api/events", eventsRouter);
+app.use("/api/layout", userLayoutRouter);
+app.use("/api/zone", zoneRouter);
+app.use("/api/cart", cartRoutes);
+app.use("/api/categories", categoryRouter);
+app.use("/api/checkout", checkoutRouter);
+app.use("/api/chat", chatRoutes);
+app.use("/api/vouchers", voucherRouteruser)
+app.use("/api/my-ticket", ticketRouter);
+app.use("/api/agent", agentRoutes);
+app.use("/api/recommendations", recommendationsRoutes);
+
+app.use("/api/admin/users", userRouter);
+app.use("/api/admin/auth", adminRouter);
+app.use("/api/admin/events", eventRouter);
+app.use("/api/admin/layout", adminLayoutRouter);
+app.use("/api/admin/categories", categoriesRouter);
+app.use("/api/admin/orders", orderRouter);
+app.use("/api/admin/vouchers", voucherRouter);
+
+export const io = new Server(httpServer, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+initZoneSocket(io);
+EventSocket(io)
+OrderSocket(io)
+await connectDB();
+
+const PORT = process.env.PORT ;
+httpServer.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});

@@ -1,0 +1,363 @@
+/* ===== PAGE WRAPPER ===== */
+.ma-page {
+    display: flex;
+    justify-content: center;
+    font-family: 'Segoe UI', sans-serif;
+    color: #ffffff;
+}
+
+.ma-container {
+    width: 100%;
+    max-width: 860px;
+}
+
+/* ===== HEADER ===== */
+.ma-header {
+    margin-bottom: 32px;
+}
+
+.ma-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 16px 0;
+}
+
+.ma-divider {
+    height: 1px;
+    background-color: #2e2e2e;
+}
+
+/* ===== BODY ===== */
+.ma-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ===== AVATAR ===== */
+.ma-avatar-wrapper {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.ma-avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background-color: #22a861;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.ma-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ma-avatar-initial {
+    font-size: 40px;
+    font-weight: 700;
+    color: #ffffff;
+    user-select: none;
+}
+
+.ma-avatar-camera {
+    position: absolute;
+    bottom: 0;
+    right: -2px;
+    width: 28px;
+    height: 28px;
+    background-color: #22a861;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #1a1a1a;
+}
+
+.ma-avatar-camera svg {
+    width: 14px;
+    height: 14px;
+    color: #ffffff;
+}
+
+.ma-file-input {
+    display: none;
+}
+
+/* ===== NOTICE ===== */
+.ma-notice {
+    font-size: 13.5px;
+    color: #aaaaaa;
+    text-align: center;
+    line-height: 1.6;
+    margin: 0 0 28px 0;
+}
+
+/* ===== FORM ===== */
+.ma-form {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ma-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* ===== LABELS ===== */
+.ma-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.ma-label--muted {
+    color: #aaaaaa;
+    font-weight: 400;
+}
+
+/* ===== INPUTS ===== */
+.ma-input {
+    width: 100%;
+    background-color: #f5f5f5;
+    border: none;
+    border-radius: 6px;
+    padding: 13px 14px;
+    font-size: 14px;
+    color: #1a1a1a;
+    outline: none;
+    box-sizing: border-box;
+    transition: box-shadow 0.2s;
+}
+
+.ma-input:focus {
+    box-shadow: 0 0 0 2px #22a861;
+}
+
+/* ===== PHONE ===== */
+.ma-phone-input-wrapper {
+    position: relative;
+}
+
+.ma-phone-input {
+    padding-right: 40px;
+}
+
+.ma-clear-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ma-clear-btn svg {
+    width: 16px;
+    height: 16px;
+    color: #888;
+}
+
+/* ===== EMAIL ===== */
+.ma-email-wrapper {
+    position: relative;
+}
+
+.ma-email-input {
+    padding-right: 40px;
+    color: #888;
+}
+
+.ma-verified-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+}
+
+.ma-verified-icon svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* ===== DOB ROW — 3 dropdowns ===== */
+.ma-dob-row {
+    display: flex;
+    gap: 10px;
+}
+
+.ma-dob-row .ma-select-wrapper {
+    flex: 1;
+}
+
+.ma-select-wrapper {
+    position: relative;
+}
+
+.ma-select {
+    width: 100%;
+    appearance: none;
+    background-color: #f5f5f5;
+    border: none;
+    border-radius: 6px;
+    padding: 13px 36px 13px 14px;
+    font-size: 14px;
+    color: #1a1a1a;
+    outline: none;
+    cursor: pointer;
+    height:50px;
+    font-weight: 500;
+    box-sizing: border-box;
+    transition: box-shadow 0.2s;
+}
+
+.ma-select:focus {
+    box-shadow: 0 0 0 2px #22a861;
+}
+
+.ma-chevron {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: #555;
+    pointer-events: none;
+}
+
+/* ===== GENDER ===== */
+.ma-gender-row {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+}
+
+.ma-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #ffffff;
+    user-select: none;
+}
+
+.ma-radio {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.ma-radio--checked {
+    border-color: #22a861;
+}
+
+.ma-radio-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #22a861;
+}
+
+/* ===== SAVE MESSAGE ===== */
+.ma-save-msg {
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.ma-save-msg--ok {
+    color: #22a861;
+    background-color: rgba(34, 168, 97, 0.12);
+}
+
+.ma-save-msg--err {
+    color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.12);
+}
+
+/* ===== SUBMIT BUTTON ===== */
+.ma-submit-btn {
+    width: 100%;
+    background-color: #22a861;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    padding: 15px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
+}
+
+.ma-submit-btn:hover:not(:disabled) {
+    background-color: #1e9856;
+}
+
+.ma-submit-btn:active:not(:disabled) {
+    transform: scale(0.99);
+    background-color: #1a8a4e;
+}
+
+.ma-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===== DOB ROW ===== */
+.ma-dob-row {
+  display: flex;
+  gap: 10px;
+}
+
+.ma-dob-select-wrapper {
+  flex: 1;
+}
+
+.ma-dob-select {
+  width: 100%;
+  padding: 13px 32px 13px 14px;
+  background-color: #f5f5f5;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #1a1a1a;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.ma-dob-select:focus {
+  box-shadow: 0 0 0 2px #22a861;
+}

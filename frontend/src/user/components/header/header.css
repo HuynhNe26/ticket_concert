@@ -1,0 +1,579 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+
+:root {
+  --tb-green: #1db954;
+  --tb-green-dark: #17a348;
+  --tb-green-light: #25d066;
+  --tb-white: #ffffff;
+
+  --tb-text-secondary: rgba(255,255,255,0.85);
+  --tb-text-muted: rgba(255,255,255,0.65);
+  --tb-surface: rgba(255,255,255,0.12);
+  --tb-surface-hover: rgba(255,255,255,0.2);
+  --tb-border: rgba(255,255,255,0.18);
+  --tb-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  --tb-radius-sm: 6px;
+  --tb-radius-md: 10px;
+  --tb-radius-full: 9px;
+  --tb-font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  --tb-header-h: 60px;
+  --tb-transition: 0.18s ease;
+}
+
+
+/* ── Header shell ── */
+.tb-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  height: 70px;
+  background: linear-gradient(135deg, #3d8dbc 0%, #00b872 100%);
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+  font-family: var(--tb-font);
+}
+
+/* ── Inner container ── */
+.tb-container {
+  display: flex;
+  align-items: center;
+  gap: 100px;
+  max-width: 1280px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ── Logo ── */
+.tb-logo {
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.tb-logo-text {
+  font-family: var(--tb-font);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--tb-white);
+  letter-spacing: -0.5px;
+  white-space: nowrap;
+}
+
+/* ── Desktop Search ── */
+.tb-search-wrapper {
+  flex: 1;
+  width: 400px;
+  display: flex;
+  align-items: center;
+}
+
+.tb-search-box {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--tb-white);
+  border-radius: var(--tb-radius-full);
+  padding: 0 6px 0 14px;
+  height: 40px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: box-shadow var(--tb-transition);
+}
+
+.tb-search-box:focus-within {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+}
+
+.tb-search-icon {
+  width: 17px;
+  height: 17px;
+  color: #aaa;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.tb-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--tb-font);
+  font-size: 15px;
+  color: #222;
+  min-width: 0;
+}
+
+.tb-search-input::placeholder {
+  color: #bbb;
+}
+
+.tb-search-btn {
+  flex-shrink: 0;
+  background: var(--tb-green);
+  color: var(--tb-white);
+  border: none;
+  border-radius: var(--tb-radius-full);
+  padding: 0 16px;
+  height: 30px;
+  font-family: var(--tb-font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--tb-transition), transform 0.1s;
+}
+
+.tb-search-btn:hover {
+  background: var(--tb-green-dark);
+}
+
+.tb-search-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Right nav ── */
+.tb-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ── Shared icon button ── */
+.tb-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--tb-radius-full);
+  color: var(--tb-white);
+  transition: background var(--tb-transition);
+}
+
+.tb-icon-btn:hover {
+  background: var(--tb-surface-hover);
+}
+
+.tb-icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Mobile search btn — hidden on desktop */
+.tb-mobile-search-btn {
+  display: none;
+}
+
+/* ── Create event button ── */
+.tb-create-btn {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid rgba(255,255,255,0.7);
+  border-radius: var(--tb-radius-full);
+  padding: 0 14px;
+  height: 36px;
+  color: var(--tb-white);
+  font-family: var(--tb-font);
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--tb-transition), border-color var(--tb-transition);
+}
+
+.tb-create-btn:hover {
+  background: var(--tb-surface-hover);
+  border-color: var(--tb-white);
+}
+
+/* ── Nav link (Vé của tôi) ── */
+.tb-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--tb-text-secondary);
+  text-decoration: none;
+  font-family: var(--tb-font);
+  font-size: 15px;
+  font-weight: 500;
+  padding: 0 8px;
+  height: 38px;
+  border-radius: var(--tb-radius-sm);
+  transition: background var(--tb-transition), color var(--tb-transition);
+  white-space: nowrap;
+}
+
+.tb-nav-link:hover {
+  background: var(--tb-surface);
+  color: var(--tb-white);
+}
+
+.tb-nav-link svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tb-nav-label {
+  display: inline;
+}
+
+/* ── Avatar ── */
+.tb-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--tb-radius-full);
+  background: #e8c140;
+  color: #333;
+  font-family: var(--tb-font);
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.tb-avatar-guest {
+  background: var(--tb-surface);
+  color: var(--tb-white);
+  border-color: rgba(255,255,255,0.4);
+}
+
+/* ── Chevron icon ── */
+.tb-chevron {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--tb-transition);
+}
+
+.tb-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* ── User trigger button ── */
+.user-menu-wrapper {
+  position: relative;
+}
+
+.tb-user-trigger,
+.tb-login-btn,
+.tb-flag-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--tb-white);
+  font-family: var(--tb-font);
+  padding: 4px 8px;
+  border-radius: var(--tb-radius-sm);
+  transition: background var(--tb-transition);
+  margin-left: 20px;
+}
+
+.tb-user-trigger:hover,
+.tb-login-btn:hover,
+.tb-flag-btn:hover {
+  background: var(--tb-surface);
+}
+
+.tb-username {
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-login-label {
+  font-size: 17px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ── Dropdown menu ── */
+.tb-user-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 200px;
+  background: var(--tb-white);
+  border-radius: var(--tb-radius-md);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08);
+  padding: 8px 0;
+  animation: tbMenuIn 0.15s ease;
+  z-index: 100;
+}
+
+@keyframes tbMenuIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.tb-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  color: #333;
+  font-family: var(--tb-font);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.tb-menu-item:hover {
+  background: #f5f5f5;
+  color: #111;
+}
+
+.tb-menu-item svg {
+  width: 18px;
+  height: 18px;
+  color: #555;
+  flex-shrink: 0;
+}
+
+.tb-menu-divider {
+  height: 1px;
+  background: #eee;
+  margin: 6px 0;
+}
+
+.tb-menu-logout {
+  color: #e53935;
+}
+
+.tb-menu-logout svg {
+  color: #e53935;
+}
+
+/* ── Mobile search overlay ── */
+.tb-mobile-search-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 9998;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0;
+  animation: tbFadeIn 0.15s ease;
+}
+
+@keyframes tbFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.tb-mobile-search-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--tb-green);
+  padding: 10px 16px;
+  gap: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  animation: tbSlideDown 0.18s ease;
+}
+
+@keyframes tbSlideDown {
+  from { transform: translateY(-100%); }
+  to   { transform: translateY(0); }
+}
+
+.tb-mobile-search-bar .tb-search-icon {
+  color: rgba(255,255,255,0.7);
+}
+
+.tb-mobile-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--tb-font);
+  font-size: 15px;
+  color: var(--tb-white);
+  min-width: 0;
+}
+
+.tb-mobile-search-input::placeholder {
+  color: rgba(255,255,255,0.6);
+}
+
+.tb-mobile-close {
+  background: none;
+  border: none;
+  color: var(--tb-white);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.tb-mobile-close:hover {
+  opacity: 1;
+}
+
+/* ── Login modal ── */
+.tb-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: tbFadeIn 0.15s ease;
+}
+
+.tb-modal-content {
+  position: relative;
+  border-radius: 16px;
+  max-width: 380px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+  animation: tbModalIn 0.2s ease;
+}
+
+@keyframes tbModalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.tb-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #f0f0f0;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  color: #555;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.tb-modal-close:hover {
+  background: #e0e0e0;
+  color: #222;
+}
+
+@media (max-width: 900px) {
+  .tb-search-wrapper {
+    max-width: 300px;
+  }
+
+  .tb-create-btn {
+    display: none;
+  }
+
+  .tb-nav-label {
+    display: none;
+  }
+
+  .tb-nav-link {
+    padding: 0 6px;
+  }
+
+  .tb-username {
+    display: none;
+  }
+
+  .tb-login-label {
+  }
+
+  .tb-flag-btn .tb-chevron {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --tb-header-h: 56px;
+  }
+
+  .tb-container {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  /* Hide desktop search on mobile */
+  .tb-search-wrapper {
+    display: none;
+  }
+
+  /* Show mobile search icon */
+  .tb-mobile-search-btn {
+    display: flex;
+  }
+
+  .tb-logo-text {
+    font-size: 20px;
+  }
+
+  /* Compact nav */
+  .tb-nav-link {
+    gap: 0;
+  }
+
+  .tb-nav-link svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .tb-create-btn {
+    display: none;
+  }
+
+  .tb-user-trigger,
+  .tb-login-btn {
+    gap: 0;
+    padding: 4px;
+  }
+
+  /* Dropdown goes full-width-ish on small screens */
+  .tb-user-menu {
+    right: -4px;
+    min-width: 180px;
+  }
+}
+
+/* ── Very small (≤ 380px) ── */
+@media (max-width: 380px) {
+  .tb-logo-text {
+    font-size: 18px;
+  }
+
+  .tb-flag-btn {
+    display: none;
+  }
+
+  .tb-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}

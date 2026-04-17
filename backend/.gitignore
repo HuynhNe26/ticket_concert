@@ -1,0 +1,13 @@
+# env files
+.env
+backend/.env
+
+# dependencies
+node_modules/
+
+# logs
+*.log
+
+# build
+dist/
+build/
