@@ -21,7 +21,6 @@ export default function AddAdmin() {
     const [warning, setWarning] = useState({ show: false, message: '' });
     const [success, setSuccess] = useState({ show: false, message: '' });
     const [error, setError] = useState({show: false, message: '' });
-    const showWarning = (message) => setWarning({ show: true, message });
     const showSuccess = (message) => setSuccess({ show: true, message });
     const showError =  (message) => setError({ show: true, message });
     const [errors, setErrors] = useState({})
@@ -116,6 +115,7 @@ export default function AddAdmin() {
                     role: ""
                 });
             } else {
+                showError("Tạo tài khoản thành công!")
                 setErrors({ api: data.message });
             }
 

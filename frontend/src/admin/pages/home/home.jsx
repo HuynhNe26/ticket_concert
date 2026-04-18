@@ -28,9 +28,6 @@ export default function HomeAdmin() {
   const [events, setEvents] = useState ([]);
   const [eventTotal, setEventTotal] = useState ([]);
   const [orders, setOrders] = useState([]);
-  const [error, setError] = useState("");
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const now = new Date();
   const year = new Date().getFullYear();
 
   useEffect(() => {
@@ -83,13 +80,6 @@ export default function HomeAdmin() {
     getUser();
     getEvent();
     getOrder();
-
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-
-    return () => clearInterval(timer);
   }, []);
 
   const totalRevenue = orders.reduce(

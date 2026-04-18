@@ -17,15 +17,9 @@ export default function AddEvent() {
     actor: ''
   });
 
-  const [artists, setArtists] = useState([]);
   const [bannerFile, setBannerFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const handleArtistChange = (index, value) => {
-    const updatedArtists = [...artists];
-    updatedArtists[index] = value;
-    setArtists(updatedArtists);
-  }
+
 
   // Này là hàm xử lý để khi admin nhập vào thì nó lưu thay đổi vào đây!
 

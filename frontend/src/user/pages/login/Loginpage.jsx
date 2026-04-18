@@ -9,6 +9,7 @@ import Error from "../../components/notification/error/error";
 import Warning from "../../components/notification/warning/warning";
 import OtpModal from "./reset_password.jsx"
 import "./Login_user.css";
+import LoadingUser from "../../components/loading/loading.jsx";
 
 
 
@@ -16,7 +17,6 @@ export default function LoginPage({ isModal = false, onClose = null }) {
   const navigate = useNavigate();
   const [tab, setTab] = useState("login"); // login | register
   const [loading, setLoading] = useState(false);
-  const [showLogin, setShowLogin] = useState(true);
   const [showForgot, setShowForgot] = useState(false);
   
   // State cho notifications
@@ -32,10 +32,6 @@ export default function LoginPage({ isModal = false, onClose = null }) {
 
   const showError = (message) => {
     setNotification({ type: 'error', message, show: true });
-  };
-
-  const showWarning = (message) => {
-    setNotification({ type: 'warning', message, show: true });
   };
 
   const hideNotification = () => {
@@ -100,6 +96,8 @@ export default function LoginPage({ isModal = false, onClose = null }) {
       setLoading(false);
     }
   };
+
+  if(loading) return <LoadingUser />
 
   return (
     <GoogleOAuthProvider clientId="940435928416-p9ic1ginb2kon6nrrqk6e9g7r7pjbfkt.apps.googleusercontent.com">
@@ -208,7 +206,6 @@ export default function LoginPage({ isModal = false, onClose = null }) {
           <OtpModal
             onClose={() => {
               setShowForgot(false);
-              setShowLogin(true);
             }}
           />
         )}

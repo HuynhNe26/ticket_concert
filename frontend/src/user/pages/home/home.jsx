@@ -120,7 +120,6 @@ export default function HomeUser() {
   const [trending, setTrendings] = useState([]);
   const [eventMonth, setEventMonths] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [eventCategory, setEventCategory] = useState([]);
   const [eventWeeks, setEventWeeks] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [warning, setWarning] = useState({ show: false, message: "" });
@@ -159,6 +158,7 @@ export default function HomeUser() {
         if (tr.success) setTrendings(tr.data.slice(0, 10));
         if (em.success) setEventMonths(em.data.slice(0, 10));
         if (cat.success) setCategories(cat.data);
+        console.log(categories)
         if (evw.success) setEventWeeks(evw.data.slice(0, 10));
       } catch (err) {
         setError({ show: true, message: "Lỗi tải dữ liệu trang chủ" });
@@ -167,6 +167,7 @@ export default function HomeUser() {
       }
     };
     fetchAll();
+
   }, []);
 
   // ── Fetch "Dành cho bạn" — chạy độc lập để không block màn hình chính ─────
@@ -189,17 +190,6 @@ export default function HomeUser() {
     };
     fetchRecommendations();
   }, []);
-
-  // ── Category events ────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!categories.length) return;
-    const id = categories[0]?.category_id;
-    if (!id) return;
-    fetch(`${API_BASE}/api/events/category/${id}`)
-      .then((r) => r.json())
-      .then((d) => { if (d.success) setEventCategory(d.data.slice(0, 10)); })
-      .catch(() => {});
-  }, [categories]);
 
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("vi-VN").format(amount) + "đ";

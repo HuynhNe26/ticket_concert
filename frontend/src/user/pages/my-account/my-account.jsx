@@ -67,7 +67,7 @@ export default function MyAccount() {
             }
         };
         getInfo();
-    }, []);
+    }, [token]);
 
     if (loading) return <LoadingUser />;
 

@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef } from "react";
 import QRCode from "qrcode";
 import "./my-ticket.css";
 import LoginPage from "../login/Loginpage";
+
+const API_BASE = process.env.REACT_APP_API_URL;
 // ─── Helpers ──
 const mapStatus = (s) => {
   if (s === "Thành công") return "success";
@@ -51,16 +53,6 @@ function QRCanvas({ value, size = 168 }) {
   }, [value, size]);
 
   return <canvas ref={canvasRef} style={{ borderRadius: 12, display: "block" }} />;
-}
-
-// ─── InfoRow ──
-function InfoRow({ icon, label, value, accent }) {
-  return (
-    <div className="info-row">
-      <span className="info-label">{label}</span>
-      <span className={`info-value${accent ? " accent" : ""}`}>{value}</span>
-    </div>
-  );
 }
 
 function TicketModal({ ticket, onClose }) {
@@ -225,7 +217,6 @@ export default function MyTicket() {
   const [selected,   setSelected]   = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const token    = localStorage.getItem("token");
-  const API_BASE = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     if (!token) {

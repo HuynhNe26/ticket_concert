@@ -1,9 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "./zone_ticket.css";
 
 export default function Ticket({ zones  = [], eventId, layout = {}, event={}}) {
-    const navigate = useNavigate();
 
     const formatCurrency = (amount) =>
         new Intl.NumberFormat("vi-VN", {
@@ -22,7 +19,6 @@ export default function Ticket({ zones  = [], eventId, layout = {}, event={}}) {
             if (!apiZone) return null;
 
             const available = apiZone.zone_quantity - apiZone.sold_quantity;
-            const percentLeft = (available / apiZone.zone_quantity) * 100;
 
             return {
                 ...layoutZone,
@@ -49,7 +45,7 @@ export default function Ticket({ zones  = [], eventId, layout = {}, event={}}) {
                 <span>📅 {eventEnd.slice(0, 5)}, {eventEnd.slice(6, 8)} Tháng {eventEnd.slice(9, 11)}, {eventEnd.slice(12, 17)}</span>
                 <br />
                 <span>📍 {event?.event_location?.split(",")[0]}</span>
-                <img style={{width: '100%', height: 'auto', marginTop: '20px'}} src={event.banner_url} />
+                <img style={{width: '100%', height: 'auto', marginTop: '20px'}} src={event.banner_url} alt="Hình sự kiện"/>
             </div>
             <div style={{width: '100%', backgroundColor: 'white', height: '1px', marginTop: '20px'}}></div>
 
@@ -73,8 +69,6 @@ export default function Ticket({ zones  = [], eventId, layout = {}, event={}}) {
             </div>
 
             {mergedZones.map((z) => {
-
-                const isFull = z.available <= 0;
 
                 return (
                     <div
