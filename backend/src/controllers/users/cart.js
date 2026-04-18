@@ -156,6 +156,7 @@ export async function getCart(req, res) {
         e.event_age,
         e.event_actor,
         e.event_artist,
+        e.banner_url,
 
         z.zone_name,
         z.zone_description,

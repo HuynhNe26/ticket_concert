@@ -20,6 +20,8 @@
   --arrow-size:      36px;
 }
 
+*, *::before, *::after { box-sizing: border-box; }
+
 /* ── Page shell ── */
 .hw-page {
   font-family: var(--hw-font-b);
