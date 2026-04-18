@@ -1,6 +1,6 @@
 import express from "express";
 import { getHybridRecommendations } from "../../agent/recommendation.service.js";
-import { authMiddleware, optionalAuth } from "../../middlewares/userAuth.js";
+import { optionalAuth } from "../../middlewares/userAuth.js";
 
 const router = express.Router();
 
