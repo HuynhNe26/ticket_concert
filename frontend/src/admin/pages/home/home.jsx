@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../../context/authAdmin";
 import "./home.css";
 
+const API_BASE = process.env.REACT_APP_API_URL;
 /* ===== ICON COMPONENT ===== */
 const Icon = ({ children, size = 24 }) => (
   <svg
@@ -23,23 +24,83 @@ const Icon = ({ children, size = 24 }) => (
 export default function HomeAdmin() {
   const { admin } = useAdminAuth();
   const navigate = useNavigate();
+  const [users, setUsers] = useState([]);
+  const [events, setEvents] = useState ([]);
+  const [eventTotal, setEventTotal] = useState ([]);
+  const [orders, setOrders] = useState([]);
+  const [error, setError] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
+  const now = new Date();
+  const year = new Date().getFullYear();
 
   useEffect(() => {
+
+    const getUser = async () => {
+      try {
+        const res = await fetch (`${API_BASE}/api/admin/users/`);
+
+        const data = await res.json();
+        if (data.success) {
+          setUsers(data.data)
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
+
+    const getEvent = async () => {
+      try {
+        const res = await fetch (`${API_BASE}/api/admin/events/statistic`);
+        const resTotal = await fetch (`${API_BASE}/api/admin/events/`);
+        const data = await res.json();
+        const dataTotal = await resTotal.json();
+        if (data.success) {
+          setEvents(data.data)
+        }
+
+        if (dataTotal.success) {
+          setEventTotal(dataTotal.data)
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
+
+    const getOrder = async () => {
+      try {
+        const res = await fetch (`${API_BASE}/api/admin/orders/`);
+
+        const data = await res.json();
+        if (data.success) {
+          setOrders(data.data)
+          console.log(data.data)
+        }
+      } catch (err) {
+        console.log(err)
+      }
+    }
     
+    getUser();
+    getEvent();
+    getOrder();
+
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
+
+
     return () => clearInterval(timer);
   }, []);
+
+  const totalRevenue = orders.reduce(
+    (sum, item) => sum + Number(item.revenue), 0
+  );
 
   // Stats data
   const stats = [
     {
-      title: "Total Users",
-      value: "2,543",
-      change: "+12.5%",
-      trend: "up",
+      title: "Người dùng",
+      value: `${users.length}`,
       icon: (
         <Icon>
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -52,10 +113,8 @@ export default function HomeAdmin() {
       link: "/admin/user",
     },
     {
-      title: "Total Products",
-      value: "1,247",
-      change: "+8.2%",
-      trend: "up",
+      title: "Sự kiện đang mở bán",
+      value: `${events}`,
       icon: (
         <Icon>
           <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
@@ -63,13 +122,23 @@ export default function HomeAdmin() {
         </Icon>
       ),
       color: "purple",
-      link: "/admin/products",
+      link: "/admin/events",
     },
     {
-      title: "Total Orders",
-      value: "4,892",
-      change: "+23.1%",
-      trend: "up",
+      title: "Tổng sự kiện",
+      value: `${eventTotal.length}`,
+      icon: (
+        <Icon>
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+          <line x1="7" y1="7" x2="7.01" y2="7" />
+        </Icon>
+      ),
+      color: "purple",
+      link: "/admin/events",
+    },
+    {
+      title: "Tổng đơn hàng",
+      value: `${orders.length}`,
       icon: (
         <Icon>
           <circle cx="9" cy="21" r="1" />
@@ -81,10 +150,8 @@ export default function HomeAdmin() {
       link: "/admin/orders",
     },
     {
-      title: "Revenue",
-      value: "$52,847",
-      change: "+15.3%",
-      trend: "up",
+      title: "Tổng doanh thu",
+      value: `${totalRevenue.toLocaleString("VN-Vi")}`,
       icon: (
         <Icon>
           <line x1="12" y1="1" x2="12" y2="23" />
@@ -92,7 +159,7 @@ export default function HomeAdmin() {
         </Icon>
       ),
       color: "orange",
-      link: "/admin/revenue",
+      link: "/admin/report",
     },
   ];
 
@@ -157,62 +224,6 @@ export default function HomeAdmin() {
     },
   ];
 
-  // Recent activities
-  const recentActivities = [
-    {
-      id: 1,
-      user: "John Doe",
-      action: "created new order",
-      time: "2 minutes ago",
-      type: "order",
-    },
-    {
-      id: 2,
-      user: "Jane Smith",
-      action: "updated product",
-      time: "15 minutes ago",
-      type: "product",
-    },
-    {
-      id: 3,
-      user: "Mike Johnson",
-      action: "registered new account",
-      time: "1 hour ago",
-      type: "user",
-    },
-    {
-      id: 4,
-      user: "Sarah Wilson",
-      action: "completed payment",
-      time: "2 hours ago",
-      type: "payment",
-    },
-    {
-      id: 5,
-      user: "Tom Brown",
-      action: "left a review",
-      time: "3 hours ago",
-      type: "review",
-    },
-  ];
-
-  const formatTime = (date) => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-
-  const formatDate = (date) => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   return (
     <div className="admin-home">
       <div className="admin-container">
@@ -222,15 +233,8 @@ export default function HomeAdmin() {
           <div className="header-content">
             <div className="header-text">
               <h1 className="header-title">
-                Welcome back, <span className="highlight">{admin?.fullname || "Admin"}</span>
+                Chào mừng trở lại, <span className="highlight">{admin?.fullname || "Admin"}</span>
               </h1>
-              <p className="header-subtitle">
-                Here's what's happening with your store today
-              </p>
-            </div>
-            <div className="header-time">
-              <div className="time-display">{formatTime(currentTime)}</div>
-              <div className="date-display">{formatDate(currentTime)}</div>
             </div>
           </div>
         </div>
@@ -247,12 +251,6 @@ export default function HomeAdmin() {
               <div className="stat-content">
                 <div className="stat-title">{stat.title}</div>
                 <div className="stat-value">{stat.value}</div>
-                <div className={`stat-change ${stat.trend}`}>
-                  <span className="change-icon">
-                    {stat.trend === "up" ? "↑" : "↓"}
-                  </span>
-                  {stat.change} from last month
-                </div>
               </div>
             </div>
           ))}
@@ -267,8 +265,7 @@ export default function HomeAdmin() {
             {/* QUICK ACTIONS */}
             <div className="section-card">
               <div className="section-header">
-                <h2 className="section-title">Quick Actions</h2>
-                <p className="section-subtitle">Frequently used actions</p>
+                <h2 className="section-title">Hành động nhanh</h2>
               </div>
               <div className="quick-actions-grid">
                 {quickActions.map((action, index) => (
@@ -290,8 +287,8 @@ export default function HomeAdmin() {
             {/* CHART PLACEHOLDER */}
             <div className="section-card">
               <div className="section-header">
-                <h2 className="section-title">Revenue Overview</h2>
-                <p className="section-subtitle">Monthly performance</p>
+                <h2 className="section-title">Thống kê doanh thu</h2>
+                <p className="section-subtitle">Doanh thu theo tháng của năm {year}</p>
               </div>
               <div className="chart-placeholder">
                 <div className="chart-bars">
@@ -321,33 +318,6 @@ export default function HomeAdmin() {
 
           {/* RIGHT COLUMN */}
           <div className="content-right">
-            
-            {/* RECENT ACTIVITIES */}
-            <div className="section-card">
-              <div className="section-header">
-                <h2 className="section-title">Recent Activities</h2>
-                <p className="section-subtitle">Latest updates</p>
-              </div>
-              <div className="activities-list">
-                {recentActivities.map((activity) => (
-                  <div key={activity.id} className="activity-item">
-                    <div className={`activity-dot activity-${activity.type}`}></div>
-                    <div className="activity-content">
-                      <div className="activity-text">
-                        <strong>{activity.user}</strong> {activity.action}
-                      </div>
-                      <div className="activity-time">{activity.time}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button className="view-all-btn">
-                View All Activities
-                <Icon size={16}>
-                  <polyline points="9 18 15 12 9 6" />
-                </Icon>
-              </button>
-            </div>
 
             {/* SYSTEM STATUS */}
             <div className="section-card">

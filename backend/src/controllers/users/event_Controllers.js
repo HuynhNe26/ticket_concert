@@ -62,12 +62,21 @@ export const EventControllers = {
   async getAllEvents(req, res) {
     try {
       const query = `
-        SELECT event_id, event_name, banner_url, event_start, event_location, 
-               (SELECT MIN(zone_price) FROM zones WHERE event_id = events.event_id) as min_price,
-                event_status, event_end
-        FROM events 
+          SELECT 
+            event_id,
+            event_name,
+            banner_url,
+            event_start,
+            event_location,
+            (
+              SELECT MIN(zone_price) 
+              FROM zones 
+              WHERE event_id = events.event_id
+            ) as min_price,
+            event_status,
+            event_end
+        FROM events
         WHERE event_status = true
-        AND event_end >= NOW()
         ORDER BY created_at DESC
       `;
       const { rows } = await pool.query(query);

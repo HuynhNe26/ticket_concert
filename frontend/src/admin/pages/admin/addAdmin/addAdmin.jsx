@@ -222,6 +222,7 @@ export default function AddAdmin() {
                                 value={formData.gender}
                                 onChange={handleChange}
                                 className={errors.gender ? "error" : ""}
+                                style={{height: "50px"}}
                             >
                                 <option value="">Chọn giới tính</option>
                                 <option value="male">Nam</option>

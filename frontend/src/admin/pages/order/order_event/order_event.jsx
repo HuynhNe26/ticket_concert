@@ -230,7 +230,7 @@ export default function OrderEvent() {
                             <tbody>
                                 {paginated.map((order, idx) => {
                                     const STATUS_MAP = {
-                                        "Thành công": { label: "Đã thanh toán", class: "status--paid" },
+                                        "paid": { label: "Đã thanh toán", class: "status--paid" },
                                         "Chờ thanh toán": { label: "Chờ thanh toán", class: "status--pending" },
                                         "Huỷ": { label: "Đã huỷ", class: "status--cancelled" }
                                     };
@@ -251,8 +251,8 @@ export default function OrderEvent() {
                                                 {formatCurrency(order.total_price)}
                                             </td>
                                             <td className="oe-td">
-                                                <span className={`oe-status`}>
-                                                    
+                                                <span className={`oe-status ${STATUS_MAP.class}`}>
+                                                    {STATUS_MAP[order.payment_status]?.label || ""}
                                                 </span>
                                             </td>
                                             <td className="oe-td oe-td--date">

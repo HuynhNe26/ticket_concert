@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./reset_password.css";
 
+const API_BASE = process.env.REACT_APP_API_URL;
+
 // ── SVG Icons ──────────────────────────────────────────────
 const MailIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -88,7 +90,7 @@ function OtpModal({ email, onClose, onSuccess }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:5001/api/users/checkotp", {
+      const res = await fetch(`${API_BASE}/api/users/checkotp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
@@ -111,7 +113,7 @@ function OtpModal({ email, onClose, onSuccess }) {
     setCountdown(60);
     console.log(email)
     try {
-      await fetch("http://localhost:5001/api/users/forgetPassword", {
+      await fetch(`${API_BASE}/api/users/forgetPassword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -216,7 +218,7 @@ export default function ResetPassword() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5001/api/users/forgetPassword", {
+      const res = await fetch(`${API_BASE}/api/users/forgetPassword`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

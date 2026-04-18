@@ -1,3 +1,4 @@
+import { success } from "zod";
 import { pool } from "../../config/database.js";
 import uploadCloud from "../../middlewares/upload.js";
 
@@ -369,6 +370,30 @@ export const EventControllers = {
         data: rows
       });
 
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
+        message: "Lỗi server"
+      });
+    }
+  },
+
+  async statistic(req, res) {
+    try {
+      const { rows } = await pool.query(
+        `
+          SELECT event_name
+          FROM events
+          WHERE event_status = true
+          AND event_end >= NOW()
+          AND event_start <= NOW()
+        `
+      )
+
+      return res.status(200).json({
+        success: true,
+        data: rows.length
+      })
     } catch (err) {
       console.error(err);
       return res.status(500).json({

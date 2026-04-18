@@ -56,6 +56,7 @@ export default function Header() {
         });
 
         setShowLogoutSuccess(true);
+        window.location.reload();
       }
     } catch (err) {
       console.log("Logout error", err);

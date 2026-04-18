@@ -20,7 +20,7 @@ const INTENT_PATTERNS = [
   },
   {
     intent: "event_list",
-    patterns: [/sự kiện.*tháng/, /show.*tháng/, /có.*sự kiện/, /sự kiện.*sắp/, /concert.*nào/],
+    patterns: [/sự kiện.*tháng/, /show.*tháng/, /có.*sự kiện/, /sự kiện.*sắp/, /concert.z/],
   },
   {
     intent: "artist_info",

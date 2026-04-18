@@ -3,8 +3,9 @@ import express from "express";
 import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { connectDB } from "./config/database.js";
+import { connectDB, pool } from "./config/database.js";
 import cookieParser from "cookie-parser";
+import cron from "node-cron";
 
 dotenv.config();
 
@@ -82,6 +83,22 @@ initZoneSocket(io);
 EventSocket(io)
 OrderSocket(io)
 await connectDB();
+
+cron.schedule("* * * * *", async () => {
+  console.log("Cron đang chạy:", new Date());
+  try {
+    await pool.query(`
+      UPDATE events
+      SET event_status = false
+      WHERE event_end < NOW()
+        AND event_status = true
+    `);
+
+    console.log("Đã cập nhật trạng thái sự kiện hết hạn");
+  } catch (err) {
+    console.error("Lỗi cập nhật event_status:", err);
+  }
+});
 
 const PORT = process.env.PORT ;
 httpServer.listen(PORT, () => {

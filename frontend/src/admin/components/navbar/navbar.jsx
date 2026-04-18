@@ -128,19 +128,7 @@ const MENU = [
         allowLevels: [1, 2],
       },
     ],
-  },
-  {
-    label: "Thống kê",
-    allowLevels: [1, 2],
-    path: "/admin/statistic",
-    icon: (
-      <Icon>
-        <path d="M18 20V10" />
-        <path d="M12 20V4" />
-        <path d="M6 20v-6" />
-      </Icon>
-    )
-  },
+  }
 ];
 
 export default function Navbar() {
