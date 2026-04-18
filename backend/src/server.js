@@ -78,8 +78,13 @@ app.use("/api/admin/vouchers", voucherRouter);
 
 export const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
+    origin: [
+      "http://localhost:3000",
+      "https://ticketconcert.online",
+      "https://www.ticketconcert.online",
+      "https://ticket-concert-pi.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     credentials: true,
   },
 });

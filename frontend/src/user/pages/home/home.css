@@ -25,6 +25,11 @@
   font-family: var(--hw-font-b);
 }
 
+.hw-section {
+  padding: 0 16px;
+  margin-bottom: 28px;
+}
+
 /* ── Section header row ── */
 .hw-sec-head {
   display: flex;
