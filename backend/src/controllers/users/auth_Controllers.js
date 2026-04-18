@@ -342,16 +342,16 @@ export const authControllers = {
       );
 
       await resend.emails.send({
-        from: "onboarding@resend.dev",
+        from: "noreply@ticketconcert.online",
         to: email,
         subject: `Ticket Concert - ${otp} là mã xác nhận để đặt lại mật khẩu của bạn`,
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px;">
             <h2>Ticket Concert</h2>
 
-            <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu tài khoản của bạn.</p>
+            <p style="font-size: 15px;">Chúng tôi nhận được yêu cầu đặt lại mật khẩu tài khoản của bạn.</p>
 
-            <p><strong>Đây là mã xác nhận để đặt lại mật khẩu:</strong></p>
+            <p style="font-size: 17px;"><strong>Đây là mã xác nhận để đặt lại mật khẩu:</strong></p>
 
             <div style="
               font-size: 32px;
@@ -363,12 +363,24 @@ export const authControllers = {
               ${otp}
             </div>
 
-            <p>Mã xác nhận sẽ hết hạn trong <strong style="color: #2e7d32;">10 phút</strong>.</p>
+            <p style="font-size: 15px;">Mã xác nhận sẽ hết hạn trong <strong style="color: #2e7d32;">10 phút</strong>.</p>
 
-            <p>Nếu bạn không yêu cầu thay đổi mật khẩu, hãy bỏ qua email này.</p>
+            <p style="font-size: 15px;">Nếu bạn không yêu cầu thay đổi mật khẩu, hãy bỏ qua email này.</p>
 
             <br />
-            <p><strong>Ticket Concert Team</strong></p>
+            <p style="font-size: 17px;"><strong>Ticket Concert Team</strong></p>
+            <br />
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <img 
+                src="https://res.cloudinary.com/dzfqqipsx/image/upload/v1776499227/xmcn7vabeqm6lgnvl0pm.png"
+                style="width: 150px; height: 150px; object-fit: contain; display: block; margin-right: 50px;"
+              />
+
+              <img 
+                src="https://res.cloudinary.com/dzfqqipsx/image/upload/v1776498643/yuzokosxfjqor1g0twvm.jpg"
+                style="width: 150px; height: 150px; object-fit: contain; display: block;"
+              />
+            </div>
           </div>
         `
       });
@@ -390,8 +402,6 @@ export const authControllers = {
   async verifyopt(req, res) {
     try {
       const {otp, email} = req.body;
-
-      const now = new Date();
 
       if (!otp) {
         return res.status(400).json({
@@ -431,6 +441,84 @@ export const authControllers = {
       return res.status(200).json({
         success: true,
         data: user
+      })
+    } catch (err) {
+      console.log(err);
+
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi server!"
+      });
+    }
+  },
+
+  async resetPassword(req, res) {
+    try {
+      const {password, email} = req.body;
+
+      const now = new Date().toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng nhập mật khẩu!"
+        });
+      }
+
+      const hashPassword = await bcrypt.hash(password, 10);
+
+      await pool.query(
+        `
+        UPDATE users
+        SET password = $1
+        WHERE email = $2
+        `,
+        [hashPassword, email]
+      );
+
+      const {rows} = await pool.query(
+        `SELECT fullname
+        FROM users
+        WHERE email = $1`
+      , [email])
+
+      const fullname = rows[0]?.fullname;
+
+      await resend.emails.send({
+        from: "noreply@ticketconcert.online",
+        to: email,
+        subject: `Ticket Concert Notification - Mật khẩu của bạn đã được thay đổi`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2 style="font-size: 17px;">Ticket Concert</h2>
+
+            <p style="font-size: 15px;">Chào <strong>${fullname}</strong></p>
+
+            <p style="font-size: 15px;">Mật khẩu của bạn đã được thay đổi và lúc <strong>${now}</strong>. Nếu bạn không yêu cầu thay đổi mật khẩu, vui lòng liên hệ với quản trị viên của mình.</p>
+            <br />
+            <p style="font-size: 15px;">ticketconcert-cskh@gmail.com</p>
+
+            <br />
+            <p style="font-size: 17px;"><strong>Ticket Concert Team</strong></p>
+            <br />
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <img 
+                src="https://res.cloudinary.com/dzfqqipsx/image/upload/v1776499227/xmcn7vabeqm6lgnvl0pm.png"
+                style="width: 150px; height: 150px; object-fit: contain; display: block; margin-right: 50px;"
+              />
+
+              <img 
+                src="https://res.cloudinary.com/dzfqqipsx/image/upload/v1776498643/yuzokosxfjqor1g0twvm.jpg"
+                style="width: 150px; height: 150px; object-fit: contain; display: block;"
+              />
+            </div>
+          </div>
+        `
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Thay đổi mật khẩu thành công!"
       })
     } catch (err) {
       console.log(err);

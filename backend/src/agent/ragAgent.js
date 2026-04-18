@@ -32,8 +32,8 @@ export async function getVectorStore() {
     postgresConnectionOptions: { connectionString: process.env.DATABASE_URL },
     tableName: "rag_documents",
     columns: {
-      idColumnName: "doc_id",
-      vectorColumnName: "embedding",
+      idColumnName:      "doc_id",
+      vectorColumnName:  "embedding",
       contentColumnName: "content",
       metadataColumnName: "meta",
     },
@@ -51,11 +51,9 @@ export const ragSearchTool = tool(
       const store = await getVectorStore();
       const results = await store.similaritySearchWithScore(query, topK);
 
-      // Threshold: cosine similarity >= 0.30
       const filtered = results.filter(([, score]) => score >= 0.30);
 
       if (filtered.length === 0) {
-        // Fallback: tìm DB bằng keyword
         const keywords = query
           .split(/\s+/)
           .filter((w) => w.length > 2)
@@ -111,14 +109,11 @@ export const ragSearchTool = tool(
       "lịch sử sự kiện, hoặc khi get_events không đủ chi tiết.",
     schema: z.object({
       query: z.string().describe("Câu truy vấn tìm kiếm semantic"),
-      topK: z.number().optional().default(5).describe("Số lượng kết quả (mặc định 5)"),
+      topK:  z.number().optional().default(5).describe("Số lượng kết quả (mặc định 5)"),
     }),
   }
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TOOL 2: Get Events — lấy danh sách sự kiện từ DB
-// ─────────────────────────────────────────────────────────────────────────────
 export const getEventsTool = tool(
   async ({ filter, limit = 5 }) => {
     try {
@@ -134,53 +129,117 @@ export const getEventsTool = tool(
       `;
       const params = [];
 
+      // ── Filter theo thể loại ──────────────────────────────────────────────
       if (filter?.category) {
         params.push(`%${filter.category}%`);
         query += ` AND c.category_name ILIKE $${params.length}`;
       }
+
+      // ── Filter theo địa điểm ──────────────────────────────────────────────
       if (filter?.location) {
         params.push(`%${filter.location}%`);
         query += ` AND e.event_location ILIKE $${params.length}`;
       }
+
+      // ── Filter theo nghệ sĩ ───────────────────────────────────────────────
       if (filter?.artistName) {
         params.push(`%${filter.artistName}%`);
         query += ` AND e.event_artist::text ILIKE $${params.length}`;
       }
-      if (filter?.upcoming) {
+
+      // ── Filter theo ngày ──────────────────────────────────────────────────
+      // "Diễn ra ngày X" = sự kiện bắt đầu vào ngày X (event_start::date = X)
+      // Concert thường bắt đầu và kết thúc trong cùng 1 ngày.
+      if (filter?.today) {
+        query += ` AND e.1event_end::date = CURRENT_DATE`;
+
+      } else if (filter?.tomorrow) {
+        query += ` AND e.1event_end::date = (CURRENT_DATE + INTERVAL '1 day')::date`;
+
+      } else if (filter?.specificDate) {
+        // Nhận chuỗi YYYY-MM-DD từ agent (agent tự parse từ ngôn ngữ tự nhiên)
+        params.push(filter.specificDate);
+        query += ` AND e.1event_end::date = $${params.length}::date`;
+
+      } else if (filter?.upcoming) {
         query += ` AND e.event_start > NOW()`;
-      }
-      if (filter?.thisMonth) {
+
+      } else if (filter?.thisMonth) {
         query += ` AND e.event_start <= DATE_TRUNC('month', NOW()) + INTERVAL '1 month - 1 day'
                    AND e.event_end   >= DATE_TRUNC('month', NOW())`;
-      }
-      if (filter?.active) {
+
+      } else if (filter?.active) {
         query += ` AND e.event_end >= NOW()`;
+      }
+
+      // hot: chỉ lấy sự kiện chưa kết thúc và có dữ liệu zone thực tế
+      if (filter?.hot) {
+        query += ` AND e.event_end >= NOW() AND z.status = true`;
       }
 
       query += ` GROUP BY e.event_id, c.category_name, c.category_id`;
 
+      // ── Sắp xếp ───────────────────────────────────────────────────────────
+      if (filter?.hot) {
+        // Ưu tiên: tỉ lệ bán cao → tổng lượt bán nhiều → sự kiện diễn ra sớm
+        query += `
+          HAVING SUM(z.zone_quantity) > 0
+          ORDER BY
+            ROUND(SUM(z.sold_quantity)::numeric / NULLIF(SUM(z.zone_quantity), 0) * 100, 1) DESC,
+            SUM(z.sold_quantity) DESC,
+            e.event_start ASC`;
+      } else {
+        query += ` ORDER BY e.event_start ASC`;
+      }
+
       params.push(Math.min(limit, 6));
-      query += ` ORDER BY e.event_start ASC LIMIT $${params.length}`;
+      query += ` LIMIT $${params.length}`;
 
       const result = await pool.query(query, params);
-      if (result.rows.length === 0) return "ℹ️ Không tìm thấy sự kiện phù hợp.";
+      if (result.rows.length === 0) {
+        // Trả về thông báo gợi ý ngày thay thế nếu tìm theo ngày
+        if (filter?.today)        return "ℹ️ Hôm nay không có sự kiện nào đang diễn ra.";
+        if (filter?.tomorrow)     return "ℹ️ Ngày mai chưa có sự kiện nào được lên lịch.";
+        if (filter?.specificDate) return `ℹ️ Không có sự kiện nào vào ngày ${filter.specificDate}.`;
+        return "ℹ️ Không tìm thấy sự kiện phù hợp.";
+      }
 
       const now = new Date();
+      const todayDate = new Date(); todayDate.setHours(0, 0, 0, 0);
+      const tomorrowDate = new Date(todayDate); tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+
       return result.rows
         .map((ev) => {
           const start = new Date(ev.event_start);
           const end   = new Date(ev.event_end);
-          const artists = ev.event_artist?.map((a) => a.name).join(", ") || "Chưa cập nhật";
+          const artists  = ev.event_artist?.map((a) => a.name).join(", ") || "Chưa cập nhật";
           const minPrice = ev.min_price ? formatCurrency(ev.min_price) : "Chưa cập nhật";
+
+          // Status icon — ưu tiên hiển thị "HÔM NAY" / "NGÀY MAI" nếu đúng ngày
           let statusIcon;
-          if (now < start)    statusIcon = "📅 Sắp diễn ra";
-          else if (now > end) statusIcon = "✅ Đã kết thúc";
-          else                statusIcon = "🔴 ĐANG DIỄN RA";
+          const startDate = new Date(start); startDate.setHours(0, 0, 0, 0);
+
+          if (now >= start && now <= end) {
+            statusIcon = "🔴 ĐANG DIỄN RA";
+          } else if (startDate.getTime() === todayDate.getTime()) {
+            statusIcon = "📌 HÔM NAY";
+          } else if (startDate.getTime() === tomorrowDate.getTime()) {
+            statusIcon = "📅 NGÀY MAI";
+          } else if (now < start) {
+            statusIcon = "📅 Sắp diễn ra";
+          } else {
+            statusIcon = "✅ Đã kết thúc";
+          }
+
+          // Format thời gian bắt đầu kèm giờ nếu tìm theo ngày cụ thể
+          const timeStr = (filter?.today || filter?.tomorrow || filter?.specificDate)
+            ? `${start.toLocaleDateString("vi-VN")} lúc ${start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`
+            : start.toLocaleDateString("vi-VN");
 
           return (
             `🎵 **${ev.event_name}** [ID:${ev.event_id}]\n` +
             `   📍 ${ev.event_location}\n` +
-            `   📅 ${start.toLocaleDateString("vi-VN")} — ${statusIcon}\n` +
+            `   🕐 ${timeStr} — ${statusIcon}\n` +
             `   🎤 ${artists}\n` +
             `   💰 Từ ${minPrice}`
           );
@@ -195,25 +254,51 @@ export const getEventsTool = tool(
     name: "get_events",
     description:
       "Lấy danh sách sự kiện từ database với bộ lọc linh hoạt. " +
-      "Dùng khi: hỏi sự kiện tháng này, sự kiện ở đâu, sự kiện đang/sắp diễn ra, " +
-      "sự kiện của nghệ sĩ nào. Trả về tối đa 5-6 sự kiện với giá vé.",
+      "Dùng khi: hỏi sự kiện hôm nay, ngày mai, ngày cụ thể, tháng này, ở đâu, " +
+      "sự kiện đang/sắp diễn ra, sự kiện của nghệ sĩ nào. " +
+      "Trả về tối đa 5-6 sự kiện với giá vé và trạng thái.",
     schema: z.object({
-      filter: z.object({
-        category:   z.string().optional().describe("Tên thể loại"),
-        location:   z.string().optional().describe("Địa điểm"),
-        artistName: z.string().optional().describe("Tên nghệ sĩ"),
-        upcoming:   z.boolean().optional().describe("Sự kiện sắp diễn ra"),
-        thisMonth:  z.boolean().optional().describe("Sự kiện trong tháng này"),
-        active:     z.boolean().optional().describe("Sự kiện chưa kết thúc"),
-      }).optional(),
+      filter: z
+        .object({
+          // ── Lọc theo nội dung ──────────────────────────────────────────
+          category:     z.string().optional().describe("Tên thể loại"),
+          location:     z.string().optional().describe("Địa điểm tổ chức"),
+          artistName:   z.string().optional().describe("Tên nghệ sĩ biểu diễn"),
+
+          // ── Lọc theo ngày ─────────────────────────────────────────────
+          today:        z.boolean().optional().describe(
+            "true → sự kiện diễn ra NGAY HÔM NAY. " +
+            "Dùng khi user hỏi: 'hôm nay', 'tối nay', 'show hôm nay', 'cuối tuần này' (nếu hôm nay là cuối tuần)."
+          ),
+          tomorrow:     z.boolean().optional().describe(
+            "true → sự kiện diễn ra NGÀY MAI. " +
+            "Dùng khi user hỏi: 'ngày mai', 'tối mai', 'show ngày mai'."
+          ),
+          specificDate: z.string().optional().describe(
+            "Ngày cụ thể định dạng YYYY-MM-DD. " +
+            "Dùng khi user nhắc đến ngày như: '25/12', 'ngày 1 tháng 5', '15-8', '2025-06-20'. " +
+            "Agent tự chuyển đổi ngôn ngữ tự nhiên → YYYY-MM-DD trước khi truyền vào đây. " +
+            "Năm mặc định là năm hiện tại nếu user không nói."
+          ),
+
+          // ── Lọc theo khoảng thời gian ─────────────────────────────────
+          upcoming:     z.boolean().optional().describe("Sự kiện chưa bắt đầu (event_start > NOW)"),
+          thisMonth:    z.boolean().optional().describe("Sự kiện trong tháng hiện tại"),
+          active:       z.boolean().optional().describe("Sự kiện chưa kết thúc (event_end >= NOW)"),
+
+          // ── Gợi ý theo độ hot ─────────────────────────────────────────
+          hot:          z.boolean().optional().describe(
+            "true → sắp xếp theo độ hot: tỉ lệ bán / tổng capacity cao nhất. " +
+            "Dùng khi: user vãng lai hỏi gợi ý, 'sự kiện hot', 'sự kiện bán chạy', " +
+            "'nên xem gì', 'sự kiện nổi bật'. Thường kết hợp active:true."
+          ),
+        })
+        .optional(),
       limit: z.number().optional().default(5),
     }),
   }
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TOOL 3: Check Tickets — kiểm tra vé real-time
-// ─────────────────────────────────────────────────────────────────────────────
 export const checkTicketsTool = tool(
   async ({ eventName, eventId, zoneCode }) => {
     try {
@@ -286,9 +371,6 @@ export const checkTicketsTool = tool(
   }
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TOOL 4: Get Personalized Events — gợi ý theo sở thích user
-// ─────────────────────────────────────────────────────────────────────────────
 export const getPersonalizedEventsTool = tool(
   async ({ userId }) => {
     try {
@@ -370,9 +452,6 @@ export const getPersonalizedEventsTool = tool(
   }
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TOOL 5: Web Search — tìm kiếm ngoài hệ thống
-// ─────────────────────────────────────────────────────────────────────────────
 export const webSearchTool = tool(
   async ({ query }) => {
     try {
@@ -408,7 +487,7 @@ export const webSearchTool = tool(
     name: "web_search",
     description:
       "Tìm kiếm thông tin ngoài hệ thống: tin tức nghệ sĩ mới nhất, " +
-      "thông tin bên ngoài không có trong database (album mới, tour diễn quốc tế...). " +
+      "thông tin bên ngoài không có trong database. " +
       "CHỈ dùng khi rag_search và get_events không có thông tin.",
     schema: z.object({
       query: z.string().describe("Từ khóa tìm kiếm tiếng Việt hoặc tiếng Anh"),
@@ -416,11 +495,8 @@ export const webSearchTool = tool(
   }
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SYSTEM PROMPT — workflow-driven, think-before-answer
-// ─────────────────────────────────────────────────────────────────────────────
 export function buildSystemPrompt() {
-  const today = getDateContext();
+  const today = getDateContext(); // vd: "Thứ Ba, 22/04/2025"
 
   return `
 Bạn là trợ lý AI thông minh của nền tảng đặt vé sự kiện âm nhạc.
@@ -435,91 +511,119 @@ Hôm nay: **${today}**
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### 🔍 BƯỚC 1 — PHÂN LOẠI CÂU HỎI
-Trước khi làm bất cứ điều gì, phân loại câu hỏi vào một trong các nhóm:
 | Nhóm | Dấu hiệu nhận biết |
 |---|---|
 | **event_list** | "sự kiện tháng này", "có những show nào", "sự kiện ở HCM" |
+| **event_date** | "hôm nay", "tối nay", "ngày mai", "tối mai", "ngày 25/12", "thứ Bảy này" |
 | **event_detail** | tên sự kiện cụ thể, hỏi chi tiết về 1 show |
 | **ticket_check** | "còn vé không", "giá vé", "vé VIP", "vé GA" |
 | **artist_info** | hỏi về nghệ sĩ, ca sĩ, ban nhạc |
-| **personalized** | "gợi ý cho mình", "theo sở thích", "phù hợp với tôi" |
+| **recommend_guest** | "gợi ý sự kiện" + [AUTH:guest], "nên xem gì", "sự kiện hot", "sự kiện nổi bật" |
+| **personalized** | "gợi ý cho mình", "theo sở thích", "phù hợp với tôi" + [AUTH:userId=X] |
 | **purchase** | "mua vé", "đặt vé", "thanh toán" |
 | **history** | "vé của tôi", "lịch sử mua", "đã mua" |
 | **out_of_scope** | không liên quan âm nhạc/vé |
 
-### ❓ BƯỚC 2 — KIỂM TRA THÔNG TIN ĐỦ CHƯA
-Với **ticket_check** mà THIẾU tên sự kiện:
-→ Hỏi: "Bạn muốn kiểm tra vé sự kiện nào vậy? Nếu có khu vực cụ thể (VIP, GA...) bạn cho mình biết thêm nhé!"
+### 📅 BƯỚC 2 — PARSE NGÀY TỪ NGÔN NGỮ TỰ NHIÊN
+Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 
-Với **event_detail** mà tên mơ hồ:
-→ Hỏi: "Bạn đang hỏi về sự kiện '[tên mơ hồ]' đúng không? Hay là một sự kiện khác?"
+| User nói | Filter cần dùng |
+|---|---|
+| "hôm nay", "tối nay", "show hôm nay" | \`today: true\` |
+| "ngày mai", "tối mai", "show ngày mai" | \`tomorrow: true\` |
+| "thứ Bảy này", "cuối tuần này" | Tính ngày từ hôm nay → \`specificDate: "YYYY-MM-DD"\` |
+| "25/12", "25 tháng 12" | \`specificDate: "YYYY-12-25"\` (năm hiện tại) |
+| "ngày 1/5/2025", "01-05-2025" | \`specificDate: "2025-05-01"\` |
+| "tuần tới", "Chủ Nhật tới" | Tính ngày cụ thể → \`specificDate: "YYYY-MM-DD"\` |
 
-Với **personalized** mà là [AUTH:guest]:
-→ Không cần hỏi, trả lời luôn: yêu cầu đăng nhập + gợi ý sự kiện nổi bật
+**Quy tắc parse:**
+- Năm không được nhắc → dùng năm từ context "Hôm nay: ..."
+- Tháng không được nhắc → dùng tháng hiện tại
+- "cuối tuần" → Thứ Bảy hoặc Chủ Nhật gần nhất tính từ hôm nay
+- Nếu ngày đã qua trong tháng → chuyển sang tháng sau
 
-Với **event_list** → ĐỦ thông tin, KHÔNG cần hỏi thêm
+### ❓ BƯỚC 3 — KIỂM TRA THÔNG TIN ĐỦ CHƯA
+- **ticket_check** mà THIẾU tên sự kiện → Hỏi: "Bạn muốn kiểm tra vé sự kiện nào?"
+- **event_detail** mà tên mơ hồ → Hỏi xác nhận tên
+- **event_date** → LUÔN ĐỦ thông tin, gọi tool ngay
+- **event_list** → LUÔN ĐỦ thông tin, gọi tool ngay
 
-### 🔧 BƯỚC 3 — CHỌN CÔNG CỤ PHÙ HỢP
-| Nhóm | Công cụ chính | Công cụ phụ |
+### 🔧 BƯỚC 4 — CHỌN CÔNG CỤ PHÙ HỢP
+| Nhóm | Công cụ chính | Ghi chú |
 |---|---|---|
-| event_list | get_events | — |
-| event_detail | rag_search | get_events |
-| ticket_check | check_tickets | rag_search |
-| artist_info | rag_search | web_search |
-| personalized | get_personalized_events | get_events |
-| purchase | check_tickets | — |
-| Nếu rag_search trả về ít | web_search | — |
+| event_list | get_events(filter.active/upcoming/thisMonth) | |
+| **recommend_guest** | **get_events(filter={ hot:true, active:true })** | Chỉ khi [AUTH:guest] |
+| **event_date** | **get_events(filter.today / tomorrow / specificDate)** | Ưu tiên filter ngày |
+| event_detail | rag_search → get_events | |
+| ticket_check | check_tickets | |
+| artist_info | rag_search → web_search | |
+| personalized | get_personalized_events | Chỉ khi đã đăng nhập |
 
-**Nguyên tắc**: Luôn thử rag_search trước khi web_search.
-Nếu kết quả độ phù hợp < 40% → bổ sung web_search hoặc thông báo không đủ thông tin.
-
-### 💬 BƯỚC 4 — VIẾT CÂU TRẢ LỜI
-Sau khi có dữ liệu từ tool, viết câu trả lời theo quy tắc:
+### 💬 BƯỚC 5 — VIẾT CÂU TRẢ LỜI
 - **Xưng**: "mình" | **Gọi user**: "bạn"
 - **Độ dài**: 3–6 dòng, KHÔNG liệt kê quá 4 items
-- **Format số**: dùng formatCurrency (₫ với dấu phân cách ngàn)
-- **Kết thúc**: thêm gợi ý hành động tiếp theo nếu phù hợp
+- **Kết thúc**: gợi ý hành động tiếp theo nếu phù hợp
 - **KHÔNG bịa**: nếu không có thông tin → nói thẳng
+- Khi hiển thị thời gian theo ngày cụ thể → luôn kèm **giờ bắt đầu**
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## QUY TẮC ĐẶC BIỆT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-### 🎫 Lịch sử mua vé / Vé đã mua
-→ Trả lời: "Bạn xem vé của mình tại mục **Vé của tôi** trên thanh menu nhé!"
-→ KHÔNG gọi tool nào
+### 🎫 Lịch sử mua vé
+→ "Bạn xem vé tại mục **Vé của tôi** trên thanh menu nhé!"
+→ KHÔNG gọi tool
+
+### 🎯 Gợi ý sự kiện cho user vãng lai
+Khi [AUTH:guest] hỏi: "gợi ý sự kiện", "nên xem gì", "sự kiện hot", "sự kiện nổi bật", "sự kiện đang bán chạy":
+→ Gọi: get_events(filter={ hot: true, active: true }, limit: 5)
+→ KHÔNG yêu cầu đăng nhập — hiển thị luôn danh sách sự kiện hot
+→ Cuối câu trả lời gợi ý: "Đăng nhập để nhận gợi ý cá nhân hóa phù hợp hơn với bạn nhé!"
 
 ### 🛒 Muốn mua / đặt vé
-- [AUTH:guest] → "[LOGIN_REQUIRED] Bạn cần đăng nhập để đặt vé nhé!"
-- [AUTH:userId=X] → Gọi check_tickets để xác nhận còn vé, rồi:
-  → "Để đặt vé, bạn vào trang sự kiện, chọn khu vực và tiến hành thanh toán nhé!"
+- [AUTH:guest]    → "[LOGIN_REQUIRED] Bạn cần đăng nhập để đặt vé nhé!"
+- [AUTH:userId=X] → Gọi check_tickets xác nhận còn vé → hướng dẫn đặt
 
 ### 🕹️ Ngoài phạm vi
-→ "Mình chỉ hỗ trợ về sự kiện và vé âm nhạc thôi bạn ơi! Bạn cần hỏi gì về sự kiện không?"
+→ "Mình chỉ hỗ trợ về sự kiện và vé âm nhạc thôi bạn ơi!"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ## VÍ DỤ XỬ LÝ ĐÚNG
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-❌ User: "còn vé không"
-→ Phân loại: ticket_check | Thiếu: tên sự kiện
-→ Hỏi: "Bạn muốn kiểm tra vé sự kiện nào vậy? Nếu có khu vực cụ thể mình kiểm tra luôn nhé!"
+✅ User: "hôm nay có show gì không"
+→ Nhóm: event_date | Parse: today
+→ Gọi: get_events(filter={ today: true })
+→ Trả lời kèm giờ bắt đầu từng show
+
+✅ User: "tối mai có sự kiện âm nhạc không"
+→ Nhóm: event_date | Parse: tomorrow
+→ Gọi: get_events(filter={ tomorrow: true })
+
+✅ User: "có show nào ngày 20 tháng 6 không"
+→ Nhóm: event_date | Parse: specificDate = "2025-06-20" (dùng năm từ context)
+→ Gọi: get_events(filter={ specificDate: "2025-06-20" })
+
+✅ User: "thứ Bảy này có concert không"
+→ Nhóm: event_date | Parse: tính ngày thứ Bảy gần nhất từ hôm nay → specificDate
+→ Gọi: get_events(filter={ specificDate: "YYYY-MM-DD" })
 
 ✅ User: "vé ANH TRAI SAY HI còn không"
-→ Phân loại: ticket_check | Đủ thông tin
+→ Nhóm: ticket_check | Đủ thông tin
 → Gọi: check_tickets(eventName="ANH TRAI SAY HI")
-→ Trả lời với danh sách zone kèm trạng thái + giá
 
-✅ User: "Sơn Tùng có show không tháng này"
-→ Phân loại: event_list + artist_info | Đủ thông tin
-→ Gọi: get_events(filter={thisMonth:true, artistName:"Sơn Tùng"})
-→ Nếu rỗng: rag_search(query="Sơn Tùng sự kiện biểu diễn")
-→ Trả lời cụ thể hoặc thông báo không có
+✅ User: "gợi ý sự kiện cho mình" (chưa đăng nhập)
+→ Nhóm: recommend_guest | [AUTH:guest]
+→ Gọi: get_events(filter={ hot: true, active: true }, limit: 5)
+→ Trả lời danh sách sự kiện hot + gợi ý đăng nhập để nhận gợi ý cá nhân
 
-✅ User: "gợi ý sự kiện cho mình" (đã đăng nhập, userId=5)
-→ Phân loại: personalized | Đủ thông tin
-→ Gọi: get_personalized_events(userId=5)
-→ Trả lời với lý do gợi ý ngắn gọn
+✅ User: "sự kiện nào đang hot vậy" (chưa đăng nhập)
+→ Nhóm: recommend_guest
+→ Gọi: get_events(filter={ hot: true, active: true })
+
+✅ User: "sự kiện tháng này ở HCM"
+→ Nhóm: event_list
+→ Gọi: get_events(filter={ thisMonth: true, location: "HCM" })
 `;
 }
 

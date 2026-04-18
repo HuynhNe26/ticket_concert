@@ -13,4 +13,5 @@ router.put("/change-profile", authMiddleware, authControllers.changeProfile);
 router.post("/logout", authControllers.logout);
 router.post("/forgetPassword", authControllers.sendotp);
 router.post("/checkotp", authControllers.verifyopt);
+router.post("/resetPassword", authControllers.resetPassword);
 export default router;

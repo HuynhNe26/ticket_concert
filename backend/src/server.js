@@ -94,7 +94,26 @@ cron.schedule("* * * * *", async () => {
         AND event_status = true
     `);
 
-    console.log("Đã cập nhật trạng thái sự kiện hết hạn");
+    await pool.query(`
+      UPDATE events
+      SET event_status = true
+      WHERE event_start <= NOW()
+        AND event_status = false
+    `);
+
+    await pool.query(`
+      UPDATE vouchers
+      SET voucher_status = true
+      WHERE voucher_start <= NOW()
+        AND voucher_status = false
+    `);
+
+    await pool.query(`
+      UPDATE vouchers
+      SET voucher_status = false
+      WHERE voucher_end < NOW()
+        AND voucher_status = true
+    `);
   } catch (err) {
     console.error("Lỗi cập nhật event_status:", err);
   }
