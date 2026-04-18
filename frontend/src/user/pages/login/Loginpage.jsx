@@ -100,7 +100,7 @@ export default function LoginPage({ isModal = false, onClose = null }) {
   if(loading) return <LoadingUser />
 
   return (
-    <GoogleOAuthProvider clientId="940435928416-p9ic1ginb2kon6nrrqk6e9g7r7pjbfkt.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId="143611187688-httdl23tun6csbcba5qpqi36jpb38ndm.apps.googleusercontent.com">
       <div 
         className="auth-card" 
         style={isModal ? {

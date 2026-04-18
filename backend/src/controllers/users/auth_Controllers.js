@@ -148,7 +148,7 @@ export const authControllers = {
         });
       }
 
-      const { email, name: fullName, picture } = googlePayload;
+      const { email, name: fullName } = googlePayload;
 
       let result = await pool.query(
         "SELECT * FROM users WHERE email = $1", 
