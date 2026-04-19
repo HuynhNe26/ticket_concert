@@ -9,6 +9,7 @@ import CheckoutResult from "../user/pages/checkout/CheckoutResult";
 import CompleteProfile from "../user/pages/login/CompleteProfile/CompleteProfile";
 import MyTicket from "../user/pages/my-ticket/my-ticket";
 import MyAccount from "../user/pages/my-account/my-account";
+import VerifyEmailPage from "../user/pages/login/VerifyEmailPage ";
 export function UserRoutes() {
 
   return (
@@ -23,6 +24,7 @@ export function UserRoutes() {
         <Route path='/complete-profile' element={<CompleteProfile />} />
         <Route path='/my-tickets' element={<MyTicket />} />
         <Route path='profile' element={<MyAccount />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
       </Route>
     </>
   );

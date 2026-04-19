@@ -251,6 +251,7 @@ export default function AddAdmin() {
                         <div className="form-group">
                             <label className="level">Cấp Độ <span className="required">*</span></label>
                             <select
+                                style={{height:"50px"}}
                                 id="level"
                                 name="level"
                                 value={formData.level}
@@ -269,6 +270,7 @@ export default function AddAdmin() {
                             <select
                                 id="role"
                                 name="role"
+                                style={{height:"50px"}}
                                 value={formData.role}
                                 onChange={handleChange}
                                 className={errors.role ? "error" : ""}

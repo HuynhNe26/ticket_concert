@@ -195,6 +195,29 @@ export const AdminControllers = {
     }
   },
 
+  async searchAdmin(req, res) {
+    try {
+      const admin = req.query.admin;
+
+      const { rows } = await pool.query("SELECT * FROM admins WHERE email ILIKE '%' || $1 || '%' OR fullname ILIKE '%' || $1 || '%'", [admin]);
+
+      if(rows.length == 0) {
+        return res.json({
+          success: false,
+          message: "Không có dữ liệu cần tìm!"
+        });
+      }
+      return res.json({
+        success: true,
+        admin: rows,
+      });
+
+    } catch (err) {
+      console.error("Lỗi tìm kiếm quản trị viên:", err);
+      return res.status(500).json({ message: "Lỗi server!" });
+    }
+  },
+
   async resetPass(req, res) {
     try {
       const { id } = req.params;
@@ -213,13 +236,15 @@ export const AdminControllers = {
 
       let fullName = rows[0]?.fullname;
 
+      const password = 123456
+
       const query = `
         UPDATE admins 
-        SET password = '123456'
-        WHERE admin_id = $1
+        SET password = $1
+        WHERE admin_id = $2
       `;
 
-      const result = await pool.query(query, [id]);
+      const result = await pool.query(query, [password, id]);
 
       if (result.rowCount > 0) {
         return res.status(200).json({
@@ -227,6 +252,7 @@ export const AdminControllers = {
           message: `Thay đổi mật khẩu của quản trị viên ${fullName} thành công!`
         });
       }
+      
 
       return res.status(404).json({
         success: false,
@@ -276,5 +302,39 @@ export const AdminControllers = {
       console.error("Lỗi thay đổi thông tin quản trị viên:", err);
       return res.status(500).json({ message: "Lỗi server!" });
     }
-  }
+  },
+
+  async updateAdmin(req, res) {
+    try {
+      const {fullname, email, phonenumber, birthofday, gender, role, level, address} = req.body;
+      const {id}= req.params;
+
+      let query = `
+        UPDATE 
+          admins 
+        SET fullname = $1,
+        birthofday = $2,
+        phonenumber = $3,
+        address = $4,
+        email = $5,
+        gender = $6,
+        role = $7,
+        level = $8,
+        updated_at = NOW()
+        WHERE admin_id = $9
+      `
+
+      await pool.query(query, [fullname, birthofday, phonenumber, address, email, gender, role, level, id])
+
+      res.status(200).json({
+        success: true,
+        message: "Thay đổi thông tin quản trị viên thành công!"
+      })
+
+    } catch (err) {
+      console.error("Lỗi thay đổi thông tin quản trị viên:", err);
+      return res.status(500).json({ message: "Lỗi server!" });
+    }
+  },
+
 };

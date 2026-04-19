@@ -13,6 +13,7 @@ export default function UserManagement() {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
     const fetchUsers = async (keyword = searchTerm) => {
+        setLoading(true);
         try {
             const token = localStorage.getItem("authToken");
             const response = await fetch(`${API_BASE}/api/admin/users?search=${keyword}`, {
@@ -25,7 +26,9 @@ export default function UserManagement() {
             if (data.success) setUsers(data.data);
         } catch (error) {
             console.error("Error fetching users:", error);
-        } 
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleViewDetail = async (userId) => {
@@ -65,10 +68,10 @@ export default function UserManagement() {
         return data.map(item => item.search).join(", ");
     }
 
-    return (
-        <div className="manager-user-page-wrapper"> {/* Root class duy nhất */}
-            {loading && <LoadingAdmin />}
+    if (loading) return <LoadingAdmin />
 
+    return (
+        <div className="manager-user-page-wrapper"> 
             {/* --- MODAL XEM CHI TIẾT --- */}
             {isDetailModalOpen && selectedUser && (
                 <div className="mu-modal-overlay">

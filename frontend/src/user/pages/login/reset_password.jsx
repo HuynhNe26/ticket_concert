@@ -225,9 +225,6 @@ function NewPasswordForm({ email, onDone }) {
 
   return (
     <div className="rp-card">
-      <div className="rp-icon-wrap">
-        <LockIcon />
-      </div>
       <h1 className="rp-title">Đặt mật khẩu mới</h1>
       <p className="rp-subtitle">Nhập mật khẩu mới cho tài khoản <strong>{email}</strong></p>
 
@@ -322,16 +319,13 @@ export default function ResetPassword() {
     }
   };
 
-  // OTP xác thực xong → qua bước nhập mật khẩu mới
   const handleOtpSuccess = () => {
     setShowOtp(false);
     setStep("newPassword");
   };
 
-  // Đặt mật khẩu xong → hiện màn hình thành công
   const handleDone = () => setStep("done");
 
-  // ── Step: newPassword ──
   if (step === "newPassword") {
     return (
       <div className="rp-page">
@@ -340,19 +334,17 @@ export default function ResetPassword() {
     );
   }
 
-  // ── Step: done ──
   if (step === "done") {
     return (
       <div className="rp-page">
         <div className="rp-card">
           <div className="rp-success">
-            <div className="rp-success-icon"><CheckIcon /></div>
             <h2>Đặt lại mật khẩu thành công!</h2>
             <p style={{ marginTop: 8 }}>
               Mật khẩu của bạn đã được cập nhật.<br />
               Hãy đăng nhập lại với mật khẩu mới.
             </p>
-            <a href="/login" className="rp-btn" style={{ marginTop: 24, display: "block", textAlign: "center" }}>
+            <a href="/" className="rp-btn" style={{ marginTop: 24, display: "block", textAlign: "center" }}>
               Đăng nhập ngay
             </a>
           </div>
@@ -361,11 +353,9 @@ export default function ResetPassword() {
     );
   }
 
-  // ── Step: email ──
   return (
     <div className="rp-page">
       <div className="rp-card">
-        <div className="rp-icon-wrap"><LockIcon /></div>
         <h1 className="rp-title">Quên mật khẩu?</h1>
         <p className="rp-subtitle">
           Nhập email của bạn và chúng tôi sẽ gửi mã xác thực để đặt lại mật khẩu.
@@ -407,7 +397,7 @@ export default function ResetPassword() {
         </form>
 
         <div className="rp-back">
-          <a href="/login"><ArrowLeftIcon />Quay lại đăng nhập</a>
+          <a href="/"><ArrowLeftIcon />Quay lại đăng nhập</a>
         </div>
       </div>
 
