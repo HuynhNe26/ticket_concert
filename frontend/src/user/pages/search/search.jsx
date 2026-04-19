@@ -42,6 +42,7 @@ function getEventStatus(startDate, endDate) {
   const now = new Date();
   const start = new Date(startDate);
   const end = new Date(endDate);
+  console.log(now)
   if (now < start) return { label: "Sắp diễn ra", type: "upcoming" };
   if (now > end)   return { label: "Đã kết thúc",  type: "ended" };
   return { label: "Đang diễn ra", type: "ongoing" };
@@ -170,13 +171,10 @@ export default function SearchPage() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    if (queryFromUrl && lastKeywordRef.current !== queryFromUrl) {
-      lastKeywordRef.current = queryFromUrl;
-      fetchEvents();
-    }
-  }, [queryFromUrl]);
+  fetchEvents();
+  lastKeywordRef.current = queryFromUrl;
+}, [queryFromUrl]);
 
   // ── Quick tabs ──
   const applyQuickTab = (tab) => {

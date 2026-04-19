@@ -35,6 +35,7 @@ import adminLayoutRouter from "./router/admins/layout.js";
 import categoriesRouter from "./router/admins/categories.js"
 import orderRouter from "./router/admins/orders.js"
 import voucherRouter from "./router/admins/voucher.js"
+import statisticRouter from "./router/admins/statistic.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -75,6 +76,7 @@ app.use("/api/admin/layout", adminLayoutRouter);
 app.use("/api/admin/categories", categoriesRouter);
 app.use("/api/admin/orders", orderRouter);
 app.use("/api/admin/vouchers", voucherRouter);
+app.use("/api/admin/statistic", statisticRouter);
 
 export const io = new Server(httpServer, {
   cors: {

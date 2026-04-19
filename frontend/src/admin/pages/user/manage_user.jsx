@@ -72,7 +72,6 @@ export default function UserManagement() {
 
     return (
         <div className="manager-user-page-wrapper"> 
-            {/* --- MODAL XEM CHI TIẾT --- */}
             {isDetailModalOpen && selectedUser && (
                 <div className="mu-modal-overlay">
                     <div className="mu-modal-content mu-detail-modal">
