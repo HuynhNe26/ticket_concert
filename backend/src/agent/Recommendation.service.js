@@ -175,16 +175,14 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
   ];
   if (artists.length) queries.add(artists.join(", "));
 
-  // Query 4: tên sự kiện đã mua (để tìm kiếm liên quan)
   const names = purchasedEvents.slice(0, 5).map((e) => e.event_name).filter(Boolean);
   if (names.length) queries.add(names.join(", "));
 
   if (!queries.size) return new Map();
 
-  // Score accumulator: event_id → { totalScore, hitCount }
   const scoreAccum = new Map();
 
-  const THRESHOLD = 0.25; // cosine similarity tối thiểu
+  const THRESHOLD = 0.25;
 
   await Promise.all(
     [...queries].map(async (q) => {
@@ -193,7 +191,6 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
         for (const [doc, score] of results) {
           if (score < THRESHOLD) continue;
 
-          // Lấy event_id từ metadata (meta.event_id) hoặc parse từ content
           const eventId =
             doc.metadata?.event_id ??
             (() => {
@@ -215,7 +212,6 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
     })
   );
 
-  // Normalize: avgScore = totalScore / hitCount
   const scoreMap = new Map();
   for (const [eventId, { totalScore, hitCount }] of scoreAccum) {
     scoreMap.set(eventId, totalScore / hitCount);
@@ -224,15 +220,6 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
   return scoreMap;
 }
 
-// ─── 5. TỔNG HỢP ĐIỂM ĐA CHIỀU ───────────────────────────────────────────────
-//
-//  Điểm tổng hợp = w_sem * semanticScore
-//                + w_fav * isFavorite
-//                + w_cat * categoryMatch
-//                + w_art * artistMatch
-//
-//  Trả về candidates đã sắp xếp giảm dần theo totalScore
-// ─────────────────────────────────────────────────────────────────────────────
 function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
   const { purchasedEvents, purchasedIds, favorite } = userContext;
 
@@ -261,7 +248,6 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
       const isFavorite     = favoriteEventIds.has(ev.event_id) ? 1 : 0;
       const categoryMatch  = purchasedCategoryIds.has(ev.category_id) ? 1 : 0;
 
-      // Artist match: kiểm tra có artist nào trùng không
       const evArtists = Array.isArray(ev.event_artist)
         ? ev.event_artist.map((a) => (a?.name || a)?.toLowerCase()).filter(Boolean)
         : [];
@@ -281,20 +267,13 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
     .sort((a, b) => b._scores.totalScore - a._scores.totalScore);
 }
 
-// ─── 6. AI REASONING — chọn top-K từ pre-scored candidates ───────────────────
-//
-//  Thay vì để AI tự chọn trong 50 events "lạnh",
-//  ta gửi top 15 đã có điểm + lý do → AI reasoning nhanh hơn, chính xác hơn.
-// ─────────────────────────────────────────────────────────────────────────────
 async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
   const { llm } = await import("./ragAgent.js");
   const { purchasedEvents, favorite } = userContext;
 
-  // Chỉ lấy top 15 pre-scored candidates để gửi AI
   const topCandidates = rankedCandidates.slice(0, 15);
   if (!topCandidates.length) return [];
 
-  // Format danh sách candidates với điểm tổng hợp để AI dễ reason
   const eventList = topCandidates
     .map((ev) => {
       const { semanticScore, isFavorite, categoryMatch, artistMatch, totalScore } =
@@ -316,7 +295,6 @@ async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
     })
     .join("\n\n");
 
-  // User profile summary
   const historyText = purchasedEvents.length
     ? purchasedEvents.slice(0, 8).map((e) => `  • ${e.event_name} (${e.category_name})`).join("\n")
     : "  Chưa có lịch sử mua vé.";
