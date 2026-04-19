@@ -86,7 +86,7 @@ export const EventControllers = {
         eventEnd,
         false,
         event.actor,
-        JSON.stringify(event.artist) // ✅ jsonb
+        JSON.stringify(event.artist)
       ]);
 
       return res.status(201).json({
@@ -129,7 +129,6 @@ export const EventControllers = {
 
       const event = eventResult.rows[0];
 
-      // ===== FIX ARTIST FORMAT =====
       let artist = [];
 
       if (event.event_artist) {
@@ -147,7 +146,7 @@ export const EventControllers = {
         success: true,
         data: {
           ...event,
-          artist,            // 👈 frontend dùng field này
+          artist,           
         },
         message: 'Lấy thông tin sự kiện thành công'
       });
@@ -161,7 +160,6 @@ export const EventControllers = {
     }
   },
 
-  // ============ CẬP NHẬT SỰ KIỆN (CHỈ THÔNG TIN EVENT, KHÔNG BAO GỒM LAYOUT/ZONES) ============
   async updateEvent(req, res) {
     try {
       const { id } = req.params;
@@ -174,7 +172,6 @@ export const EventControllers = {
         });
       }
 
-      // Tạo thời gian event_start và event_end
       const eventStart = event.time 
         ? `${event.date} ${event.time}:00`
         : `${event.date} 00:00:00`;
@@ -240,7 +237,6 @@ export const EventControllers = {
     }
   },
 
-  // ============ XÓA SỰ KIỆN ============
   async deleteEvent(req, res) {
     const client = await pool.connect();
     
@@ -249,13 +245,10 @@ export const EventControllers = {
 
       await client.query('BEGIN');
 
-      // Xóa zones trước (foreign key)
       await client.query('DELETE FROM zones WHERE event_id = $1', [id]);
       
-      // Xóa layout
       await client.query('DELETE FROM layout WHERE event_id = $1', [id]);
-      
-      // Xóa event
+
       const result = await client.query(
         'DELETE FROM events WHERE event_id = $1 RETURNING event_name',
         [id]
@@ -290,13 +283,10 @@ export const EventControllers = {
     }
   },
 
-  // ============ TOGGLE STATUS SỰ KIỆN ============
   async toggleEventStatus(req, res) {
     try {
       const { id } = req.params;
       const { isActive } = req.body;
-
-      console.log(isActive)
 
       const query = `
         UPDATE events SET
@@ -403,7 +393,6 @@ export const EventControllers = {
   }
 };
 
-// ============ HELPER FUNCTION (KHÔNG CÒN DÙNG) ============
 function generateLayoutCode(eventName) {
   const prefix = eventName
     .split(' ')

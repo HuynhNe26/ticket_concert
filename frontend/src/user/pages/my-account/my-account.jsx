@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import "./my-account.css";
 import LoadingUser from "../../components/loading/loading";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -29,6 +30,7 @@ export default function MyAccount() {
     const [avatarPreview, setAvatarPreview] = useState(null);
     const token = localStorage.getItem("token");
     const fileInputRef = useRef(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const getInfo = async () => {
@@ -68,6 +70,8 @@ export default function MyAccount() {
         };
         getInfo();
     }, [token]);
+
+    if (!token) return navigate("/")
 
     if (loading) return <LoadingUser />;
 
@@ -122,24 +126,24 @@ export default function MyAccount() {
     const getInitial = () => info.fullname?.trim().charAt(0).toUpperCase() || "?";
 
     return (
-        <div className="ma-page">
-            <div className="ma-container">
-                <div className="ma-header">
-                    <h1 className="ma-title">Thông tin tài khoản</h1>
+        <div className="ma-page-1">
+            <div className="ma-container-1">
+                <div className="ma-header-1">
+                    <h1 className="ma-title-1">Thông tin tài khoản</h1>
                     <div className="ma-divider" />
                 </div>
 
-                <div className="ma-body">
+                <div className="ma-body-1">
                     {/* Avatar */}
                     <div className="ma-avatar-wrapper" onClick={handleAvatarClick}>
-                        <div className="ma-avatar">
+                        <div className="ma-avatar-1">
                             {avatarPreview ? (
-                                <img src={avatarPreview} alt="avatar" className="ma-avatar-img" />
+                                <img src={avatarPreview} alt="avatar" className="ma-avatar-img-1" />
                             ) : (
-                                <span className="ma-avatar-initial">{getInitial()}</span>
+                                <span className="ma-avatar-initial-1">{getInitial()}</span>
                             )}
                         </div>
-                        <div className="ma-avatar-camera">
+                        <div className="ma-avatar-camera-1">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                                 <circle cx="12" cy="13" r="4" />

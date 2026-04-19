@@ -1,42 +1,42 @@
 /* ===== PAGE WRAPPER ===== */
-.ma-page {
+.ma-page-1 {
     display: flex;
     justify-content: center;
     font-family: 'Segoe UI', sans-serif;
     color: #ffffff;
 }
 
-.ma-container {
+.ma-container-1 {
     width: 100%;
     max-width: 860px;
 }
 
 /* ===== HEADER ===== */
-.ma-header {
+.ma-header-1 {
     margin-bottom: 32px;
 }
 
-.ma-title {
+.ma-title-1 {
     font-size: 22px;
     font-weight: 700;
     color: #ffffff;
     margin: 0 0 16px 0;
 }
 
-.ma-divider {
+.ma-divider-1 {
     height: 1px;
     background-color: #2e2e2e;
 }
 
 /* ===== BODY ===== */
-.ma-body {
+.ma-body-1 {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
 /* ===== AVATAR ===== */
-.ma-avatar-wrapper {
+.ma-avatar-wrapper-1 {
     position: relative;
     width: 96px;
     height: 96px;
@@ -44,7 +44,7 @@
     cursor: pointer;
 }
 
-.ma-avatar {
+.ma-avatar-1 {
     width: 96px;
     height: 96px;
     border-radius: 50%;
@@ -55,20 +55,20 @@
     overflow: hidden;
 }
 
-.ma-avatar-img {
+.ma-avatar-img-1 {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.ma-avatar-initial {
+.ma-avatar-initial-1 {
     font-size: 40px;
     font-weight: 700;
     color: #ffffff;
     user-select: none;
 }
 
-.ma-avatar-camera {
+.ma-avatar-camera-1 {
     position: absolute;
     bottom: 0;
     right: -2px;

@@ -4,9 +4,6 @@ import { Search, Plus, Calendar, MapPin, Users, DollarSign, Edit2, Trash2, Eye, 
 import LoadingAdmin from '../../../components/loading/loading';
 import io from 'socket.io-client';
 import EventToggle from './event_toggle';
-import Warning from "../../../../user/components/notification/warning/warning";   // 👈 sửa đường dẫn đúng project
-import Success from '../../../../user/components/notification/success/success';
-import ErrorNotif from '../../../../user/components/notification/error/error';
 
 const API_BASE = process.env.REACT_APP_API_URL;
 const LIMIT = 4;
@@ -153,24 +150,6 @@ export default function ManageEvent() {
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '24px', marginTop: '50px' }}>
 
-            {/* 🆕 Notifications */}
-            <Warning
-                show={warning.show}
-                message={warning.message}
-                onClose={() => setWarning({ show: false, message: '' })}
-            />
-            <Success
-                show={success.show}
-                message={success.message}
-                onClose={() => setSuccess({ show: false, message: '' })}
-            />
-            <ErrorNotif
-                show={notifError.show}
-                message={notifError.message}
-                onClose={() => setNotifError({ show: false, message: '' })}
-            />
-
-            {/* Header */}
             <div style={{ marginBottom: '32px' }}>
                 <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#1e293b', marginBottom: '8px' }}>
                     Quản Lý Sự Kiện
@@ -180,7 +159,6 @@ export default function ManageEvent() {
                 </p>
             </div>
 
-            {/* Error Message */}
             {error && (
                 <div style={{
                     background: '#fee2e2', border: '1px solid #fecaca',
@@ -191,7 +169,6 @@ export default function ManageEvent() {
                 </div>
             )}
 
-            {/* Hot Events Banner */}
             {hotEvents.length > 0 && (
                 <div style={{
                     background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
@@ -200,7 +177,7 @@ export default function ManageEvent() {
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                         <Flame size={24} />
-                        <h2 style={{ fontSize: '18px', fontWeight: '700' }}>🔥 Sự Kiện Hot - Đang Bán Chạy</h2>
+                        <h2 style={{ fontSize: '18px', fontWeight: '700' }}>Sự kiện đang mở bán</h2>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
                         {hotEvents.map((event, index) => (
@@ -232,7 +209,6 @@ export default function ManageEvent() {
                 </div>
             )}
 
-            {/* Stats Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '32px' }}>
                 {statsCards.map((stat, index) => (
                     <div key={index} style={{
@@ -250,7 +226,6 @@ export default function ManageEvent() {
                 ))}
             </div>
 
-            {/* Filters & Actions */}
             <div style={{ background: 'white', padding: '20px', borderRadius: '16px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                 <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
                     <div style={{ flex: '1', minWidth: '250px', position: 'relative' }}>
@@ -371,7 +346,6 @@ export default function ManageEvent() {
                                             <Edit2 size={18} color="#667eea" />
                                         </button>
 
-                                        {/* 🆕 Nút xóa 2 bước */}
                                         <button
                                             onClick={() => pendingDeleteId === event.event_id ? handleConfirmDelete() : handleDeleteEvent(event.event_id)}
                                             style={{
