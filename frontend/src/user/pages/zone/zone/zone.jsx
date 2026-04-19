@@ -55,7 +55,7 @@ export default function Zone() {
     };
   }, [id]);
 
-  if (event.event_status == false) {
+  if (event.event_status === false) {
     navigate("/")
   }
 

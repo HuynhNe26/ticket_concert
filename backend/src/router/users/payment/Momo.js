@@ -21,7 +21,7 @@ momo.post("/", authMiddleware, async (req, res) => {
     const requestId = partnerCode + Date.now();
     const orderInfo = "Thanh toán Ticket-Concert";
     const redirectUrl = "http://localhost:3000/result";
-    const ipnUrl = "https://mae-blastoporic-zetta.ngrok-free.dev/api/checkout/momo/notify";
+    const ipnUrl = " https://uninclined-overhonestly-jone.ngrok-free.dev/api/checkout/momo/notify";
     const requestType = "captureWallet";
     const extraData = Buffer.from(JSON.stringify({ orderId, userId, price, total_price, voucher_id })).toString("base64");
 

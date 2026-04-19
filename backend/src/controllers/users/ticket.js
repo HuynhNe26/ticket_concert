@@ -5,7 +5,6 @@ export const TicketControllers = {
     async myTicket(req, res) {
         const userId = req.user.userId;
 
-
         try {
             const query = `
                 SELECT 
@@ -22,6 +21,7 @@ export const TicketControllers = {
                 LEFT JOIN zones z ON z.zone_id = pd.zone_id
                 LEFT JOIN vouchers v ON v.voucher_id = pd.voucher_id
                 WHERE u.user_id = $1
+                ORDER BY p.created_at DESC
             `;
 
             const { rows } = await pool.query(query, [userId]);

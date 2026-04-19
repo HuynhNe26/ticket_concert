@@ -61,6 +61,10 @@ export default function UserManagement() {
         return new Date(dateString).toLocaleDateString('vi-VN');
     };
 
+    const handleJson = (data) => {
+        return data.map(item => item.search).join(", ");
+    }
+
     return (
         <div className="manager-user-page-wrapper"> {/* Root class duy nhất */}
             {loading && <LoadingAdmin />}
@@ -84,7 +88,7 @@ export default function UserManagement() {
                             <div className="mu-detail-item"><strong>Điểm tích lũy:</strong> {selectedUser.point}</div>
                             <div className="mu-detail-item"><strong>Ngày tham gia:</strong> {formatDate(selectedUser.created_at)}</div>
                             <div className="mu-detail-item"><strong>Trạng thái:</strong> {selectedUser.status}</div>
-                            <div className="mu-detail-item"><strong>Từ khóa tìm kiếm</strong> {selectedUser.favorite}</div>
+                            <div className="mu-detail-item"><strong>Từ khóa tìm kiếm</strong> {handleJson(selectedUser.favorite)}</div>
                         </div>
                         <div className="mu-modal-actions">
                             <button className="mu-btn-cancel" onClick={() => setIsDetailModalOpen(false)}>Đóng</button>

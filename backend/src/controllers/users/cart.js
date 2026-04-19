@@ -70,7 +70,7 @@ export async function addToCart(req, res) {
     if (quantity > available) {
       await client.query("ROLLBACK");
       return res.status(400).json({
-        message: "Không đủ vé",
+        message: "Hết vé",
         available
       });
     }
@@ -156,6 +156,7 @@ export async function getCart(req, res) {
         e.event_age,
         e.event_actor,
         e.event_artist,
+        e.banner_url,
 
         z.zone_name,
         z.zone_description,

@@ -1,11 +1,36 @@
 import { pool } from "../config/database.js";
 import { getAgent } from "./ragAgent.js";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// BƯỚC 1: PHÂN LOẠI CÂU HỎI (trước khi gọi agent)
-// Giúp hệ thống biết intent ngay cả khi agent hỏi lại hoặc không dùng tool
-// ─────────────────────────────────────────────────────────────────────────────
 const INTENT_PATTERNS = [
+  {
+    intent: "event_date",
+    patterns: [
+      /hôm nay/,
+      /tối nay/,
+      /show.*hôm nay/,
+      /ngày mai/,
+      /tối mai/,
+      /show.*ngày mai/,
+      /thứ (hai|ba|tư|năm|sáu|bảy|chủ nhật)/i,
+      /cuối tuần/,
+      /ngày\s+\d{1,2}[\/\-]\d{1,2}/,           
+      /ngày\s+\d{1,2}\s+tháng\s+\d{1,2}/,       
+      /\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?/,   
+      /tuần (này|tới|sau)/,
+    ],
+  },
+  {
+    intent: "recommend_guest",
+    patterns: [
+      /gợi ý.*sự kiện/,
+      /sự kiện.*gợi ý/,
+      /nên xem gì/,
+      /sự kiện.*hot/,
+      /sự kiện.*nổi bật/,
+      /sự kiện.*bán chạy/,
+      /xem gì.*hôm nay/,
+    ],
+  },
   {
     intent: "ticket_check",
     patterns: [/còn vé/, /hết vé/, /giá vé/, /mua vé gì/, /khu vực.*vé/, /vé.*giá/, /zone.*vé/],
@@ -45,10 +70,9 @@ const INTENT_PATTERNS = [
 ];
 
 function classifyIntent(message, toolsUsed = []) {
-  // Tool-based override (chính xác nhất)
   const toolIntentMap = {
     check_tickets:           "ticket_check",
-    get_events:              "event_list",
+    get_events:              "event_list",   
     get_personalized_events: "personalized",
     rag_search:              "event_detail",
     web_search:              "web_search",
@@ -57,7 +81,6 @@ function classifyIntent(message, toolsUsed = []) {
     if (toolsUsed.includes(toolName)) return intent;
   }
 
-  // Pattern-based
   const msg = message.toLowerCase().normalize("NFC");
   for (const { intent, patterns } of INTENT_PATTERNS) {
     if (patterns.some((p) => p.test(msg))) return intent;
@@ -66,10 +89,6 @@ function classifyIntent(message, toolsUsed = []) {
   return "general";
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// BƯỚC 2: PHÁT HIỆN CÂU HỎI LẠI (agent đang hỏi user thay vì trả lời)
-// Dùng để đánh dấu metadata đặc biệt
-// ─────────────────────────────────────────────────────────────────────────────
 const CLARIFICATION_PATTERNS = [
   /bạn muốn kiểm tra .+\?/i,
   /bạn đang hỏi về .+\?/i,
@@ -86,26 +105,22 @@ function isClarificationQuestion(text) {
   return CLARIFICATION_PATTERNS.some((p) => p.test(text));
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EXTRACT ANSWER từ last AI message
-// ─────────────────────────────────────────────────────────────────────────────
 function extractAnswer(lastAI) {
   const content = lastAI?.content;
   if (!content) return null;
   if (typeof content === "string") return content.trim() || null;
   if (Array.isArray(content)) {
-    return content
-      .filter((block) => block?.type === "text" && block?.text)
-      .map((block) => block.text)
-      .join("")
-      .trim() || null;
+    return (
+      content
+        .filter((block) => block?.type === "text" && block?.text)
+        .map((block) => block.text)
+        .join("")
+        .trim() || null
+    );
   }
   return null;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// EXTRACT TOOLS USED từ toàn bộ messages
-// ─────────────────────────────────────────────────────────────────────────────
 function extractToolsUsed(messages) {
   return [
     ...new Set(
@@ -118,9 +133,6 @@ function extractToolsUsed(messages) {
   ];
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SAVE TO chat_ai (fire-and-forget)
-// ─────────────────────────────────────────────────────────────────────────────
 function saveChatMessage({
   userId,
   sessionId,
@@ -148,9 +160,6 @@ function saveChatMessage({
     .catch((err) => console.error("[Chat] saveChatMessage error:", err.message));
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GET CHAT HISTORY
-// ─────────────────────────────────────────────────────────────────────────────
 export async function getChatHistory(sessionId, limit = 50) {
   const result = await pool.query(
     `SELECT chat_id, user_id, sender, message, intent,
@@ -164,17 +173,10 @@ export async function getChatHistory(sessionId, limit = 50) {
   return result.rows;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DELETE SESSION HISTORY
-// ─────────────────────────────────────────────────────────────────────────────
 export async function deleteSessionHistory(sessionId) {
   await pool.query(`DELETE FROM chat_ai WHERE session_id = $1`, [sessionId]);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN: agentChat
-// Workflow: phân loại → inject auth → agent xử lý → phát hiện clarification → lưu
-// ─────────────────────────────────────────────────────────────────────────────
 export async function agentChat(
   userMessage,
   sessionId = "default",
@@ -187,7 +189,7 @@ export async function agentChat(
   // ── Phân loại câu hỏi (trước khi gọi agent) ──────────────────────────────
   const preIntent = classifyIntent(userMessage);
 
-  // ── Lưu tin nhắn user (nguyên gốc, không có auth prefix) ─────────────────
+  // ── Lưu tin nhắn user ────────────────────────────────────────────────────
   saveChatMessage({
     userId,
     sessionId,
@@ -197,9 +199,9 @@ export async function agentChat(
     metaJson: { preClassified: preIntent },
   });
 
-  // ── Inject auth context vào message gửi agent ─────────────────────────────
-  const authPrefix      = userId ? `[AUTH:userId=${userId}]` : `[AUTH:guest]`;
-  const agentInputMsg   = `${authPrefix} ${userMessage}`;
+  // ── Inject auth context vào message gửi agent ────────────────────────────
+  const authPrefix    = userId ? `[AUTH:userId=${userId}]` : `[AUTH:guest]`;
+  const agentInputMsg = `${authPrefix} ${userMessage}`;
 
   const agent = await getAgent();
   const config = {
@@ -214,19 +216,15 @@ export async function agentChat(
     );
     const messages = result.messages;
 
-    // ── Lấy câu trả lời cuối từ AI ──────────────────────────────────────────
     const lastAI = [...messages]
       .reverse()
       .find((m) => m._getType?.() === "ai" || m.role === "assistant");
 
-    const toolsUsed  = extractToolsUsed(messages);
+    const toolsUsed   = extractToolsUsed(messages);
     const finalIntent = classifyIntent(userMessage, toolsUsed);
-    const answerStr  = extractAnswer(lastAI) ?? "Xin lỗi, mình không thể xử lý yêu cầu này.";
-
-    // ── Phát hiện: agent đang hỏi lại hay trả lời thật ───────────────────────
+    const answerStr   = extractAnswer(lastAI) ?? "Xin lỗi, mình không thể xử lý yêu cầu này.";
     const isClarifying = isClarificationQuestion(answerStr);
 
-    // ── Lưu câu trả lời bot ─────────────────────────────────────────────────
     saveChatMessage({
       userId,
       sessionId,
@@ -234,52 +232,27 @@ export async function agentChat(
       sender:         "bot",
       intent:         finalIntent,
       ticketQuantity: 0,
-      metaJson: {
-        toolsUsed,
-        isClarifying,       
-        preIntent,              
-        finalIntent,           
-      },
+      metaJson: { toolsUsed, isClarifying, preIntent, finalIntent },
     });
 
-    return {
-      answer:       answerStr,
-      toolsUsed,
-      sessionId,
-      isClarifying,             // FE có thể dùng để hiển thị UI khác nếu muốn
-      intent:       finalIntent,
-    };
+    return { answer: answerStr, toolsUsed, sessionId, isClarifying, intent: finalIntent };
 
   } catch (err) {
     console.error("[Agent] Full error:", err);
     console.error("[Agent] Message:", err.message);
 
-    // ── Rate limit handling ──────────────────────────────────────────────────
     if (err.message?.includes("429")) {
       const busyMsg = "Hệ thống đang bận, bạn vui lòng thử lại sau 1 phút nhé!";
-      saveChatMessage({
-        userId,
-        sessionId,
-        message:  busyMsg,
-        sender:   "bot",
-        intent:   "error",
-        metaJson: { error: "rate_limit" },
-      });
+      saveChatMessage({ userId, sessionId, message: busyMsg, sender: "bot",
+        intent: "error", metaJson: { error: "rate_limit" } });
       return { answer: busyMsg, toolsUsed: [], sessionId, intent: "error" };
     }
 
-    // ── Context window overflow ───────────────────────────────────────────────
     if (err.message?.includes("context") || err.message?.includes("token")) {
       const overflowMsg =
         "Cuộc trò chuyện quá dài rồi! Bạn thử bắt đầu cuộc hội thoại mới nhé (nhấn nút Làm mới).";
-      saveChatMessage({
-        userId,
-        sessionId,
-        message:  overflowMsg,
-        sender:   "bot",
-        intent:   "error",
-        metaJson: { error: "context_overflow" },
-      });
+      saveChatMessage({ userId, sessionId, message: overflowMsg, sender: "bot",
+        intent: "error", metaJson: { error: "context_overflow" } });
       return { answer: overflowMsg, toolsUsed: [], sessionId, intent: "error" };
     }
 
@@ -287,9 +260,6 @@ export async function agentChat(
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Clear session (reset LangGraph thread)
-// ─────────────────────────────────────────────────────────────────────────────
 export async function clearSession(sessionId) {
   await deleteSessionHistory(sessionId);
   console.log(`[Chat] Session ${sessionId} cleared.`);

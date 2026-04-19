@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
-import OtpModal from "./reset_password";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 

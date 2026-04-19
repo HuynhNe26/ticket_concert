@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './layout_zone.css';
 import LoginPage from "../../login/Loginpage";
-import LoadingUser from '../../../components/loading/loading';
 import Warning from '../../../components/notification/warning/warning.jsx';  
 import Success from '../../../components/notification/success/success.jsx';
 import ErrorNotif from '../../../components/notification/error/error.jsx';
@@ -12,7 +11,6 @@ const API_BASE = process.env.REACT_APP_API_URL;
 export default function LayoutZone({ layout, zones, eventId }) {
   const canvasRef = useRef(null);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const token = localStorage.getItem("token");
   const [selectedZone, setSelectedZone] = useState(null);
@@ -161,8 +159,6 @@ export default function LayoutZone({ layout, zones, eventId }) {
       return;
     }
 
-    setLoading(true);
-
     try {
       const response = await fetch(`${API_BASE}/api/cart/${eventId}`, {
         method: 'POST',
@@ -186,19 +182,14 @@ export default function LayoutZone({ layout, zones, eventId }) {
     } catch (err) {
       console.error(err);
       showError('Lỗi kết nối server');
-    } finally {
-      setLoading(false);
     }
   };
 
-  if (loading) return <LoadingUser />;
-
   return (
     <div className="layout-zone-wrapper">
-
-      {/* 🆕 Notifications */}
-      <Warning  show={warning.show} message={warning.message} onClose={() => setWarning({ show: false, message: '' })} />
-      <Success  show={success.show} message={success.message} onClose={() => setSuccess({ show: false, message: '' })} />
+      
+      <Warning show={warning.show} message={warning.message} onClose={() => setWarning({ show: false, message: '' })} />
+      <Success show={success.show} message={success.message} onClose={() => setSuccess({ show: false, message: '' })} />
       <ErrorNotif show={error.show} message={error.message}   onClose={() => setError({ show: false, message: '' })} />
 
       <canvas ref={canvasRef} onClick={handleCanvasClick} className="layout-canvas" />

@@ -46,13 +46,13 @@ export async function getGuestEvents(limit = 10) {
      )
      GROUP BY e.event_id, c.category_name, c.category_id
      ORDER BY
-       e.event_status ASC,      -- đang/sắp diễn ra lên trước
+       e.event_status ASC,
        e.event_start  ASC
      LIMIT $1`,
     [limit]
   );
   return rows;
-}   
+}
 
 export async function getHotEvents(limit = 10) {
   const { rows } = await pool.query(
@@ -60,9 +60,9 @@ export async function getHotEvents(limit = 10) {
        e.event_id, e.event_name, e.event_location,
        e.event_start, e.event_end, e.event_artist,
        e.banner_url, c.category_name, c.category_id,
-       MIN(z.zone_price)   AS min_price,
-       SUM(z.sold_quantity)  AS total_sold,
-       SUM(z.zone_quantity)  AS total_capacity,
+       MIN(z.zone_price)    AS min_price,
+       SUM(z.sold_quantity) AS total_sold,
+       SUM(z.zone_quantity) AS total_capacity,
        CASE
          WHEN SUM(z.zone_quantity) > 0
            THEN ROUND(
@@ -79,10 +79,7 @@ export async function getHotEvents(limit = 10) {
        AND z.status       = true
      GROUP BY e.event_id, c.category_name, c.category_id
      HAVING SUM(z.zone_quantity) > 0
-     ORDER BY
-       sold_percent DESC,   -- tỉ lệ bán cao → hot nhất
-       total_sold   DESC,   -- cùng % → tổng vé bán nhiều hơn lên trước  
-       e.event_start ASC    -- cùng độ hot → sự kiện diễn sớm hơn lên trước
+     ORDER BY sold_percent DESC, total_sold DESC, e.event_start ASC
      LIMIT $1`,
     [limit]
   );
@@ -97,8 +94,8 @@ async function getUserContext(userId) {
               c.category_name, e.event_artist
        FROM payments p
        JOIN payment_detail pd ON p.payment_id = pd.payment_id
-       JOIN events e ON pd.event_id = e.event_id
-       JOIN categories c ON e.category_id = c.category_id
+       JOIN events e          ON pd.event_id  = e.event_id
+       JOIN categories c      ON e.category_id = c.category_id
        WHERE p.user_id = $1 AND p.payment_status = 'Thành công'
        ORDER BY p.payment_id DESC
        LIMIT 20`,
@@ -108,193 +105,356 @@ async function getUserContext(userId) {
   ]);
 
   const purchasedEvents = purchaseRes.rows;
-  const purchasedIds = new Set(purchasedEvents.map((r) => r.event_id));
-  const favorite = userRes.rows[0]?.favorite || [];
+  const purchasedIds    = new Set(purchasedEvents.map((r) => r.event_id));
+  const favorite        = userRes.rows[0]?.favorite || [];
   return { purchasedEvents, purchasedIds, favorite };
 }
 
-// ─── 3. AI ANALYSIS & TOP-K SELECTION ────────────────────────────────────────
-// ─── 3. AI ANALYSIS & TOP-K SELECTION ────────────────────────────────────────
-async function selectTopKWithAI(candidates, userContext, k = 5) {
-  const { llm, getVectorStore } = await import("./ragAgent.js");
-
-  const { purchasedEvents, purchasedIds, favorite } = userContext;
-
-  // ── Build query string từ context user để embed ───────────────────────────
-  const favoriteKeywords = favorite
-    .map((f) => f?.search)
-    .filter(Boolean);
+function buildUserProfileText(userContext) {
+  const { purchasedEvents, favorite } = userContext;
+  const parts = [];
 
   const favoriteEventIds = new Set(
     favorite.map((f) => f?.event_id).filter(Boolean)
   );
 
+  const favoriteKeywords = favorite.map((f) => f?.search).filter(Boolean);
+  for (const kw of favoriteKeywords) {
+    parts.push(kw, kw, kw);
+  }
+
   const purchasedCategories = [
     ...new Set(purchasedEvents.map((e) => e.category_name).filter(Boolean)),
   ];
+  for (const cat of purchasedCategories) {
+    parts.push(cat, cat);
+  }
 
   const purchasedArtists = [
     ...new Set(
       purchasedEvents.flatMap((e) => {
-        const artist = e.event_artist;
-        if (!artist) return [];
-        if (Array.isArray(artist)) return artist.map((a) => a?.name || a).filter(Boolean);
+        const a = e.event_artist;
+        if (!a) return [];
+        if (Array.isArray(a)) return a.map((x) => x?.name || x).filter(Boolean);
         return [];
       })
     ),
   ];
-
-  // Câu query ghép từ sở thích + lịch sử để tìm semantic
-  const semanticQuery = [
-    ...favoriteKeywords,
-    ...purchasedCategories,
-    ...purchasedArtists,
-  ]
-    .join(", ")
-    .trim();
-
-  // ── RAG: tìm document liên quan nếu có context ────────────────────────────
-  let ragContext = "";
-  if (semanticQuery) {
-    try {
-      const vectorStore = await getVectorStore();
-      const ragResults = await vectorStore.similaritySearchWithScore(semanticQuery, 5);
-      const relevant = ragResults.filter(([, score]) => score >= 0.3);
-
-      if (relevant.length > 0) {
-        ragContext =
-          "\nTHÔNG TIN BỔ SUNG TỪ HỆ THỐNG:\n" +
-          relevant
-            .map(([doc], i) => `[${i + 1}] ${doc.pageContent.slice(0, 300)}`)
-            .join("\n---\n");
-      }
-    } catch (err) {
-      console.error("[Recommendation] RAG search error:", err.message);
-      // Không throw — tiếp tục mà không có RAG context
-    }
+  for (const artist of purchasedArtists) {
+    parts.push(artist, artist);
   }
 
-  // ── Danh sách ứng viên (loại trừ event đã mua) ────────────────────────────
-  const filteredCandidates = candidates.filter(
-    (ev) => !purchasedIds.has(ev.event_id)
+  // Purchased event names (trọng số x1)
+  const purchasedNames = purchasedEvents.map((e) => e.event_name).filter(Boolean);
+  parts.push(...purchasedNames);
+
+  return { profileText: parts.join(", ").trim(), favoriteEventIds };
+}
+
+
+async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
+  const { purchasedEvents, favorite } = userContext;
+
+  const queries = new Set();
+  
+  const favKws = favorite.map((f) => f?.search).filter(Boolean).join(", ");
+  if (favKws) queries.add(favKws);
+
+  const cats = [...new Set(purchasedEvents.map((e) => e.category_name).filter(Boolean))];
+  if (cats.length) queries.add(cats.join(", "));
+
+  const artists = [
+    ...new Set(
+      purchasedEvents.flatMap((e) => {
+        const a = e.event_artist;
+        if (!a) return [];
+        if (Array.isArray(a)) return a.map((x) => x?.name || x).filter(Boolean);
+        return [];
+      })
+    ),
+  ];
+  if (artists.length) queries.add(artists.join(", "));
+
+  // Query 4: tên sự kiện đã mua (để tìm kiếm liên quan)
+  const names = purchasedEvents.slice(0, 5).map((e) => e.event_name).filter(Boolean);
+  if (names.length) queries.add(names.join(", "));
+
+  if (!queries.size) return new Map();
+
+  // Score accumulator: event_id → { totalScore, hitCount }
+  const scoreAccum = new Map();
+
+  const THRESHOLD = 0.25; // cosine similarity tối thiểu
+
+  await Promise.all(
+    [...queries].map(async (q) => {
+      try {
+        const results = await vectorStore.similaritySearchWithScore(q, topK);
+        for (const [doc, score] of results) {
+          if (score < THRESHOLD) continue;
+
+          // Lấy event_id từ metadata (meta.event_id) hoặc parse từ content
+          const eventId =
+            doc.metadata?.event_id ??
+            (() => {
+              const match = doc.pageContent.match(/\[ID[:\s]*(\d+)\]/i);
+              return match ? parseInt(match[1]) : null;
+            })();
+
+          if (!eventId) continue;
+
+          const prev = scoreAccum.get(eventId) ?? { totalScore: 0, hitCount: 0 };
+          scoreAccum.set(eventId, {
+            totalScore: prev.totalScore + score,
+            hitCount:   prev.hitCount + 1,
+          });
+        }
+      } catch (err) {
+        console.error(`[Recommendation] Vector search error for query "${q}":`, err.message);
+      }
+    })
   );
 
-  if (!filteredCandidates.length) return [];
+  // Normalize: avgScore = totalScore / hitCount
+  const scoreMap = new Map();
+  for (const [eventId, { totalScore, hitCount }] of scoreAccum) {
+    scoreMap.set(eventId, totalScore / hitCount);
+  }
 
-  const eventList = filteredCandidates
+  return scoreMap;
+}
+
+// ─── 5. TỔNG HỢP ĐIỂM ĐA CHIỀU ───────────────────────────────────────────────
+//
+//  Điểm tổng hợp = w_sem * semanticScore
+//                + w_fav * isFavorite
+//                + w_cat * categoryMatch
+//                + w_art * artistMatch
+//
+//  Trả về candidates đã sắp xếp giảm dần theo totalScore
+// ─────────────────────────────────────────────────────────────────────────────
+function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
+  const { purchasedEvents, purchasedIds, favorite } = userContext;
+
+  const favoriteEventIds = new Set(favorite.map((f) => f?.event_id).filter(Boolean));
+
+  const purchasedCategoryIds = new Set(
+    purchasedEvents.map((e) => e.category_id).filter(Boolean)
+  );
+
+  const purchasedArtistNames = new Set(
+    purchasedEvents.flatMap((e) => {
+      const a = e.event_artist;
+      if (!a) return [];
+      if (Array.isArray(a)) return a.map((x) => (x?.name || x)?.toLowerCase()).filter(Boolean);
+      return [];
+    })
+  );
+
+  // Trọng số
+  const W = { semantic: 0.45, favorite: 0.30, category: 0.15, artist: 0.10 };
+
+  return candidates
+    .filter((ev) => !purchasedIds.has(ev.event_id))
     .map((ev) => {
-      const isFav = favoriteEventIds.has(ev.event_id) ? " ⭐ [YÊU THÍCH]" : "";
+      const semanticScore  = semanticScoreMap.get(ev.event_id) ?? 0;
+      const isFavorite     = favoriteEventIds.has(ev.event_id) ? 1 : 0;
+      const categoryMatch  = purchasedCategoryIds.has(ev.category_id) ? 1 : 0;
+
+      // Artist match: kiểm tra có artist nào trùng không
+      const evArtists = Array.isArray(ev.event_artist)
+        ? ev.event_artist.map((a) => (a?.name || a)?.toLowerCase()).filter(Boolean)
+        : [];
+      const artistMatch = evArtists.some((a) => purchasedArtistNames.has(a)) ? 1 : 0;
+
+      const totalScore =
+        W.semantic  * semanticScore +
+        W.favorite  * isFavorite    +
+        W.category  * categoryMatch +
+        W.artist    * artistMatch;
+
+      return {
+        ...ev,
+        _scores: { semanticScore, isFavorite, categoryMatch, artistMatch, totalScore },
+      };
+    })
+    .sort((a, b) => b._scores.totalScore - a._scores.totalScore);
+}
+
+// ─── 6. AI REASONING — chọn top-K từ pre-scored candidates ───────────────────
+//
+//  Thay vì để AI tự chọn trong 50 events "lạnh",
+//  ta gửi top 15 đã có điểm + lý do → AI reasoning nhanh hơn, chính xác hơn.
+// ─────────────────────────────────────────────────────────────────────────────
+async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
+  const { llm } = await import("./ragAgent.js");
+  const { purchasedEvents, favorite } = userContext;
+
+  // Chỉ lấy top 15 pre-scored candidates để gửi AI
+  const topCandidates = rankedCandidates.slice(0, 15);
+  if (!topCandidates.length) return [];
+
+  // Format danh sách candidates với điểm tổng hợp để AI dễ reason
+  const eventList = topCandidates
+    .map((ev) => {
+      const { semanticScore, isFavorite, categoryMatch, artistMatch, totalScore } =
+        ev._scores;
+
+      const favLabel  = isFavorite    ? " ⭐[YÊU THÍCH]"    : "";
+      const catLabel  = categoryMatch ? " 🎵[CÙNG THỂ LOẠI]" : "";
+      const artLabel  = artistMatch   ? " 🎤[NGHỆ SĨ YÊU THÍCH]" : "";
+      const semLabel  = semanticScore > 0.5 ? " 🔥[LIÊN QUAN CAO]" : "";
+      const scoreStr  = (totalScore * 100).toFixed(0);
+
       return (
-        `[ID:${ev.event_id}]${isFav} ${ev.event_name} | ${ev.category_name} | ` +
-        `${new Date(ev.event_start).toLocaleDateString("vi-VN")} | ` +
-        `từ ${Number(ev.min_price || 0).toLocaleString("vi-VN")}đ`
+        `[ID:${ev.event_id}][Score:${scoreStr}%]${favLabel}${catLabel}${artLabel}${semLabel}\n` +
+        `  Tên: ${ev.event_name}\n` +
+        `  Thể loại: ${ev.category_name} | ` +
+        `Ngày: ${new Date(ev.event_start).toLocaleDateString("vi-VN")} | ` +
+        `Từ ${Number(ev.min_price || 0).toLocaleString("vi-VN")}đ`
       );
     })
-    .join("\n");
+    .join("\n\n");
 
+  // User profile summary
   const historyText = purchasedEvents.length
-    ? purchasedEvents.map((e) => `- ${e.event_name} (${e.category_name})`).join("\n")
-    : "Chưa có lịch sử mua vé.";
+    ? purchasedEvents.slice(0, 8).map((e) => `  • ${e.event_name} (${e.category_name})`).join("\n")
+    : "  Chưa có lịch sử mua vé.";
 
-  const favoriteText = favoriteKeywords.join(", ") || "Không có";
+  const favKeywords = favorite.map((f) => f?.search).filter(Boolean).join(", ") || "Không có";
 
-  // ── Prompt ghép đủ 3 nguồn: lịch sử + favorite + RAG context ─────────────
   const prompt =
-    `Bạn là hệ thống gợi ý sự kiện âm nhạc. Hãy phân tích sở thích người dùng và chọn ${k} sự kiện phù hợp nhất.\n\n` +
-    `LỊCH SỬ MUA VÉ:\n${historyText}\n\n` +
-    `TỪ KHÓA YÊU THÍCH: ${favoriteText}\n` +
-    `LƯU Ý: Các sự kiện đánh dấu ⭐ [YÊU THÍCH] là sự kiện user đã lưu — ưu tiên cao nhất.\n` +
-    `${ragContext}\n\n` +
-    `DANH SÁCH SỰ KIỆN ỨNG VIÊN:\n${eventList}\n\n` +
-    `Yêu cầu:\n` +
-    `- Chọn đúng ${k} sự kiện phù hợp nhất với sở thích người dùng\n` +
-    `- Ưu tiên: phù hợp thể loại/nghệ sĩ yêu thích, đa dạng, ngày diễn sắp tới\n` +
-    `- CHỈ trả về dãy ID cách nhau bởi dấu phẩy, không giải thích\n` +
-    `- Ví dụ: 3,7,1,5,2`;
+    `Bạn là hệ thống gợi ý sự kiện âm nhạc cá nhân hóa.\n\n` +
 
-  const response = await llm.invoke([{ role: "user", content: prompt }]);
-  const text = (response.content || "").trim();
+    `## HỒ SƠ NGƯỜI DÙNG\n` +
+    `Từ khóa yêu thích: ${favKeywords}\n` +
+    `Lịch sử mua vé gần đây:\n${historyText}\n\n` +
+
+    `## DANH SÁCH ỨNG VIÊN (đã pre-score bằng embedding + heuristic)\n` +
+    `Giải thích nhãn: ⭐ đã lưu yêu thích | 🎵 cùng thể loại đã mua | 🎤 nghệ sĩ yêu thích | 🔥 liên quan ngữ nghĩa cao\n\n` +
+    `${eventList}\n\n` +
+
+    `## YÊU CẦU\n` +
+    `Dựa trên hồ sơ người dùng và điểm sẵn có, chọn đúng ${k} sự kiện phù hợp nhất.\n` +
+    `Ưu tiên theo thứ tự: ⭐ yêu thích > 🔥 liên quan > 🎤 nghệ sĩ > 🎵 thể loại.\n` +
+    `Đảm bảo đa dạng thể loại nếu có thể.\n` +
+    `CHỈ trả về dãy ID cách nhau bởi dấu phẩy, không giải thích thêm.\n` +
+    `Ví dụ: 3,7,1,5,2`;
+
+  const response  = await llm.invoke([{ role: "user", content: prompt }]);
+  const text      = (response.content || "").trim();
 
   const selectedIds = text
     .split(",")
     .map((s) => parseInt(s.trim()))
     .filter((id) => !isNaN(id))
-    .filter((id, index, arr) => arr.indexOf(id) === index) // dedup
+    .filter((id, i, arr) => arr.indexOf(id) === i) // dedup
     .slice(0, k);
 
   return selectedIds;
 }
 
-// ─── 4. LỌC VÀ SẮP XẾP KẾT QUẢ ──────────────────────────────────────────────
-function filterAndBuildResult(selectedIds, candidates, purchasedIds, k) {
+function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
+  // Lookup map: event_id → scored event object
   const idToEvent = Object.fromEntries(
-    candidates.map((e) => [e.event_id, e])
+    rankedCandidates.map((e) => [e.event_id, e])
   );
 
-  const seen = new Set(); // chặn trùng lần 2
+  const seen = new Set();
 
-  const result = selectedIds
-    .filter((id) => idToEvent[id] && !purchasedIds.has(id) && !seen.has(id))
-    .map((id) => {
+  return selectedIds
+    .filter((id) => {
+      // Chỉ giữ: tồn tại trong candidates, chưa mua, chưa lặp
+      if (!idToEvent[id])        return false;
+      if (purchasedIds.has(id))  return false;
+      if (seen.has(id))          return false;
       seen.add(id);
-      return idToEvent[id];
+      return true;
+    })
+    .map((id) => {
+      // Strip _scores — internal field, không cần trả về client
+      const { _scores, ...ev } = idToEvent[id];
+      return ev;
     });
-
-  if (result.length < k) {
-    const extras = candidates
-      .filter((e) => !seen.has(e.event_id) && !purchasedIds.has(e.event_id))
-      .slice(0, k - result.length);
-    result.push(...extras);
-  }
-
-  return result;
 }
 
-// ─── 5. MAIN RECOMMENDER ─────────────────────────────────────────────────────
+// ─── 8. MAIN RECOMMENDER ─────────────────────────────────────────────────────
+//
+//  Flow chuẩn:
+//    candidates (50) → semantic score → multi-signal rank
+//    → AI chọn đúng topK → buildCleanResult → trả về client
+//
+//  Fallback chain (không bao giờ tự bù event ngoài ý AI):
+//    không có context  → hot
+//    AI lỗi / rỗng     → hot
+//    candidates rỗng   → popular (empty)
+// ─────────────────────────────────────────────────────────────────────────────
 export async function getHybridRecommendations(userId = null, limit = 20, topK = 5) {
-  const candidates = await getCandidateEvents(50);
-
-  if (!candidates.length) {
-    return { type: "popular", events: [] };
-  }
-
-  // Fallback: chưa đăng nhập
+  // ── Fallback: chưa đăng nhập ─────────────────────────────────────────────
   if (!userId) {
     const events = await getGuestEvents(limit);
     return { type: "guest", events };
   }
 
-  // Lấy context user
-  const userContext = await getUserContext(userId);
-  const { purchasedEvents, purchasedIds, favorite } = userContext;
+  // ── Lấy candidates + user context song song ──────────────────────────────
+  const [candidates, userContext] = await Promise.all([
+    getCandidateEvents(50),
+    getUserContext(userId),
+  ]);
 
-  // Fallback: user chưa có dữ liệu nào
+  if (!candidates.length) {
+    return { type: "popular", events: [] };
+  }
+
+  const { purchasedEvents, purchasedIds, favorite } = userContext;
   const hasContext = purchasedEvents.length > 0 || favorite.length > 0;
+
+  // ── Fallback: user mới, chưa có dữ liệu ──────────────────────────────────
   if (!hasContext) {
     const events = await getHotEvents(limit);
     return { type: "hot", events };
   }
 
   try {
-    const selectedIds = await selectTopKWithAI(candidates, userContext, topK);
+    // ── BƯỚC A: Lấy vector store ─────────────────────────────────────────
+    const { getVectorStore } = await import("./ragAgent.js");
+    const vectorStore = await getVectorStore();
 
-    if (!selectedIds.length) {
+    // ── BƯỚC B: Semantic scoring từ embedding user profile ────────────────
+    const semanticScoreMap = await buildSemanticScoreMap(userContext, vectorStore, 20);
+
+    // ── BƯỚC C: Multi-signal scoring + rank toàn bộ candidates ───────────
+    const rankedCandidates = scoreAndRankCandidates(candidates, semanticScoreMap, userContext);
+
+    if (!rankedCandidates.length) {
       const events = await getHotEvents(limit);
       return { type: "hot", events };
     }
 
-    const events = filterAndBuildResult(selectedIds, candidates, purchasedIds, topK);
+    // ── BƯỚC D: AI chọn đúng topK từ top-15 pre-scored ───────────────────
+    const selectedIds = await selectTopKWithAI(rankedCandidates, userContext, topK);
 
-    // ✅ Sau khi filter vẫn không có kết quả → fallback hot
+    // AI trả về rỗng hoặc lỗi parse → fallback hot, không tự bù
+    if (!selectedIds.length) {
+      console.warn("[Recommendation] AI returned no selections, falling back to hot.");
+      const events = await getHotEvents(limit);
+      return { type: "hot", events };
+    }
+
+    // ── BƯỚC E: Build clean result — đúng K event AI đã chọn ─────────────
+    const events = buildCleanResult(selectedIds, rankedCandidates, purchasedIds);
+
+    // Edge case: tất cả IDs AI trả về đều invalid (đã mua / không tồn tại)
     if (!events.length) {
+      console.warn("[Recommendation] All AI-selected IDs were invalid, falling back to hot.");
       const hotEvents = await getHotEvents(limit);
       return { type: "hot", events: hotEvents };
     }
 
     return { type: "personalized", events };
+
   } catch (err) {
-    console.error("[Recommendation] AI error:", err.message);
-    // ✅ AI lỗi hoàn toàn → fallback hot thay vì candidates thô
+    console.error("[Recommendation] Pipeline error:", err.message);
     const events = await getHotEvents(limit);
     return { type: "hot", events };
   }

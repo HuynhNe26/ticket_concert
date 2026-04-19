@@ -56,6 +56,7 @@ export default function Header() {
         });
 
         setShowLogoutSuccess(true);
+        window.location.reload();
       }
     } catch (err) {
       console.log("Logout error", err);
@@ -107,7 +108,7 @@ export default function Header() {
         <div className="tb-container">
           {/* Logo */}
           <Link to="/" className="tb-logo">
-            <img src="./Logo.png" style={{width: "auto", height: "60px"}} />
+            <img src="./Logo.png" style={{width: "auto", height: "60px"}} alt="Logo" />
           </Link>
 
           {/* Desktop Search */}

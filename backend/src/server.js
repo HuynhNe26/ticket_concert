@@ -3,8 +3,9 @@ import express from "express";
 import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { connectDB } from "./config/database.js";
+import { connectDB, pool } from "./config/database.js";
 import cookieParser from "cookie-parser";
+import cron from "node-cron";
 
 dotenv.config();
 
@@ -42,7 +43,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: "http://localhost:3000", 
+    origin: [
+      "http://localhost:3000",
+      "https://ticketconcert.online",
+      "https://www.ticketconcert.online",
+      "https://ticket-concert-pi.vercel.app"
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     credentials: true,
   })
@@ -72,8 +78,13 @@ app.use("/api/admin/vouchers", voucherRouter);
 
 export const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
+    origin: [
+      "http://localhost:3000",
+      "https://ticketconcert.online",
+      "https://www.ticketconcert.online",
+      "https://ticket-concert-pi.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     credentials: true,
   },
 });
@@ -82,6 +93,41 @@ initZoneSocket(io);
 EventSocket(io)
 OrderSocket(io)
 await connectDB();
+
+cron.schedule("* * * * *", async () => {
+  console.log("Cron đang chạy:", new Date());
+  try {
+    await pool.query(`
+      UPDATE events
+      SET event_status = false
+      WHERE event_end < NOW()
+        AND event_status = true
+    `);
+
+    await pool.query(`
+      UPDATE events
+      SET event_status = true
+      WHERE event_start <= NOW()
+        AND event_status = false
+    `);
+
+    await pool.query(`
+      UPDATE vouchers
+      SET voucher_status = true
+      WHERE voucher_start <= NOW()
+        AND voucher_status = false
+    `);
+
+    await pool.query(`
+      UPDATE vouchers
+      SET voucher_status = false
+      WHERE voucher_end < NOW()
+        AND voucher_status = true
+    `);
+  } catch (err) {
+    console.error("Lỗi cập nhật event_status:", err);
+  }
+});
 
 const PORT = process.env.PORT ;
 httpServer.listen(PORT, () => {

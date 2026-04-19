@@ -113,7 +113,7 @@ export default function LayoutAdmin() {
                 </div>
             )}
 
-            <div style={{ background: "white" }}>
+            <div>
                 <Outlet />
             </div>
 

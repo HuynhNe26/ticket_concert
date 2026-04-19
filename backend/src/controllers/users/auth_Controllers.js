@@ -148,7 +148,7 @@ export const authControllers = {
         });
       }
 
-      const { email, name: fullName, picture } = googlePayload;
+      const { email, name: fullName } = googlePayload;
 
       let result = await pool.query(
         "SELECT * FROM users WHERE email = $1", 
@@ -342,33 +342,119 @@ export const authControllers = {
       );
 
       await resend.emails.send({
-        from: "onboarding@resend.dev",
+        from: "no-reply@ticketconcert.online",
         to: email,
         subject: `Ticket Concert - ${otp} là mã xác nhận để đặt lại mật khẩu của bạn`,
         html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px;">
-            <h2>Ticket Concert</h2>
+          <div style="margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#060a14;padding:40px 16px;">
+              <tr>
+                <td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+          
+                    <!-- LOGO / HEADER -->
+                    <tr>
+                      <td style="padding-bottom:24px;text-align:center;">
+                        <table cellpadding="0" cellspacing="0" style="display:inline-table;">
+                          <tr>
+                            <td style="background:#7c3aed;border-radius:10px;padding:8px 20px;">
+                              <span style="font-family:'Bebas Neue','Arial Black',Arial,sans-serif;font-size:22px;letter-spacing:4px;color:#ffffff;">TICKET CONCERT</span>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
 
-            <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu tài khoản của bạn.</p>
+                    <tr>
+                      <td style="background:#0d1526;border-radius:20px;border:1px solid rgba(255,255,255,0.07);overflow:hidden;">
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td style="padding:32px 36px;">
+          
+                              <p style="margin:0 0 24px;font-size:15px;color:#94a3b8;line-height:1.7;">
+                                Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn. Sử dụng mã xác nhận dưới đây để tiếp tục:
+                              </p>
+          
+                              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                                <tr>
+                                  <td align="center" style="background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.35);border-radius:14px;padding:28px 20px;">
+                                    <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:5px;color:#7c3aed;text-transform:uppercase;">Mã xác nhận</p>
+                                    <p style="margin:0 0 10px;font-family:'Courier New',Courier,monospace;font-size:48px;font-weight:700;letter-spacing:12px;color:#c4b5fd;">${otp}</p>
+                                    <p style="margin:0;font-size:12px;color:#64748b;">Hết hạn sau <strong style="color:#f87171;">10 phút</strong></p>
+                                  </td>
+                                </tr>
+                              </table>
+          
+                              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                                <tr>
+                                  <td style="background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.2);border-radius:10px;padding:14px 16px;">
+                                    <p style="margin:0;font-size:13px;color:#fca5a5;line-height:1.6;">
+                                      ⚠️ Nếu bạn không yêu cầu thay đổi mật khẩu, hãy bỏ qua email này. Tài khoản của bạn vẫn an toàn.
+                                    </p>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
 
-            <p><strong>Đây là mã xác nhận để đặt lại mật khẩu:</strong></p>
-
-            <div style="
-              font-size: 32px;
-              font-weight: bold;
-              letter-spacing: 6px;
-              margin: 20px 0;
-              color: #2e7d32;
-            ">
-              ${otp}
-            </div>
-
-            <p>Mã xác nhận sẽ hết hạn trong <strong style="color: #2e7d32;">10 phút</strong>.</p>
-
-            <p>Nếu bạn không yêu cầu thay đổi mật khẩu, hãy bỏ qua email này.</p>
-
-            <br />
-            <p><strong>Ticket Concert Team</strong></p>
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td style="border-top:1px dashed rgba(255,255,255,0.08);"></td>
+                          </tr>
+                        </table>
+          
+                        <!-- FOOTER INSIDE CARD -->
+                        <table width="100%" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td style="padding:24px 36px;">
+                              <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                  <td>
+                                    <p style="margin:0 0 4px;font-size:13px;font-weight:700;letter-spacing:2px;color:#c4b5fd;text-transform:uppercase;">Ticket Concert Team</p>
+                                    <p style="margin:0;font-size:12px;color:#475569;">ticketconcert.online</p>
+                                  </td>
+                                  <td align="right">
+                                    <table cellpadding="0" cellspacing="0">
+                                      <tr>
+                                        <td style="padding-right:12px;">
+                                          <img src="https://res.cloudinary.com/dzfqqipsx/image/upload/v1776499227/xmcn7vabeqm6lgnvl0pm.png"
+                                            width="50" height="50"
+                                            style="display:block;border-radius:8px;object-fit:contain;"
+                                            alt="Logo 1" />
+                                        </td>
+                                        <td>
+                                          <img src="https://res.cloudinary.com/dzfqqipsx/image/upload/v1776498643/yuzokosxfjqor1g0twvm.jpg"
+                                            width="50" height="50"
+                                            style="display:block;border-radius:8px;object-fit:contain;"
+                                            alt="Logo 2" />
+                                        </td>
+                                      </tr>
+                                    </table>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+          
+                      </td>
+                    </tr>
+          
+                    <!-- BOTTOM NOTE -->
+                    <tr>
+                      <td style="padding:20px 0 0;text-align:center;">
+                        <p style="margin:0;font-size:11px;color:#334155;line-height:1.6;">
+                          Email này được gửi tự động từ hệ thống Ticket Concert.<br/>
+                          Vui lòng không trả lời email này.
+                        </p>
+                      </td>
+                    </tr>
+          
+                  </table>
+                </td>
+              </tr>
+            </table>
           </div>
         `
       });
@@ -390,8 +476,6 @@ export const authControllers = {
   async verifyopt(req, res) {
     try {
       const {otp, email} = req.body;
-
-      const now = new Date();
 
       if (!otp) {
         return res.status(400).json({
@@ -431,6 +515,84 @@ export const authControllers = {
       return res.status(200).json({
         success: true,
         data: user
+      })
+    } catch (err) {
+      console.log(err);
+
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi server!"
+      });
+    }
+  },
+
+  async resetPassword(req, res) {
+    try {
+      const {password, email} = req.body;
+
+      const now = new Date().toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
+
+      if (!password) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng nhập mật khẩu!"
+        });
+      }
+
+      const hashPassword = await bcrypt.hash(password, 10);
+
+      await pool.query(
+        `
+        UPDATE users
+        SET password = $1
+        WHERE email = $2
+        `,
+        [hashPassword, email]
+      );
+
+      const {rows} = await pool.query(
+        `SELECT fullname
+        FROM users
+        WHERE email = $1`
+      , [email])
+
+      const fullname = rows[0]?.fullname;
+
+      await resend.emails.send({
+        from: "noreply@ticketconcert.online",
+        to: email,
+        subject: `Ticket Concert Notification - Mật khẩu của bạn đã được thay đổi`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2 style="font-size: 17px;">Ticket Concert</h2>
+
+            <p style="font-size: 15px;">Chào <strong>${fullname}</strong></p>
+
+            <p style="font-size: 15px;">Mật khẩu của bạn đã được thay đổi và lúc <strong>${now}</strong>. Nếu bạn không yêu cầu thay đổi mật khẩu, vui lòng liên hệ với quản trị viên của mình.</p>
+            <br />
+            <p style="font-size: 15px;">ticketconcert-cskh@gmail.com</p>
+
+            <br />
+            <p style="font-size: 17px;"><strong>Ticket Concert Team</strong></p>
+            <br />
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <img 
+                src="https://res.cloudinary.com/dzfqqipsx/image/upload/v1776499227/xmcn7vabeqm6lgnvl0pm.png"
+                style="width: 150px; height: 150px; object-fit: contain; display: block; margin-right: 50px;"
+              />
+
+              <img 
+                src="https://res.cloudinary.com/dzfqqipsx/image/upload/v1776498643/yuzokosxfjqor1g0twvm.jpg"
+                style="width: 150px; height: 150px; object-fit: contain; display: block;"
+              />
+            </div>
+          </div>
+        `
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Thay đổi mật khẩu thành công!"
       })
     } catch (err) {
       console.log(err);

@@ -1,3 +1,4 @@
+import { success } from "zod";
 import { pool } from "../../config/database.js";
 
 export const OrderControllers = {
@@ -69,6 +70,30 @@ export const OrderControllers = {
                 data: rows
             });
 
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({
+                message: "Lỗi server"
+            });
+        }
+    },
+
+    async getAllOrders(req, res) {
+        try {
+            const { rows } = await pool.query(
+                `
+                    SELECT p.*,
+                    SUM(pd.total_price) AS revenue
+                    FROM payments p
+                    JOIN payment_detail pd ON p.payment_id = pd.payment_id
+                    GROUP BY p.payment_id
+                `
+            )
+
+            return res.status(200).json({
+                success: true,
+                data: rows
+            })
         } catch (err) {
             console.error(err);
             res.status(500).json({

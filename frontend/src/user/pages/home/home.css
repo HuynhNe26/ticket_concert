@@ -20,9 +20,16 @@
   --arrow-size:      36px;
 }
 
+*, *::before, *::after { box-sizing: border-box; }
+
 /* ── Page shell ── */
 .hw-page {
   font-family: var(--hw-font-b);
+}
+
+.hw-section {
+  padding: 0 16px;
+  margin-bottom: 28px;
 }
 
 /* ── Section header row ── */

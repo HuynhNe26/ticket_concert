@@ -145,7 +145,7 @@ momoNotify.post("/notify", async (req, res) => {
       await client.query(`DELETE FROM cart_items WHERE user_id = $1`, [userId]);
 
       // 🆕 cộng point: 10.000đ = 10 điểm
-      const earnedPoints = Math.floor(total_price / 10000) * 10;
+      const earnedPoints = Math.floor(total_price / 10000);
       if (earnedPoints > 0) {
         await client.query(
           `UPDATE users SET point = point + $1 WHERE user_id = $2`,

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import "./manage_voucher.css";
-import { useNavigate } from "react-router-dom";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -21,8 +20,6 @@ export default function ManageVoucher() {
     const [editTarget, setEditTarget] = useState(null);
     const [form, setForm] = useState({});
     const [deleteTarget, setDeleteTarget] = useState(null);
-    const navigate = useNavigate();
-    const data = new Date();
 
    useEffect(() => {
         const getVoucher = async () => {
@@ -43,7 +40,7 @@ export default function ManageVoucher() {
                 }
 
             } catch (err) {
-                console.error(err);
+                setError(err)
             } finally {
                 setLoading(false);
             }

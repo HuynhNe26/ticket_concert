@@ -16,7 +16,7 @@ export default function ManageEvent() {
     const [events, setEvents] = useState([]);
     const [hotEvents, setHotEvents] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [error, setError] = useState("");
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [yearFilter, setYearFilter] = useState('');

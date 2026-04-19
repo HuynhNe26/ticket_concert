@@ -31,7 +31,6 @@
 
 .mv-root {
     font-family: var(--font);
-    background: var(--bg);
     padding: 32px 28px;
     color: var(--text-primary);
     margin-top: 50px;

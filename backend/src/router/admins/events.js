@@ -4,6 +4,7 @@ import uploadCloud from "../../middlewares/upload.js";
 const router = express.Router();
 
 router.get("/", EventControllers.getAllEvent); 
+router.get("/statistic", EventControllers.statistic); 
 router.get("/calendar", EventControllers.getEvent); 
 router.post("/create",uploadCloud.fields([{name: 'banner', maxCount: 1}]) ,EventControllers.createEvent);
 router.get("/:id", EventControllers.getEventById);

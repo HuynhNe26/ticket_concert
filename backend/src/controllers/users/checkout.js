@@ -9,7 +9,7 @@ const MOMO_CONFIG = {
   secretKey: "K951B6PE1waDMi640xX08PD3vg6EkVlz",
   endpoint: "https://test-payment.momo.vn/v2/gateway/api/create",
   redirectUrl: "http://localhost:3000/result",
-  ipnUrl: "https://mae-blastoporic-zetta.ngrok-free.dev/api/checkout/momo/notify",
+  ipnUrl: "https://uninclined-overhonestly-jone.ngrok-free.dev/api/checkout/momo/notify",
 };
 console.log(MOMO_CONFIG.ipnUrl)
 const VNP_CONFIG = {
