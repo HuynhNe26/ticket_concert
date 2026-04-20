@@ -3,12 +3,13 @@ import https from "https";
 import { pool } from "../../config/database.js";
 
 /* ================= CONFIG ================= */
+const CORS = process.env.CORS_ORIGIN;
 const MOMO_CONFIG = {
   partnerCode: "MOMO",
   accessKey: "F8BBA842ECF85",
   secretKey: "K951B6PE1waDMi640xX08PD3vg6EkVlz",
   endpoint: "https://test-payment.momo.vn/v2/gateway/api/create",
-  redirectUrl: "http://localhost:3000/result",
+  redirectUrl: `${CORS}/result`,
   ipnUrl: "https://uninclined-overhonestly-jone.ngrok-free.dev/api/checkout/momo/notify",
 };
 console.log(MOMO_CONFIG.ipnUrl)
@@ -105,7 +106,7 @@ export const Checkout = {
       return res.json({ message: "error" });
     }
   },
-  
+
   /* ================= VNPAY CREATE ================= */
   createVnpay: async (req, res) => {
     try {
