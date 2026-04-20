@@ -385,7 +385,7 @@ export default function CartPage() {
               <div className="cart-section-title">Phương thức thanh toán</div>
               <div className="pay-method-list">
                 {[
-                  { id: "MOMO",  logo: "/logoMoMo.png",  label: "MoMo" },
+                  { id: "MOMO",  logo: "https://res.cloudinary.com/dzfqqipsx/image/upload/v1776498643/yuzokosxfjqor1g0twvm.jpg",  label: "MoMo" },
                   { id: "VNPAY", logo: "/logoVNpay.png", label: "VNPAY / Ứng dụng ngân hàng" },
                 ].map((m) => (
                   <label

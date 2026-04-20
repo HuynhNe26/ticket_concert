@@ -108,7 +108,7 @@ export default function Header() {
         <div className="tb-container">
           {/* Logo */}
           <Link to="/" className="tb-logo">
-            <img src="./Logo.png" style={{width: "auto", height: "60px"}} alt="Logo" />
+            <img src="https://res.cloudinary.com/dzfqqipsx/image/upload/v1776499227/xmcn7vabeqm6lgnvl0pm.png" style={{width: "auto", height: "60px"}} alt="Logo" />
           </Link>
 
           {/* Desktop Search */}
