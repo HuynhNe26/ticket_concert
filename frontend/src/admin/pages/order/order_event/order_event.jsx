@@ -252,7 +252,7 @@ export default function OrderEvent() {
                                             </td>
                                             <td className="oe-td">
                                                 <span className={`oe-status ${STATUS_MAP.class}`}>
-                                                    {STATUS_MAP[order.payment_status]?.label || ""}
+                                                    {order.payment_status || ""}
                                                 </span>
                                             </td>
                                             <td className="oe-td oe-td--date">
