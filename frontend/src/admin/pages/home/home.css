@@ -638,3 +638,105 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-light);
 }
+/* Thêm margin-bottom cho header */
+.section-header {
+  margin-bottom: 16px;
+}
+
+/* Bộ lọc tháng */
+.month-filter-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.month-filter-btn {
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid #e2e8f0;
+  background: transparent;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 400;
+  transition: all 0.2s ease-in-out;
+}
+
+.month-filter-btn.active {
+  border: none;
+  background: #185FA5;
+  color: #E6F1FB;
+  font-weight: 600;
+}
+
+/* Trạng thái trống */
+.empty-stats-message {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 24px 0;
+}
+
+/* Item sự kiện */
+.event-stat-item {
+  margin-bottom: 14px;
+}
+
+.event-stat-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.event-stat-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-stat-count {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Thanh tiến độ */
+.progress-bar-container {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+/* Styling cho dropdown chọn năm */
+.year-filter-select {
+  width:15%;
+  padding: 3px 6px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f000;
+  background-color: #f8fafc00;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 100px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.year-filter-select:hover {
+  border-color: #cbd5e1;
+}
+
+.year-filter-select:focus {
+  border-color: #185FA5;
+  box-shadow: 0 0 0 2px rgba(24, 95, 165, 0.1);
+}

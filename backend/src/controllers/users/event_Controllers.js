@@ -4,18 +4,19 @@ export const EventControllers = {
 
   async searchEvents(req, res) {
     try {
-      const { q, dateStart, dateEnd, location } = req.query;
-      
+      const { q, dateStart, dateEnd, location } = req.query; 
+
       let query = `
-        SELECT event_id, event_name, banner_url, event_start, event_location, event_artist,
-               (SELECT MIN(zone_price) FROM zones WHERE event_id = events.event_id) as min_price
+        SELECT event_id, event_name, banner_url, event_start, event_end, event_location, event_artist,
+              (SELECT MIN(zone_price) FROM zones WHERE event_id = events.event_id) as min_price
         FROM events
         WHERE 1=1
       `;
-      
+
       const params = [];
       let paramCount = 1;
-      if (q) {
+
+      if (q && q.trim() !== "") {
         const words = q.trim().split(/\s+/).filter(Boolean);
         words.forEach(word => {
           query += ` AND (

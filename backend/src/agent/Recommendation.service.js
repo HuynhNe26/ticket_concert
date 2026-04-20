@@ -267,10 +267,6 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
     .sort((a, b) => b._scores.totalScore - a._scores.totalScore);
 }
 
-
-
-
-
 async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
   const { llm } = await import("./ragAgent.js");
   const { purchasedEvents, favorite } = userContext;

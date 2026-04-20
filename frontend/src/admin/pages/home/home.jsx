@@ -28,7 +28,24 @@ export default function HomeAdmin() {
   const [events, setEvents] = useState ([]);
   const [eventTotal, setEventTotal] = useState ([]);
   const [orders, setOrders] = useState([]);
-  const year = new Date().getFullYear();
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [ticketStats, setTicketStats]     = useState([]);
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  
+  // Tạo mảng gồm 5 năm: 3 năm trước, năm hiện tại, và 1 năm sau
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 3 + i);
+
+  useEffect(() => {
+    const fetchByMonth = async () => {
+      try {
+        const res  = await fetch(`${API_BASE}/api/admin/statistic/calendar?month=${selectedMonth}&year=${selectedYear}`);
+        const data = await res.json();
+        if (data.success) setTicketStats(data.data);
+      } catch (err) { console.log(err); }
+    };
+    fetchByMonth();
+  }, [selectedMonth,selectedYear]);
 
   useEffect(() => {
 
@@ -44,6 +61,13 @@ export default function HomeAdmin() {
         console.log(err)
       }
     }
+    const getTicketStats = async () => {
+      try {
+        const res  = await fetch(`${API_BASE}/api/admin/statistic/calendar?month=${selectedMonth}&year=${selectedYear}`);
+        const data = await res.json();
+        if (data.success) setTicketStats(data.data);
+      } catch (err) { console.log(err); }
+    };
 
     const getEvent = async () => {
       try {
@@ -70,13 +94,13 @@ export default function HomeAdmin() {
         const data = await res.json();
         if (data.success) {
           setOrders(data.data)
-          console.log(data.data)
         }
       } catch (err) {
         console.log(err)
       }
     }
     
+    getTicketStats();
     getUser();
     getEvent();
     getOrder();
@@ -156,8 +180,8 @@ export default function HomeAdmin() {
   // Quick actions
   const quickActions = [
     {
-      title: "Add Admin",
-      description: "Create new user account",
+      title: "Thêm Admin",
+      description: "Tạo tài khoản admin mới",
       icon: (
         <Icon size={28}>
           <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -170,8 +194,8 @@ export default function HomeAdmin() {
       link: "/admin/add",
     },
     {
-      title: "Add Product",
-      description: "Create new product",
+      title: "Thêm sự kiện",
+      description: "Tạo sự kiện mới",
       icon: (
         <Icon size={28}>
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
@@ -186,8 +210,8 @@ export default function HomeAdmin() {
       link: "/admin/products/add",
     },
     {
-      title: "View Orders",
-      description: "Manage all orders",
+      title: "Quán lý đơn hàng",
+      description: "Xem thông tin chỉ tiết đơn",
       icon: (
         <Icon size={28}>
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -199,18 +223,6 @@ export default function HomeAdmin() {
       ),
       color: "green",
       link: "/admin/orders",
-    },
-    {
-      title: "Settings",
-      description: "System configuration",
-      icon: (
-        <Icon size={28}>
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.25m7.07 7.07l4.24 4.25M1 12h6m6 0h6M4.22 19.78l4.24-4.25m7.07-7.07l4.24-4.25" />
-        </Icon>
-      ),
-      color: "orange",
-      link: "/admin/settings",
     },
   ];
 
@@ -275,34 +287,71 @@ export default function HomeAdmin() {
             </div>
 
             {/* CHART PLACEHOLDER */}
-            <div className="section-card">
-              <div className="section-header">
-                <h2 className="section-title">Thống kê doanh thu</h2>
-                <p className="section-subtitle">Doanh thu theo tháng của năm {year}</p>
-              </div>
-              <div className="chart-placeholder">
-                <div className="chart-bars">
-                  <div className="bar" style={{ height: "60%" }}>
-                    <span className="bar-label">Jan</span>
-                  </div>
-                  <div className="bar" style={{ height: "75%" }}>
-                    <span className="bar-label">Feb</span>
-                  </div>
-                  <div className="bar" style={{ height: "50%" }}>
-                    <span className="bar-label">Mar</span>
-                  </div>
-                  <div className="bar" style={{ height: "85%" }}>
-                    <span className="bar-label">Apr</span>
-                  </div>
-                  <div className="bar" style={{ height: "70%" }}>
-                    <span className="bar-label">May</span>
-                  </div>
-                  <div className="bar" style={{ height: "95%" }}>
-                    <span className="bar-label">Jun</span>
-                  </div>
+              <div className="section-card">
+                <div className="section-header">
+                  <h2 className="section-title">Thống kê lượt bán</h2>
+                  <p className="section-subtitle">Tỉ lệ vé được bán trong           
+                      <select 
+                      value={selectedYear} 
+                      onChange={(e) => setSelectedYear(Number(e.target.value))}
+                      className="year-filter-select"
+                    >
+                      {years.map(y => (
+                        <option key={y} value={y}>Năm {y}</option>
+                      ))}
+                    </select> 
+                  </p>
                 </div>
+                <div className="month-filter-list">
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setSelectedMonth(m)}
+                      className={`month-filter-btn ${selectedMonth === m ? "active" : ""}`}
+                    >
+                      T.{m}
+                    </button>
+                  ))}
+                </div>
+                {ticketStats.length === 0 ? (
+                  <p className="empty-stats-message">
+                    Không có sự kiện trong tháng {selectedMonth}
+                  </p>
+                ) : (
+                  ticketStats.map((ev, i) => {
+                    const sold = Number(ev.sold_tickets);
+                    const total = Number(ev.total_tickets);
+                    const pct = total > 0 ? Math.min(Math.round((sold / total) * 100), 100) : 0;
+                    const color = pct >= 80 ? "#185FA5" : pct >= 50 ? "#0F6E56" : "#888780";
+                    
+                    return (
+                      <div key={i} className="event-stat-item">
+                        <div className="event-stat-header">
+                          <span className="event-stat-name" title={ev.event_name}>
+                            {ev.event_name}
+                          </span>
+                          <span 
+                            className="event-stat-count" 
+                            style={{ color: color }}
+                          >
+                            {sold.toLocaleString("vi-VN")} / {total.toLocaleString("vi-VN")} vé ({pct}%)
+                          </span>
+                        </div>
+                        
+                        <div className="progress-bar-container">
+                          <div
+                            className="progress-bar-fill"
+                            style={{
+                              width: `${pct}%`,
+                              background: color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
-            </div>
 
           </div>
 
