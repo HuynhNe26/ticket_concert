@@ -5,7 +5,7 @@ import { authMiddleware } from "../../../middlewares/userAuth.js";
 import { pool } from "../../../config/database.js"
 
 const momo = express.Router();
-const CORS = process.env.CORS_ORIGIN'
+const CORS = process.env.CORS_ORIGIN
 
 // ===== TẠO LINK THANH TOÁN =====
 momo.post("/", authMiddleware, async (req, res) => {

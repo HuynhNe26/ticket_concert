@@ -13,7 +13,6 @@ export async function addToCart(req, res) {
   try {
     await client.query("BEGIN");
 
-    // 🔍 1. Kiểm tra user đã có cart chưa (chưa hết hạn)
     const checkCart = `
       SELECT 1
       FROM cart_items
@@ -32,7 +31,6 @@ export async function addToCart(req, res) {
       });
     }
 
-    // 🔒 2. Lock zone
     const zoneResult = await client.query(
       `
       SELECT zone_quantity, sold_quantity
@@ -51,7 +49,6 @@ export async function addToCart(req, res) {
 
     const { zone_quantity, sold_quantity } = zoneResult.rows[0];
 
-    // 📊 3. Tính số vé đang giữ
     const reservedResult = await client.query(
       `
       SELECT COALESCE(SUM(quantity),0) AS reserved_quantity
@@ -75,7 +72,6 @@ export async function addToCart(req, res) {
       });
     }
 
-    // 🔍 4. Check cart hiện tại của user trong zone
     const existingResult = await client.query(
       `
       SELECT quantity
@@ -97,7 +93,6 @@ export async function addToCart(req, res) {
       });
     }
 
-    // ✏️ 5. Update hoặc Insert cart
     if (existingResult.rows.length) {
       await client.query(
         `

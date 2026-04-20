@@ -43,7 +43,7 @@ export async function getVectorStore() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TOOL 1: RAG Search — tìm kiếm semantic trong vector store
+// TOOL 1: RAG Search
 // ─────────────────────────────────────────────────────────────────────────────
 export const ragSearchTool = tool(
   async ({ query, topK = 5 }) => {
@@ -114,6 +114,12 @@ export const ragSearchTool = tool(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL 2: Get Events
+// FIX: Sửa lỗi typo `e.1event_end` → `e.event_end` trong các filter ngày
+//      (today, tomorrow, specificDate) — đây là bug khiến filter ngày KHÔNG BAO GIỜ hoạt động.
+// FIX: Bổ sung filter `comingSoon` để lấy sự kiện chưa mở bán.
+// ─────────────────────────────────────────────────────────────────────────────
 export const getEventsTool = tool(
   async ({ filter, limit = 5 }) => {
     try {
@@ -121,45 +127,56 @@ export const getEventsTool = tool(
         SELECT e.event_id, e.event_name, e.event_location,
                e.event_start, e.event_end, e.event_artist,
                e.event_status, c.category_name,
-               MIN(z.zone_price) AS min_price
+               MIN(z.zone_price) AS min_price,
+               CASE
+                 WHEN e.event_status = false AND e.event_start > NOW()
+                   THEN 'coming_soon'
+                 WHEN e.event_status = true AND e.event_start > NOW()
+                   THEN 'upcoming'
+                 WHEN e.event_status = true
+                  AND e.event_start <= NOW()
+                  AND e.event_end   >= NOW()
+                   THEN 'ongoing'
+                 ELSE 'ended'
+               END AS event_label
         FROM events e
         JOIN categories c ON e.category_id = c.category_id
         LEFT JOIN zones z ON z.event_id = e.event_id
-        WHERE e.event_status = true
+        WHERE (
+          e.event_status = true
+          OR (e.event_status = false AND e.event_start > NOW())
+        )
       `;
       const params = [];
 
-      // ── Filter theo thể loại ──────────────────────────────────────────────
+      // ── Filter theo nội dung ──────────────────────────────────────────────
       if (filter?.category) {
         params.push(`%${filter.category}%`);
         query += ` AND c.category_name ILIKE $${params.length}`;
       }
 
-      // ── Filter theo địa điểm ──────────────────────────────────────────────
       if (filter?.location) {
         params.push(`%${filter.location}%`);
         query += ` AND e.event_location ILIKE $${params.length}`;
       }
 
-      // ── Filter theo nghệ sĩ ───────────────────────────────────────────────
       if (filter?.artistName) {
         params.push(`%${filter.artistName}%`);
         query += ` AND e.event_artist::text ILIKE $${params.length}`;
       }
 
       // ── Filter theo ngày ──────────────────────────────────────────────────
-      // "Diễn ra ngày X" = sự kiện bắt đầu vào ngày X (event_start::date = X)
-      // Concert thường bắt đầu và kết thúc trong cùng 1 ngày.
+      // FIX: Sửa `e.1event_end` → `e.event_start` (dùng event_start để filter ngày diễn ra)
+      // Logic: "có show ngày X" = sự kiện bắt đầu vào ngày X
       if (filter?.today) {
-        query += ` AND e.1event_end::date = CURRENT_DATE`;
+        query += ` AND e.event_start::date = CURRENT_DATE`;
 
       } else if (filter?.tomorrow) {
-        query += ` AND e.1event_end::date = (CURRENT_DATE + INTERVAL '1 day')::date`;
+        query += ` AND e.event_start::date = (CURRENT_DATE + INTERVAL '1 day')::date`;
 
       } else if (filter?.specificDate) {
-        // Nhận chuỗi YYYY-MM-DD từ agent (agent tự parse từ ngôn ngữ tự nhiên)
         params.push(filter.specificDate);
-        query += ` AND e.1event_end::date = $${params.length}::date`;
+        query += ` AND e.event_start::date = $${params.length}::date`;
 
       } else if (filter?.upcoming) {
         query += ` AND e.event_start > NOW()`;
@@ -169,19 +186,22 @@ export const getEventsTool = tool(
                    AND e.event_end   >= DATE_TRUNC('month', NOW())`;
 
       } else if (filter?.active) {
-        query += ` AND e.event_end >= NOW()`;
+        query += ` AND e.event_end >= NOW() AND e.event_status = true`;
+
+      } else if (filter?.comingSoon) {
+        // FIX: Filter mới cho sự kiện chưa mở bán
+        query += ` AND e.event_status = false AND e.event_start > NOW()`;
       }
 
-      // hot: chỉ lấy sự kiện chưa kết thúc và có dữ liệu zone thực tế
+      // ── Hot filter ────────────────────────────────────────────────────────
       if (filter?.hot) {
-        query += ` AND e.event_end >= NOW() AND z.status = true`;
+        query += ` AND e.event_end >= NOW() AND e.event_status = true AND z.status = true`;
       }
 
       query += ` GROUP BY e.event_id, c.category_name, c.category_id`;
 
       // ── Sắp xếp ───────────────────────────────────────────────────────────
       if (filter?.hot) {
-        // Ưu tiên: tỉ lệ bán cao → tổng lượt bán nhiều → sự kiện diễn ra sớm
         query += `
           HAVING SUM(z.zone_quantity) > 0
           ORDER BY
@@ -189,7 +209,7 @@ export const getEventsTool = tool(
             SUM(z.sold_quantity) DESC,
             e.event_start ASC`;
       } else {
-        query += ` ORDER BY e.event_start ASC`;
+        query += ` ORDER BY e.event_status DESC, e.event_start ASC`;
       }
 
       params.push(Math.min(limit, 6));
@@ -197,10 +217,10 @@ export const getEventsTool = tool(
 
       const result = await pool.query(query, params);
       if (result.rows.length === 0) {
-        // Trả về thông báo gợi ý ngày thay thế nếu tìm theo ngày
         if (filter?.today)        return "ℹ️ Hôm nay không có sự kiện nào đang diễn ra.";
         if (filter?.tomorrow)     return "ℹ️ Ngày mai chưa có sự kiện nào được lên lịch.";
         if (filter?.specificDate) return `ℹ️ Không có sự kiện nào vào ngày ${filter.specificDate}.`;
+        if (filter?.comingSoon)   return "ℹ️ Hiện chưa có sự kiện nào sắp mở bán.";
         return "ℹ️ Không tìm thấy sự kiện phù hợp.";
       }
 
@@ -215,11 +235,12 @@ export const getEventsTool = tool(
           const artists  = ev.event_artist?.map((a) => a.name).join(", ") || "Chưa cập nhật";
           const minPrice = ev.min_price ? formatCurrency(ev.min_price) : "Chưa cập nhật";
 
-          // Status icon — ưu tiên hiển thị "HÔM NAY" / "NGÀY MAI" nếu đúng ngày
           let statusIcon;
           const startDate = new Date(start); startDate.setHours(0, 0, 0, 0);
 
-          if (now >= start && now <= end) {
+          if (ev.event_label === "coming_soon") {
+            statusIcon = "🔜 SẮP MỞ BÁN";
+          } else if (now >= start && now <= end) {
             statusIcon = "🔴 ĐANG DIỄN RA";
           } else if (startDate.getTime() === todayDate.getTime()) {
             statusIcon = "📌 HÔM NAY";
@@ -231,7 +252,6 @@ export const getEventsTool = tool(
             statusIcon = "✅ Đã kết thúc";
           }
 
-          // Format thời gian bắt đầu kèm giờ nếu tìm theo ngày cụ thể
           const timeStr = (filter?.today || filter?.tomorrow || filter?.specificDate)
             ? `${start.toLocaleDateString("vi-VN")} lúc ${start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`
             : start.toLocaleDateString("vi-VN");
@@ -255,42 +275,36 @@ export const getEventsTool = tool(
     description:
       "Lấy danh sách sự kiện từ database với bộ lọc linh hoạt. " +
       "Dùng khi: hỏi sự kiện hôm nay, ngày mai, ngày cụ thể, tháng này, ở đâu, " +
-      "sự kiện đang/sắp diễn ra, sự kiện của nghệ sĩ nào. " +
+      "sự kiện đang/sắp diễn ra, sự kiện của nghệ sĩ nào, sự kiện sắp mở bán. " +
       "Trả về tối đa 5-6 sự kiện với giá vé và trạng thái.",
     schema: z.object({
       filter: z
         .object({
-          // ── Lọc theo nội dung ──────────────────────────────────────────
           category:     z.string().optional().describe("Tên thể loại"),
           location:     z.string().optional().describe("Địa điểm tổ chức"),
           artistName:   z.string().optional().describe("Tên nghệ sĩ biểu diễn"),
 
-          // ── Lọc theo ngày ─────────────────────────────────────────────
           today:        z.boolean().optional().describe(
-            "true → sự kiện diễn ra NGAY HÔM NAY. " +
-            "Dùng khi user hỏi: 'hôm nay', 'tối nay', 'show hôm nay', 'cuối tuần này' (nếu hôm nay là cuối tuần)."
+            "true → sự kiện diễn ra NGAY HÔM NAY."
           ),
           tomorrow:     z.boolean().optional().describe(
-            "true → sự kiện diễn ra NGÀY MAI. " +
-            "Dùng khi user hỏi: 'ngày mai', 'tối mai', 'show ngày mai'."
+            "true → sự kiện diễn ra NGÀY MAI."
           ),
           specificDate: z.string().optional().describe(
-            "Ngày cụ thể định dạng YYYY-MM-DD. " +
-            "Dùng khi user nhắc đến ngày như: '25/12', 'ngày 1 tháng 5', '15-8', '2025-06-20'. " +
-            "Agent tự chuyển đổi ngôn ngữ tự nhiên → YYYY-MM-DD trước khi truyền vào đây. " +
-            "Năm mặc định là năm hiện tại nếu user không nói."
+            "Ngày cụ thể định dạng YYYY-MM-DD."
           ),
 
-          // ── Lọc theo khoảng thời gian ─────────────────────────────────
           upcoming:     z.boolean().optional().describe("Sự kiện chưa bắt đầu (event_start > NOW)"),
           thisMonth:    z.boolean().optional().describe("Sự kiện trong tháng hiện tại"),
-          active:       z.boolean().optional().describe("Sự kiện chưa kết thúc (event_end >= NOW)"),
+          active:       z.boolean().optional().describe("Sự kiện đang active và chưa kết thúc"),
+          // FIX: Thêm filter comingSoon
+          comingSoon:   z.boolean().optional().describe(
+            "true → chỉ lấy sự kiện chưa mở bán (event_status = false, event_start > NOW). " +
+            "Dùng khi user hỏi 'sự kiện sắp mở bán', 'sắp có show gì', 'chưa mở bán'."
+          ),
 
-          // ── Gợi ý theo độ hot ─────────────────────────────────────────
           hot:          z.boolean().optional().describe(
-            "true → sắp xếp theo độ hot: tỉ lệ bán / tổng capacity cao nhất. " +
-            "Dùng khi: user vãng lai hỏi gợi ý, 'sự kiện hot', 'sự kiện bán chạy', " +
-            "'nên xem gì', 'sự kiện nổi bật'. Thường kết hợp active:true."
+            "true → sắp xếp theo độ hot. Dùng khi user hỏi gợi ý, sự kiện hot, bán chạy."
           ),
         })
         .optional(),
@@ -299,6 +313,9 @@ export const getEventsTool = tool(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL 3: Check Tickets
+// ─────────────────────────────────────────────────────────────────────────────
 export const checkTicketsTool = tool(
   async ({ eventName, eventId, zoneCode }) => {
     try {
@@ -307,11 +324,11 @@ export const checkTicketsTool = tool(
                z.zone_price, z.zone_quantity, z.sold_quantity,
                (z.zone_quantity - z.sold_quantity) AS available,
                z.status,
-               e.event_id, e.event_name, e.event_start, e.event_end
+               e.event_id, e.event_name, e.event_start, e.event_end,
+               e.event_status
         FROM zones z
         JOIN events e ON z.event_id = e.event_id
-        WHERE e.event_status = true
-          AND e.event_end >= NOW()
+        WHERE e.event_end >= NOW()
           AND z.status = true
       `;
       const params = [];
@@ -336,14 +353,18 @@ export const checkTicketsTool = tool(
 
       const eventName_ = result.rows[0].event_name;
       const eventStart = new Date(result.rows[0].event_start).toLocaleDateString("vi-VN");
+      // FIX: Hiển thị trạng thái mở bán rõ ràng
+      const isComingSoon = result.rows[0].event_status === false;
+      const saleStatus = isComingSoon ? "🔜 Chưa mở bán" : "🟢 Đang mở bán";
 
-      const header = `🎫 **Thông tin vé: ${eventName_}** (${eventStart})\n`;
+      const header = `🎫 **Thông tin vé: ${eventName_}** (${eventStart}) — ${saleStatus}\n`;
       const rows = result.rows
         .map((z) => {
-          const statusIcon =
-            z.available <= 0  ? "❌ Hết vé" :
-            z.available <= 20 ? `⚠️  Sắp hết (còn ${z.available})` :
-                                `✅ Còn vé (${z.available} vé)`;
+          const statusIcon = isComingSoon
+            ? "🔜 Chưa mở bán"
+            : z.available <= 0  ? "❌ Hết vé"
+            : z.available <= 20 ? `⚠️  Sắp hết (còn ${z.available})`
+                                : `✅ Còn vé (${z.available} vé)`;
           return (
             `• **${z.zone_name}** (${z.zone_code})\n` +
             `  💰 ${formatCurrency(z.zone_price)} — ${statusIcon}`
@@ -371,6 +392,9 @@ export const checkTicketsTool = tool(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL 4: Personalized Events
+// ─────────────────────────────────────────────────────────────────────────────
 export const getPersonalizedEventsTool = tool(
   async ({ userId }) => {
     try {
@@ -422,7 +446,11 @@ export const getPersonalizedEventsTool = tool(
          FROM events e
          JOIN categories c ON e.category_id = c.category_id
          LEFT JOIN zones z ON z.event_id = e.event_id
-         WHERE e.event_status = true AND e.event_end >= NOW() AND (${conditions})
+         WHERE (
+           (e.event_status = true AND e.event_end >= NOW())
+           OR (e.event_status = false AND e.event_start > NOW())
+         )
+         AND (${conditions})
          GROUP BY e.event_id, c.category_name
          ORDER BY e.event_start ASC
          LIMIT 4`,
@@ -452,6 +480,9 @@ export const getPersonalizedEventsTool = tool(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL 5: Web Search
+// ─────────────────────────────────────────────────────────────────────────────
 export const webSearchTool = tool(
   async ({ query }) => {
     try {
@@ -495,8 +526,11 @@ export const webSearchTool = tool(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SYSTEM PROMPT
+// ─────────────────────────────────────────────────────────────────────────────
 export function buildSystemPrompt() {
-  const today = getDateContext(); // vd: "Thứ Ba, 22/04/2025"
+  const today = getDateContext();
 
   return `
 Bạn là trợ lý AI thông minh của nền tảng đặt vé sự kiện âm nhạc.
@@ -518,7 +552,8 @@ Hôm nay: **${today}**
 | **event_detail** | tên sự kiện cụ thể, hỏi chi tiết về 1 show |
 | **ticket_check** | "còn vé không", "giá vé", "vé VIP", "vé GA" |
 | **artist_info** | hỏi về nghệ sĩ, ca sĩ, ban nhạc |
-| **recommend_guest** | "gợi ý sự kiện" + [AUTH:guest], "nên xem gì", "sự kiện hot", "sự kiện nổi bật" |
+| **coming_soon** | "sắp mở bán", "sự kiện chưa mở bán", "sắp có show gì" |
+| **recommend_guest** | "gợi ý sự kiện" + [AUTH:guest], "nên xem gì", "sự kiện hot" |
 | **personalized** | "gợi ý cho mình", "theo sở thích", "phù hợp với tôi" + [AUTH:userId=X] |
 | **purchase** | "mua vé", "đặt vé", "thanh toán" |
 | **history** | "vé của tôi", "lịch sử mua", "đã mua" |
@@ -554,6 +589,7 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 | event_list | get_events(filter.active/upcoming/thisMonth) | |
 | **recommend_guest** | **get_events(filter={ hot:true, active:true })** | Chỉ khi [AUTH:guest] |
 | **event_date** | **get_events(filter.today / tomorrow / specificDate)** | Ưu tiên filter ngày |
+| **coming_soon** | **get_events(filter={ comingSoon: true })** | Sự kiện chưa mở bán |
 | event_detail | rag_search → get_events | |
 | ticket_check | check_tickets | |
 | artist_info | rag_search → web_search | |
@@ -575,10 +611,9 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 → KHÔNG gọi tool
 
 ### 🎯 Gợi ý sự kiện cho user vãng lai
-Khi [AUTH:guest] hỏi: "gợi ý sự kiện", "nên xem gì", "sự kiện hot", "sự kiện nổi bật", "sự kiện đang bán chạy":
+Khi [AUTH:guest] hỏi: "gợi ý sự kiện", "nên xem gì", "sự kiện hot":
 → Gọi: get_events(filter={ hot: true, active: true }, limit: 5)
-→ KHÔNG yêu cầu đăng nhập — hiển thị luôn danh sách sự kiện hot
-→ Cuối câu trả lời gợi ý: "Đăng nhập để nhận gợi ý cá nhân hóa phù hợp hơn với bạn nhé!"
+→ Cuối câu gợi ý: "Đăng nhập để nhận gợi ý cá nhân hóa phù hợp hơn với bạn nhé!"
 
 ### 🛒 Muốn mua / đặt vé
 - [AUTH:guest]    → "[LOGIN_REQUIRED] Bạn cần đăng nhập để đặt vé nhé!"
@@ -601,25 +636,21 @@ Khi [AUTH:guest] hỏi: "gợi ý sự kiện", "nên xem gì", "sự kiện hot
 → Gọi: get_events(filter={ tomorrow: true })
 
 ✅ User: "có show nào ngày 20 tháng 6 không"
-→ Nhóm: event_date | Parse: specificDate = "2025-06-20" (dùng năm từ context)
+→ Nhóm: event_date | Parse: specificDate = "2025-06-20"
 → Gọi: get_events(filter={ specificDate: "2025-06-20" })
 
-✅ User: "thứ Bảy này có concert không"
-→ Nhóm: event_date | Parse: tính ngày thứ Bảy gần nhất từ hôm nay → specificDate
-→ Gọi: get_events(filter={ specificDate: "YYYY-MM-DD" })
+✅ User: "sắp có show gì mở bán không"
+→ Nhóm: coming_soon
+→ Gọi: get_events(filter={ comingSoon: true })
 
 ✅ User: "vé ANH TRAI SAY HI còn không"
-→ Nhóm: ticket_check | Đủ thông tin
+→ Nhóm: ticket_check
 → Gọi: check_tickets(eventName="ANH TRAI SAY HI")
 
 ✅ User: "gợi ý sự kiện cho mình" (chưa đăng nhập)
 → Nhóm: recommend_guest | [AUTH:guest]
 → Gọi: get_events(filter={ hot: true, active: true }, limit: 5)
-→ Trả lời danh sách sự kiện hot + gợi ý đăng nhập để nhận gợi ý cá nhân
-
-✅ User: "sự kiện nào đang hot vậy" (chưa đăng nhập)
-→ Nhóm: recommend_guest
-→ Gọi: get_events(filter={ hot: true, active: true })
+→ Trả lời danh sách sự kiện hot + gợi ý đăng nhập
 
 ✅ User: "sự kiện tháng này ở HCM"
 → Nhóm: event_list
