@@ -226,3 +226,39 @@ export async function deleteCart(req, res) {
     });
   }
 }
+
+export async function deleteCartItem(req, res) {
+  const { userId } = req.user;
+  const { zone_id, event_id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `DELETE FROM cart_items
+       WHERE user_id = $1
+       AND zone_id = $2
+       AND event_id = $3
+       AND expires_at > NOW()
+       RETURNING *`,
+      [userId, zone_id, event_id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy vé trong giỏ hàng",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Đã xóa vé khỏi giỏ hàng",
+    });
+
+  } catch (err) {
+    console.error("deleteCartItem error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+    });
+  }
+}
