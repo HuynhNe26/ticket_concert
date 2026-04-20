@@ -8,7 +8,6 @@ import { z } from "zod";
 import { pool } from "../config/database.js";
 import { getDateContext, formatCurrency } from "../utils/helpers.js";
 
-// ─── LLM ─────────────────────────────────────────────────────────────────────
 export const llm = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash",
   apiKey: process.env.GEMINI_API_KEY,
@@ -16,7 +15,6 @@ export const llm = new ChatGoogleGenerativeAI({
   maxOutputTokens: 1500,
 });
 
-// ─── EMBEDDINGS ───────────────────────────────────────────────────────────────
 export const embeddings = new GoogleGenerativeAIEmbeddings({
   model: "gemini-embedding-001",
   apiKey: process.env.GEMINI_API_KEY,
@@ -24,7 +22,6 @@ export const embeddings = new GoogleGenerativeAIEmbeddings({
   outputDimensionality: 2000,
 });
 
-// ─── VECTOR STORE ─────────────────────────────────────────────────────────────
 let vectorStore;
 export async function getVectorStore() {
   if (vectorStore) return vectorStore;
@@ -179,9 +176,7 @@ export const getEventsTool = tool(
 
       query += ` GROUP BY e.event_id, c.category_name, c.category_id`;
 
-      // ── Sắp xếp ───────────────────────────────────────────────────────────
       if (filter?.hot) {
-        // Ưu tiên: tỉ lệ bán cao → tổng lượt bán nhiều → sự kiện diễn ra sớm
         query += `
           HAVING SUM(z.zone_quantity) > 0
           ORDER BY
@@ -495,6 +490,121 @@ export const webSearchTool = tool(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL: Get Orders — xem lịch sử đơn hàng của user đã đăng nhập
+// ─────────────────────────────────────────────────────────────────────────────
+export const getOrdersTool = tool(
+  async ({ userId, status, paymentId, limit = 5 }) => {
+    try {
+      let query = `
+        SELECT
+          p.payment_id,
+          p.payment_status,
+          p.method,
+          p.payment_ref,
+          p.created_at,
+          json_agg(
+            json_build_object(
+              'event_name',      e.event_name,
+              'event_start',     e.event_start,
+              'event_location',  e.event_location,
+              'zone_name',       z.zone_name,
+              'zone_code',       z.zone_code,
+              'ticket_quantity', pd.ticket_quantity,
+              'price',           pd.price,
+              'total_price',     pd.total_price,
+              'ticket_status',   pd.ticket_status
+            )
+            ORDER BY e.event_start ASC
+          ) AS items,
+          SUM(pd.total_price) AS grand_total
+        FROM payments p
+        JOIN payment_detail pd ON pd.payment_id = p.payment_id
+        JOIN zones z           ON z.zone_id     = pd.zone_id
+        JOIN events e          ON e.event_id    = pd.event_id
+        WHERE p.user_id = $1
+      `;
+      const params = [userId];
+
+      if (paymentId) {
+        params.push(paymentId);
+        query += ` AND p.payment_id = $${params.length}`;
+      } else if (status) {
+        params.push(status);
+        query += ` AND p.payment_status = $${params.length}`;
+      }
+
+      query += ` GROUP BY p.payment_id`;
+      query += ` ORDER BY p.created_at DESC`;
+      params.push(Math.min(limit, 10));
+      query += ` LIMIT $${params.length}`;
+
+      const result = await pool.query(query, params);
+
+      if (result.rows.length === 0) {
+        if (paymentId) return `ℹ️ Không tìm thấy đơn hàng #${paymentId}.`;
+        if (status)    return `ℹ️ Bạn chưa có đơn hàng nào ở trạng thái "${status}".`;
+        return "ℹ️ Bạn chưa có đơn hàng nào.";
+      }
+
+      const STATUS_LABEL = {
+        pending:   "⏳ Chờ thanh toán",
+        success:   "✅ Đã thanh toán",
+        failed:    "❌ Thất bại",
+        cancelled: "🚫 Đã huỷ",
+        refunded:  "↩️ Đã hoàn tiền",
+      };
+
+      return result.rows
+        .map((p) => {
+          const statusLabel = STATUS_LABEL[p.payment_status] ?? p.payment_status;
+          const orderDate   = new Date(p.created_at).toLocaleDateString("vi-VN");
+
+          const itemLines = (p.items || [])
+            .map((it) => {
+              const eventDate   = new Date(it.event_start).toLocaleDateString("vi-VN");
+              const ticketIcon  = it.ticket_status ? "🎫" : "⚠️";
+              return (
+                `   ${ticketIcon} ${it.event_name} (${eventDate})\n` +
+                `      📍 ${it.event_location}\n` +
+                `      💺 ${it.zone_name} (${it.zone_code}) × ${it.ticket_quantity} — ${formatCurrency(it.total_price)}`
+              );
+            })
+            .join("\n");
+
+          return (
+            `🧾 **Đơn #${p.payment_id}** — ${statusLabel}\n` +
+            `   📅 Đặt ngày: ${orderDate} | 💳 ${p.method}\n` +
+            `${itemLines}\n` +
+            `   💰 Tổng: **${formatCurrency(p.grand_total)}**`
+          );
+        })
+        .join("\n\n");
+    } catch (err) {
+      console.error("Get orders error:", err.message);
+      return "❌ Lỗi khi truy vấn đơn hàng.";
+    }
+  },
+  {
+    name: "get_orders",
+    description:
+      "Xem lịch sử & chi tiết đơn hàng/thanh toán của user đã đăng nhập. " +
+      "Dùng khi user hỏi: 'đơn hàng của tôi', 'tôi đã mua gì', 'đơn #123', " +
+      "'đơn chờ thanh toán', 'vé tôi đặt', 'lịch sử đặt vé'. " +
+      "CHỈ dùng khi user đã đăng nhập (có userId). " +
+      "Có thể lọc theo status (pending/success/failed/cancelled/refunded) hoặc paymentId cụ thể.",
+    schema: z.object({
+      userId:    z.number().describe("ID người dùng từ AUTH context"),
+      status:    z
+        .enum(["pending", "success", "failed", "cancelled", "refunded"])
+        .optional()
+        .describe("Lọc theo trạng thái thanh toán"),
+      paymentId: z.number().optional().describe("Xem chi tiết 1 đơn cụ thể theo payment_id"),
+      limit:     z.number().optional().default(5).describe("Số đơn trả về (mặc định 5, tối đa 10)"),
+    }),
+  }
+);
+
 export function buildSystemPrompt() {
   const today = getDateContext(); // vd: "Thứ Ba, 22/04/2025"
 
@@ -558,6 +668,7 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 | ticket_check | check_tickets | |
 | artist_info | rag_search → web_search | |
 | personalized | get_personalized_events | Chỉ khi đã đăng nhập |
+| history | get_orders    | Chỉ khi đã đăng nhập  |
 
 ### 💬 BƯỚC 5 — VIẾT CÂU TRẢ LỜI
 - **Xưng**: "mình" | **Gọi user**: "bạn"
@@ -578,7 +689,7 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 Khi [AUTH:guest] hỏi: "gợi ý sự kiện", "nên xem gì", "sự kiện hot", "sự kiện nổi bật", "sự kiện đang bán chạy":
 → Gọi: get_events(filter={ hot: true, active: true }, limit: 5)
 → KHÔNG yêu cầu đăng nhập — hiển thị luôn danh sách sự kiện hot
-→ Cuối câu trả lời gợi ý: "Đăng nhập để nhận gợi ý cá nhân hóa phù hợp hơn với bạn nhé!"
+→ Cuối câu trả lời gợi ý: "Đăng nhập để nhận gợi ý sự kiện phù hợp hơn với bạn nhé!"
 
 ### 🛒 Muốn mua / đặt vé
 - [AUTH:guest]    → "[LOGIN_REQUIRED] Bạn cần đăng nhập để đặt vé nhé!"
@@ -650,6 +761,7 @@ export async function getAgent() {
       checkTicketsTool,
       webSearchTool,
       getPersonalizedEventsTool,
+      getOrdersTool,
     ],
     checkpointSaver: memory,
     messageModifier: (messages) => {

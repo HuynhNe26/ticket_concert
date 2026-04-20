@@ -177,7 +177,7 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
 
   const scoreAccum = new Map();
 
-  const THRESHOLD = 0.5;
+  const THRESHOLD = 0.3;
 
   await Promise.all(
     [...queries].map(async (q) => {
