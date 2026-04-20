@@ -5,6 +5,7 @@ import { authMiddleware } from "../../../middlewares/userAuth.js";
 import { pool } from "../../../config/database.js"
 
 const momo = express.Router();
+const CORS = process.env.CORS_ORIGIN'
 
 // ===== TẠO LINK THANH TOÁN =====
 momo.post("/", authMiddleware, async (req, res) => {
@@ -20,7 +21,7 @@ momo.post("/", authMiddleware, async (req, res) => {
     const secretKey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
     const requestId = partnerCode + Date.now();
     const orderInfo = "Thanh toán Ticket-Concert";
-    const redirectUrl = "http://localhost:3000/result";
+    const redirectUrl = `${CORS}/result`;
     const ipnUrl = " https://uninclined-overhonestly-jone.ngrok-free.dev/api/checkout/momo/notify";
     const requestType = "captureWallet";
     const extraData = Buffer.from(JSON.stringify({ orderId, userId, price, total_price, voucher_id })).toString("base64");
