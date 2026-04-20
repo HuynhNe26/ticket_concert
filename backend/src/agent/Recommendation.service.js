@@ -1,6 +1,5 @@
 import { pool } from "../config/database.js";
 
-// ─── 1. CANDIDATE EVENTS ─────────────────────────────────────────────────────
 export async function getCandidateEvents(limit = 50) {
   const { rows } = await pool.query(
     `SELECT e.event_id, e.event_name, e.event_location,
@@ -84,8 +83,6 @@ export async function getHotEvents(limit = 10) {
   );
   return rows;
 }
-
-// ─── 2. LẤY CONTEXT USER (đơn hàng + favorite) ───────────────────────────────
 async function getUserContext(userId) {
   const [purchaseRes, userRes] = await Promise.all([
     pool.query(
@@ -143,7 +140,6 @@ function buildUserProfileText(userContext) {
     parts.push(artist, artist);
   }
 
-  // Purchased event names (trọng số x1)
   const purchasedNames = purchasedEvents.map((e) => e.event_name).filter(Boolean);
   parts.push(...purchasedNames);
 
@@ -237,7 +233,6 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
     })
   );
 
-  // Trọng số
   const W = { semantic: 0.25, favorite: 0.20, category: 0.25, artist: 0.20 };
 
   return candidates
@@ -341,7 +336,6 @@ function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
 
   return selectedIds
     .filter((id) => {
-      // Chỉ giữ: tồn tại trong candidates, chưa mua, chưa lặp
       if (!idToEvent[id])        return false;
       if (purchasedIds.has(id))  return false;
       if (seen.has(id))          return false;
@@ -349,7 +343,6 @@ function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
       return true;
     })
     .map((id) => {
-      // Strip _scores — internal field, không cần trả về client
       const { _scores, ...ev } = idToEvent[id];
       return ev;
     });
@@ -373,7 +366,6 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
   const { purchasedEvents, purchasedIds, favorite } = userContext;
   const hasContext = purchasedEvents.length > 0 || favorite.length > 0;
 
-  // ── Fallback: user mới, chưa có dữ liệu ──────────────────────────────────
   if (!hasContext) {
     const events = await getHotEvents(limit);
     return { type: "hot", events };
