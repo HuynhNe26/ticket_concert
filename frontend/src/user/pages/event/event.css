@@ -43,13 +43,13 @@
 }
 
 .event-detail-page .event-meta-item {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     gap: 10px;
 }
 
 .event-detail-page .event-price-section {
     margin-top: auto;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     display: flex;
     align-items: baseline;
     gap: 10px;

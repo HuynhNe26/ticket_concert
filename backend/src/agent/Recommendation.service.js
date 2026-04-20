@@ -10,8 +10,7 @@ export async function getCandidateEvents(limit = 50) {
      FROM events e
      JOIN categories c ON e.category_id = c.category_id
      LEFT JOIN zones z ON z.event_id = e.event_id
-     WHERE e.event_status = true
-       AND e.event_end >= NOW()
+     WHERE e.event_end >= NOW()
      GROUP BY e.event_id, c.category_name, c.category_id
      ORDER BY e.event_start ASC
      LIMIT $1`,
@@ -98,7 +97,7 @@ async function getUserContext(userId) {
        JOIN categories c      ON e.category_id = c.category_id
        WHERE p.user_id = $1 AND p.payment_status = 'Thành công'
        ORDER BY p.payment_id DESC
-       LIMIT 20`,
+       LIMIT 10`,
       [userId]
     ),
     pool.query(`SELECT favorite FROM users WHERE user_id = $1`, [userId]),
@@ -238,7 +237,8 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
     })
   );
 
-  const W = { semantic: 0.45, favorite: 0.30, category: 0.15, artist: 0.10 };
+  // Trọng số
+  const W = { semantic: 0.25, favorite: 0.20, category: 0.25, artist: 0.20 };
 
   return candidates
     .filter((ev) => !purchasedIds.has(ev.event_id))
@@ -325,7 +325,7 @@ async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
     .split(",")
     .map((s) => parseInt(s.trim()))
     .filter((id) => !isNaN(id))
-    .filter((id, i, arr) => arr.indexOf(id) === i) 
+    .filter((id, i, arr) => arr.indexOf(id) === i) // dedup
     .slice(0, k);
 
   return selectedIds;
