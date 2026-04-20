@@ -5,8 +5,8 @@ import { Resend } from "resend";
 import crypto from "crypto";
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRES_IN = "1h";
-const CLIENT_URL = process.env.CORS_ORIGIN || "http://localhost:3000";
+const JWT_EXPIRES_IN = "15m";
+const CLIENT_URL = "https://www.ticketconcert.online";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 

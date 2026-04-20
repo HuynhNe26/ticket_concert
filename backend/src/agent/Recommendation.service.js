@@ -360,25 +360,12 @@ function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
     });
 }
 
-// ─── 8. MAIN RECOMMENDER ─────────────────────────────────────────────────────
-//
-//  Flow chuẩn:
-//    candidates (50) → semantic score → multi-signal rank
-//    → AI chọn đúng topK → buildCleanResult → trả về client
-//
-//  Fallback chain (không bao giờ tự bù event ngoài ý AI):
-//    không có context  → hot
-//    AI lỗi / rỗng     → hot
-//    candidates rỗng   → popular (empty)
-// ─────────────────────────────────────────────────────────────────────────────
 export async function getHybridRecommendations(userId = null, limit = 20, topK = 5) {
-  // ── Fallback: chưa đăng nhập ─────────────────────────────────────────────
   if (!userId) {
     const events = await getGuestEvents(limit);
     return { type: "guest", events };
   }
 
-  // ── Lấy candidates + user context song song ──────────────────────────────
   const [candidates, userContext] = await Promise.all([
     getCandidateEvents(50),
     getUserContext(userId),
@@ -398,14 +385,11 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
   }
 
   try {
-    // ── BƯỚC A: Lấy vector store ─────────────────────────────────────────
     const { getVectorStore } = await import("./ragAgent.js");
     const vectorStore = await getVectorStore();
 
-    // ── BƯỚC B: Semantic scoring từ embedding user profile ────────────────
     const semanticScoreMap = await buildSemanticScoreMap(userContext, vectorStore, 20);
 
-    // ── BƯỚC C: Multi-signal scoring + rank toàn bộ candidates ───────────
     const rankedCandidates = scoreAndRankCandidates(candidates, semanticScoreMap, userContext);
 
     if (!rankedCandidates.length) {
@@ -413,20 +397,16 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
       return { type: "hot", events };
     }
 
-    // ── BƯỚC D: AI chọn đúng topK từ top-15 pre-scored ───────────────────
     const selectedIds = await selectTopKWithAI(rankedCandidates, userContext, topK);
 
-    // AI trả về rỗng hoặc lỗi parse → fallback hot, không tự bù
     if (!selectedIds.length) {
       console.warn("[Recommendation] AI returned no selections, falling back to hot.");
       const events = await getHotEvents(limit);
       return { type: "hot", events };
     }
 
-    // ── BƯỚC E: Build clean result — đúng K event AI đã chọn ─────────────
     const events = buildCleanResult(selectedIds, rankedCandidates, purchasedIds);
 
-    // Edge case: tất cả IDs AI trả về đều invalid (đã mua / không tồn tại)
     if (!events.length) {
       console.warn("[Recommendation] All AI-selected IDs were invalid, falling back to hot.");
       const hotEvents = await getHotEvents(limit);
