@@ -151,7 +151,7 @@ export default function OrderEvent() {
                 <div className="oe-stat-card">
                     <span className="oe-stat-label">Đã thanh toán</span>
                     <span className="oe-stat-value oe-stat-value--green">
-                        {orders.filter((o) => o.payment_status === "paid" || o.payment_status === "completed").length}
+                        {orders.filter((o) => o.payment_status === "Thành công" || o.payment_status === "completed").length}
                     </span>
                 </div>
                 <div className="oe-stat-card">
