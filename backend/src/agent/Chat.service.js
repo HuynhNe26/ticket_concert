@@ -56,10 +56,6 @@ const INTENT_PATTERNS = [
     patterns: [/gợi ý.*tôi/, /gợi ý.*mình/, /theo sở thích/, /phù hợp.*tôi/, /recommend/],
   },
   {
-    intent: "history",
-    patterns: [/vé của tôi/, /lịch sử mua/, /đã mua/, /vé đã đặt/, /my ticket/],
-  },
-  {
     intent: "account",
     patterns: [/tài khoản/, /đăng nhập/, /đăng ký/, /mật khẩu/, /profile/],
   },
@@ -67,6 +63,11 @@ const INTENT_PATTERNS = [
     intent: "refund",
     patterns: [/hoàn tiền/, /hủy vé/, /đổi vé/, /refund/],
   },
+  {
+  intent: "history",
+  patterns: [/vé của tôi/, /lịch sử mua/, /đã mua/, /vé đã đặt/, /my ticket/, /đơn hàng/, /đơn của tôi/, /đơn #\d+/, /đơn số/, /tôi đã đặt/, /đơn chờ/, /đơn đã huỷ/,
+  ],
+},
 ];
 
 function classifyIntent(message, toolsUsed = []) {
@@ -76,6 +77,7 @@ function classifyIntent(message, toolsUsed = []) {
     get_personalized_events: "personalized",
     rag_search:              "event_detail",
     web_search:              "web_search",
+    get_orders:              "history", 
   };
   for (const [toolName, intent] of Object.entries(toolIntentMap)) {
     if (toolsUsed.includes(toolName)) return intent;
@@ -186,10 +188,8 @@ export async function agentChat(
     throw new Error("Chưa cấu hình GEMINI_API_KEY");
   }
 
-  // ── Phân loại câu hỏi (trước khi gọi agent) ──────────────────────────────
   const preIntent = classifyIntent(userMessage);
 
-  // ── Lưu tin nhắn user ────────────────────────────────────────────────────
   saveChatMessage({
     userId,
     sessionId,
@@ -199,7 +199,6 @@ export async function agentChat(
     metaJson: { preClassified: preIntent },
   });
 
-  // ── Inject auth context vào message gửi agent ────────────────────────────
   const authPrefix    = userId ? `[AUTH:userId=${userId}]` : `[AUTH:guest]`;
   const agentInputMsg = `${authPrefix} ${userMessage}`;
 

@@ -1,14 +1,16 @@
 import crypto from "crypto";
 import https from "https";
 import { pool } from "../../config/database.js";
+import { sendTicketEmail } from "../../utils/sendTicketEmail.js";
 
 /* ================= CONFIG ================= */
+const CORS = process.env.CORS_ORIGIN;
 const MOMO_CONFIG = {
   partnerCode: "MOMO",
   accessKey: "F8BBA842ECF85",
   secretKey: "K951B6PE1waDMi640xX08PD3vg6EkVlz",
   endpoint: "https://test-payment.momo.vn/v2/gateway/api/create",
-  redirectUrl: "http://localhost:3000/result",
+  redirectUrl: `${CORS}/result`,
   ipnUrl: "https://uninclined-overhonestly-jone.ngrok-free.dev/api/checkout/momo/notify",
 };
 console.log(MOMO_CONFIG.ipnUrl)
@@ -214,7 +216,7 @@ async function handlePaymentSuccess(parsed, paymentRef, method) {
   const { userId, price, total_price, voucher_id } = parsed;
 
   const client = await pool.connect();
-
+  let emailPayload = null;
   try {
     await client.query("BEGIN");
 
@@ -309,11 +311,55 @@ async function handlePaymentSuccess(parsed, paymentRef, method) {
     await client.query(`DELETE FROM cart_items WHERE user_id=$1`, [userId]);
 
     await client.query("COMMIT");
+    const { rows: userRows } = await pool.query(
+      `SELECT email, full_name FROM users WHERE user_id = $1`,
+      [userId]
+    );
 
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error(err);
-  } finally {
-    client.release();
+    if (userRows.length > 0) {
+      // Lấy chi tiết các vé vừa insert
+      const { rows: detailRows } = await pool.query(
+        `SELECT
+           e.event_name,
+           e.event_location,
+           e.event_start,
+           z.zone_name,
+           z.zone_code,
+           pd.ticket_quantity
+         FROM payment_detail pd
+         JOIN events e ON e.event_id = pd.event_id
+         JOIN zones  z ON z.zone_id  = pd.zone_id
+         WHERE pd.payment_id = $1`,
+        [payment_id]
+      );
+
+      emailPayload = {
+        toEmail:  userRows[0].email,
+        userName: userRows[0].full_name,
+        payment: { payment_id, method, ticket_qr },
+        items: detailRows.map((r) => ({
+          event_name:      r.event_name,
+          event_location:  r.event_location,
+          event_date:      new Date(r.event_start).toLocaleDateString("vi-VN"),
+          zone_name:       r.zone_name,
+          zone_code:       r.zone_code,
+          ticket_quantity: r.ticket_quantity,
+        })),
+      };
+    }
+
+    } catch (err) {
+      await client.query("ROLLBACK");
+      console.error(err);
+      return;
+    } finally {
+      client.release();
+    }
+
+  // 📧 Gửi mail ngoài transaction — lỗi mail không ảnh hưởng thanh toán
+  if (emailPayload) {
+    sendTicketEmail(emailPayload).catch((err) =>
+      console.error("Send ticket email failed:", err.message)
+    );
   }
 }

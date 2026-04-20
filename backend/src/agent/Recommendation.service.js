@@ -1,6 +1,5 @@
 import { pool } from "../config/database.js";
 
-// ─── 1. CANDIDATE EVENTS ─────────────────────────────────────────────────────
 export async function getCandidateEvents(limit = 50) {
   const { rows } = await pool.query(
     `SELECT e.event_id, e.event_name, e.event_location,
@@ -10,8 +9,7 @@ export async function getCandidateEvents(limit = 50) {
      FROM events e
      JOIN categories c ON e.category_id = c.category_id
      LEFT JOIN zones z ON z.event_id = e.event_id
-     WHERE e.event_status = true
-       AND e.event_end >= NOW()
+     WHERE e.event_end >= NOW()
      GROUP BY e.event_id, c.category_name, c.category_id
      ORDER BY e.event_start ASC
      LIMIT $1`,
@@ -85,8 +83,6 @@ export async function getHotEvents(limit = 10) {
   );
   return rows;
 }
-
-// ─── 2. LẤY CONTEXT USER (đơn hàng + favorite) ───────────────────────────────
 async function getUserContext(userId) {
   const [purchaseRes, userRes] = await Promise.all([
     pool.query(
@@ -98,7 +94,7 @@ async function getUserContext(userId) {
        JOIN categories c      ON e.category_id = c.category_id
        WHERE p.user_id = $1 AND p.payment_status = 'Thành công'
        ORDER BY p.payment_id DESC
-       LIMIT 20`,
+       LIMIT 10`,
       [userId]
     ),
     pool.query(`SELECT favorite FROM users WHERE user_id = $1`, [userId]),
@@ -144,7 +140,6 @@ function buildUserProfileText(userContext) {
     parts.push(artist, artist);
   }
 
-  // Purchased event names (trọng số x1)
   const purchasedNames = purchasedEvents.map((e) => e.event_name).filter(Boolean);
   parts.push(...purchasedNames);
 
@@ -182,7 +177,7 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
 
   const scoreAccum = new Map();
 
-  const THRESHOLD = 0.5;
+  const THRESHOLD = 0.3;
 
   await Promise.all(
     [...queries].map(async (q) => {
@@ -238,7 +233,7 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
     })
   );
 
-  const W = { semantic: 0.45, favorite: 0.30, category: 0.15, artist: 0.10 };
+  const W = { semantic: 0.25, favorite: 0.20, category: 0.25, artist: 0.20 };
 
   return candidates
     .filter((ev) => !purchasedIds.has(ev.event_id))
@@ -325,7 +320,7 @@ async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
     .split(",")
     .map((s) => parseInt(s.trim()))
     .filter((id) => !isNaN(id))
-    .filter((id, i, arr) => arr.indexOf(id) === i) 
+    .filter((id, i, arr) => arr.indexOf(id) === i) // dedup
     .slice(0, k);
 
   return selectedIds;
@@ -341,7 +336,6 @@ function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
 
   return selectedIds
     .filter((id) => {
-      // Chỉ giữ: tồn tại trong candidates, chưa mua, chưa lặp
       if (!idToEvent[id])        return false;
       if (purchasedIds.has(id))  return false;
       if (seen.has(id))          return false;
@@ -349,7 +343,6 @@ function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
       return true;
     })
     .map((id) => {
-      // Strip _scores — internal field, không cần trả về client
       const { _scores, ...ev } = idToEvent[id];
       return ev;
     });
@@ -373,7 +366,6 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
   const { purchasedEvents, purchasedIds, favorite } = userContext;
   const hasContext = purchasedEvents.length > 0 || favorite.length > 0;
 
-  // ── Fallback: user mới, chưa có dữ liệu ──────────────────────────────────
   if (!hasContext) {
     const events = await getHotEvents(limit);
     return { type: "hot", events };

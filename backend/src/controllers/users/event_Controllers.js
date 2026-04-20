@@ -203,7 +203,7 @@ export const EventControllers = {
       ORDER BY event_start ASC;
       `
 
-      const { rows } = await pool.query(query, [startDate, endDate]) ;
+      const { rows } = await pool.query(query, [startDate, endDate]);
 
       res.status(200).json({
         success: true,
