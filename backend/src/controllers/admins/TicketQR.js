@@ -3,7 +3,6 @@ import { pool } from "../../config/database.js";
 export const TicketQRController = {
     async scanQR(req, res) {
 
-        // ── Chỉ level 2 (staff trực tiếp) mới được quét ──────────────────────
         if (req.user.level !== 2) {
             return res.status(403).json({
                 success: false,

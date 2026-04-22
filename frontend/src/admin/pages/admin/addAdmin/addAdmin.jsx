@@ -91,7 +91,7 @@ export default function AddAdmin() {
         setLoading(true);
 
         try {
-            const response = await fetch(`${API_BASE}/api/admin/create`, {
+            const response = await fetch(`${API_BASE}/api/admin/auth/create`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
