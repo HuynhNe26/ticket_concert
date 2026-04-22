@@ -36,7 +36,7 @@ import categoriesRouter from "./router/admins/categories.js"
 import orderRouter from "./router/admins/orders.js"
 import voucherRouter from "./router/admins/voucher.js"
 import statisticRouter from "./router/admins/statistic.js";
-
+import TicketQRRouter from "./router/admins/TicketQR.js";
 const app = express();
 const httpServer = createServer(app);
 
@@ -77,6 +77,7 @@ app.use("/api/admin/categories", categoriesRouter);
 app.use("/api/admin/orders", orderRouter);
 app.use("/api/admin/vouchers", voucherRouter);
 app.use("/api/admin/statistic", statisticRouter);
+app.use("/api/admin/ticket-qr", TicketQRRouter);
 
 export const io = new Server(httpServer, {
   cors: {
