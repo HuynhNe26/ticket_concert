@@ -86,7 +86,7 @@ export default function Header() {
 
       localStorage.setItem('historySearch', JSON.stringify(history));
     }
-    if (keyword.trim()) navigate(`/search?q=${encodeURIComponent(keyword)}`);
+    navigate(`/search?q=${encodeURIComponent(keyword)}`);
     setShowMobileSearch(false);
   };
 

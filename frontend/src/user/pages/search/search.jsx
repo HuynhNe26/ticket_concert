@@ -6,7 +6,7 @@ const API_BASE = process.env.REACT_APP_API_URL;
 
 const DAYS_OF_WEEK = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 const LOCATIONS = ["Toàn quốc", "Hồ Chí Minh", "Hà Nội", "Đà Lạt", "Vị trí khác"];
-const GENRES = ["Nhạc sống", "Sân khấu & Nghệ thuật", "Thể Thao", "Hội thảo & Workshop", "Tham quan & Trải nghiệm", "Khác"];
+const GENRES = ["Đại hội","Ca nhạc", "Kịch"];
 
 const saveKeyword = async (eventId, keyword) => {
   try {
