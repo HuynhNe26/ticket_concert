@@ -128,6 +128,24 @@ const MENU = [
         allowLevels: [1, 2],
       },
     ],
+  },
+  {
+    label: "Quản lý vé",
+    allowLevels: [1, 2],
+    icon: (
+      <Icon>
+        <path d="M20 7l-8-4-8 4" />
+        <path d="M20 7l-8 4" />
+        <path d="M20 7v10a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7" />
+      </Icon>
+    ),
+    children: [
+      {
+        label: "Quản lý vé",
+        path: "/admin/tickets",
+        allowLevels: [1, 2],
+      },
+    ],
   }
 ];
 

@@ -21,6 +21,7 @@ import OrderDetail from "../admin/pages/order/order_detail/order_detail";
 import OrderEvent from "../admin/pages/order/order_event/order_event";
 import ManageVoucher from "../admin/pages/voucher/manage_voucher";
 import Statistic from "../admin/pages/statistic/statistic";
+import TicketQR from "../admin/pages/ticketqr/ticketqr";
 
 export function AdminRoutes() {
   return (
@@ -53,6 +54,8 @@ export function AdminRoutes() {
         <Route path='orders/order-event' element={<OrderEvent />} />
         <Route path='orders/order-event/order-detail' element={<OrderDetail />} />
         <Route path='report' element={<Statistic />} />
+
+        <Route path='tickets' element={<TicketQR />} />
 
         <Route path='vouchers' element={<ManageVoucher />} />
       </Route>

@@ -38,7 +38,7 @@ export default function ManageEvent() {
 
         socket.on('connect', () => { socket.emit("join_admin"); });
         socket.on('hotEvents', (data) => { setHotEvents(data); calculateStats(data); });
-        socket.on('allEvents', (data) => { setEvents(data); calculateAllEvent(data); });
+        socket.on('allEvents', (data) => { setEvents(data);});
 
         const timer = setInterval(() => {
             socket.emit("requestHotEvents");

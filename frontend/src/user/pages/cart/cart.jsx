@@ -80,11 +80,19 @@ export default function CartPage() {
 
   useEffect(() => {
     if (!expiresAt) return;
-    const interval = setInterval(() => {
+    const interval = setInterval(async() => {
       const diff = Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000);
       if (diff <= 0) {
         clearInterval(interval);
         setTimeLeft(0);
+         try {
+        await fetch(`${API_BASE}/api/cart`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (err) {
+        console.error("Xóa giỏ hàng thất bại", err);
+      }
         showWarning("Hết thời gian giữ vé");
         setTimeout(() => navigate("/"), 1500);
       } else {
@@ -92,7 +100,7 @@ export default function CartPage() {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [expiresAt, navigate]);
+  }, [expiresAt, navigate, token]);
 
   useEffect(() => {
     if (!showPicker) return;

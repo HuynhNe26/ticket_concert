@@ -151,7 +151,7 @@ export default function OrderEvent() {
                 <div className="oe-stat-card">
                     <span className="oe-stat-label">Đã thanh toán</span>
                     <span className="oe-stat-value oe-stat-value--green">
-                        {orders.filter((o) => o.payment_status === "paid" || o.payment_status === "completed").length}
+                        {orders.filter((o) => o.payment_status === "Thành công" || o.payment_status === "completed").length}
                     </span>
                 </div>
                 <div className="oe-stat-card">
@@ -252,7 +252,7 @@ export default function OrderEvent() {
                                             </td>
                                             <td className="oe-td">
                                                 <span className={`oe-status ${STATUS_MAP.class}`}>
-                                                    {STATUS_MAP[order.payment_status]?.label || ""}
+                                                    {order.payment_status || ""}
                                                 </span>
                                             </td>
                                             <td className="oe-td oe-td--date">

@@ -21,7 +21,7 @@ const statusMeta = {
 };
 
 const usageLabel = (ticket) => {
-  if (ticket.ticket_status === true)
+  if (ticket.ticket_status === false)
     return { text: "Chưa sử dụng", color: "#60a5fa", bg: "rgba(96,165,250,.12)", border: "rgba(96,165,250,.25)" };
   return { text: "Đã sử dụng", color: "#f87171", bg: "rgba(248,113,113,.1)", border: "rgba(248,113,113,.2)" };
 };
