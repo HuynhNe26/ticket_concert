@@ -25,96 +25,91 @@ export default function HomeAdmin() {
   const { admin } = useAdminAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
-  const [events, setEvents] = useState ([]);
-  const [eventTotal, setEventTotal] = useState ([]);
+  const [events, setEvents] = useState([]);
+  const [eventTotal, setEventTotal] = useState([]);
   const [orders, setOrders] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [ticketStats, setTicketStats]     = useState([]);
-  const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState(currentYear);
   
-  // Tạo mảng gồm 5 năm: 3 năm trước, năm hiện tại, và 1 năm sau
+  // States cho thống kê theo tháng hiện tại
+  const [currentMonthUsers, setCurrentMonthUsers] = useState(0);
+  const [currentMonthOrders, setCurrentMonthOrders] = useState(0);
+  const [currentMonthRevenue, setCurrentMonthRevenue] = useState(0);
+
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [ticketStats, setTicketStats] = useState([]);
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 3 + i);
 
   useEffect(() => {
     const fetchByMonth = async () => {
       try {
-        const res  = await fetch(`${API_BASE}/api/admin/statistic/calendar?month=${selectedMonth}&year=${selectedYear}`);
+        const res = await fetch(`${API_BASE}/api/admin/statistic/calendar?month=${selectedMonth}&year=${selectedYear}`);
         const data = await res.json();
         if (data.success) setTicketStats(data.data);
       } catch (err) { console.log(err); }
     };
     fetchByMonth();
-  }, [selectedMonth,selectedYear]);
+  }, [selectedMonth, selectedYear]);
 
   useEffect(() => {
-
     const getUser = async () => {
       try {
-        const res = await fetch (`${API_BASE}/api/admin/users/`);
-
+        const res = await fetch(`${API_BASE}/api/admin/users/`);
         const data = await res.json();
         if (data.success) {
-          setUsers(data.data)
+          setUsers(data.data);
+          // Lọc người dùng mới trong tháng này (giả sử có trường created_at)
+          const newUsers = data.data.filter(u => {
+            const date = new Date(u.created_at);
+            return (date.getMonth() + 1) === currentMonth && date.getFullYear() === currentYear;
+          });
+          setCurrentMonthUsers(newUsers.length);
         }
-      } catch (err) {
-        console.log(err)
-      }
-    }
-    const getTicketStats = async () => {
+      } catch (err) { console.log(err); }
+    };
+
+    const getOrder = async () => {
       try {
-        const res  = await fetch(`${API_BASE}/api/admin/statistic/calendar?month=${selectedMonth}&year=${selectedYear}`);
+        const res = await fetch(`${API_BASE}/api/admin/orders/`);
         const data = await res.json();
-        if (data.success) setTicketStats(data.data);
+        if (data.success) {
+          setOrders(data.data);
+          // Tính toán thống kê đơn hàng và doanh thu trong tháng hiện tại
+          const thisMonthOrders = data.data.filter(o => {
+            const date = new Date(o.order_date || o.created_at);
+            return (date.getMonth() + 1) === currentMonth && date.getFullYear() === currentYear;
+          });
+          setCurrentMonthOrders(thisMonthOrders.length);
+          const revenue = thisMonthOrders.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
+          setCurrentMonthRevenue(revenue);
+        }
       } catch (err) { console.log(err); }
     };
 
     const getEvent = async () => {
       try {
-        const res = await fetch (`${API_BASE}/api/admin/events/statistic`);
-        const resTotal = await fetch (`${API_BASE}/api/admin/events/`);
+        const res = await fetch(`${API_BASE}/api/admin/events/statistic`);
+        const resTotal = await fetch(`${API_BASE}/api/admin/events/`);
         const data = await res.json();
         const dataTotal = await resTotal.json();
-        if (data.success) {
-          setEvents(data.data)
-        }
+        if (data.success) setEvents(data.data);
+        if (dataTotal.success) setEventTotal(dataTotal.data);
+      } catch (err) { console.log(err); }
+    };
 
-        if (dataTotal.success) {
-          setEventTotal(dataTotal.data)
-        }
-      } catch (err) {
-        console.log(err)
-      }
-    }
-
-    const getOrder = async () => {
-      try {
-        const res = await fetch (`${API_BASE}/api/admin/orders/`);
-
-        const data = await res.json();
-        if (data.success) {
-          setOrders(data.data)
-        }
-      } catch (err) {
-        console.log(err)
-      }
-    }
-    
-    getTicketStats();
     getUser();
     getEvent();
     getOrder();
-  }, []);
+  }, [currentMonth, currentYear]);
 
-  const totalRevenue = orders.reduce(
-    (sum, item) => sum + Number(item.revenue), 0
-  );
+  const totalRevenue = orders.reduce((sum, item) => sum + Number(item.revenue), 0);
 
-  // Stats data
   const stats = [
     {
       title: "Người dùng",
-      value: `${users.length}`,
+      value: `${users.length} (+${currentMonthUsers} người mới)`,
       icon: (
         <Icon>
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -127,28 +122,18 @@ export default function HomeAdmin() {
       link: "/admin/user",
     },
     {
-      title: "Sự kiện đang mở bán",
-      value: `${events}`,
+      title: "Đơn hàng tháng này",
+      // Thay đổi từ Sự kiện đang bán sang Tổng đơn hàng trong tháng
+      value: `${currentMonthOrders}`,
       icon: (
         <Icon>
-          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-          <line x1="7" y1="7" x2="7.01" y2="7" />
+          <circle cx="9" cy="21" r="1" />
+          <circle cx="20" cy="21" r="1" />
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
         </Icon>
       ),
       color: "purple",
-      link: "/admin/events",
-    },
-    {
-      title: "Tổng sự kiện",
-      value: `${eventTotal.length}`,
-      icon: (
-        <Icon>
-          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-          <line x1="7" y1="7" x2="7.01" y2="7" />
-        </Icon>
-      ),
-      color: "purple",
-      link: "/admin/events",
+      link: "/admin/orders",
     },
     {
       title: "Tổng đơn hàng",
@@ -164,8 +149,9 @@ export default function HomeAdmin() {
       link: "/admin/orders",
     },
     {
-      title: "Tổng doanh thu",
-      value: `${totalRevenue.toLocaleString("VN-Vi")}`,
+      title: "Doanh thu tháng này",
+      // Thay đổi từ Tổng doanh thu sang Doanh thu trong tháng
+      value: `${currentMonthRevenue.toLocaleString("vi-VN")} đ`,
       icon: (
         <Icon>
           <line x1="12" y1="1" x2="12" y2="23" />
@@ -177,7 +163,6 @@ export default function HomeAdmin() {
     },
   ];
 
-  // Quick actions
   const quickActions = [
     {
       title: "Thêm Admin",
