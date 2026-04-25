@@ -65,6 +65,9 @@ export default function UserManagement() {
     };
 
     const handleJson = (data) => {
+        if (!data || !Array.isArray(data)) {
+            return "chưa có tìm kiếm";
+        }
         return data.map(item => item.search).join(", ");
     }
 

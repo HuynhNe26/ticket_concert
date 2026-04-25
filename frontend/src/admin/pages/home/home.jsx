@@ -60,7 +60,6 @@ export default function HomeAdmin() {
         const data = await res.json();
         if (data.success) {
           setUsers(data.data);
-          // Lọc người dùng mới trong tháng này (giả sử có trường created_at)
           const newUsers = data.data.filter(u => {
             const date = new Date(u.created_at);
             return (date.getMonth() + 1) === currentMonth && date.getFullYear() === currentYear;
@@ -109,7 +108,7 @@ export default function HomeAdmin() {
   const stats = [
     {
       title: "Người dùng",
-      value: `${users.length} (+${currentMonthUsers} người mới)`,
+      value: `${users.length} (+${currentMonthUsers} trong tháng)`,
       icon: (
         <Icon>
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
