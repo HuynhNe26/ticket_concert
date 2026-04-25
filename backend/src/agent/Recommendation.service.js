@@ -404,9 +404,11 @@ function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
 }
 
 export async function getHybridRecommendations(userId = null, limit = 20, topK = 5) {
+  const safeLimit = Math.min(limit || 5, 5);
+
   if (!userId) {
-    const events = await getGuestEvents(limit);
-    return { type: "guest", events };
+    const events = await getHotEvents(safeLimit);
+    return { type: "hot", events };
   }
 
   const [candidates, userContext] = await Promise.all([
@@ -422,7 +424,7 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
   const hasContext = purchasedEvents.length > 0 || favorite.length > 0;
 
   if (!hasContext) {
-    const events = await getHotEvents(limit);
+    const events = await getHotEvents(safeLimit);
     return { type: "hot", events };
   }
 
@@ -435,15 +437,19 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
     const rankedCandidates = scoreAndRankCandidates(candidates, semanticScoreMap, userContext);
 
     if (!rankedCandidates.length) {
-      const events = await getHotEvents(limit);
+      const events = await getHotEvents(safeLimit);
       return { type: "hot", events };
     }
 
-    const selectedIds = await selectTopKWithAI(rankedCandidates, userContext, topK);
+    const selectedIds = await selectTopKWithAI(
+      rankedCandidates,
+      userContext,
+      Math.min(topK || 5, safeLimit)
+    );
 
     if (!selectedIds.length) {
       console.warn("[Recommendation] AI returned no selections, falling back to hot.");
-      const events = await getHotEvents(limit);
+      const events = await getHotEvents(safeLimit);
       return { type: "hot", events };
     }
 
@@ -451,7 +457,7 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
 
     if (!events.length) {
       console.warn("[Recommendation] All AI-selected IDs were invalid, falling back to hot.");
-      const hotEvents = await getHotEvents(limit);
+      const hotEvents = await getHotEvents(safeLimit);
       return { type: "hot", events: hotEvents };
     }
 
@@ -459,7 +465,7 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
 
   } catch (err) {
     console.error("[Recommendation] Pipeline error:", err.message);
-    const events = await getHotEvents(limit);
+    const events = await getHotEvents(safeLimit);
     return { type: "hot", events };
   }
 }

@@ -11,6 +11,16 @@ function getAuthHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+// ─── Helper: đọc danh sách event_id đã xem từ localStorage ──────────────────
+function getRecentEventIds() {
+  try {
+    const raw = localStorage.getItem("recent_event_ids");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
 function HomePageSkeleton() {
   const SkCard = () => (
     <div className="hw-skeleton-card">
@@ -154,11 +164,14 @@ export default function HomeUser() {
   const [eventMonth, setEventMonths] = useState([]);
   const [categories, setCategories] = useState([]);
   const [eventWeeks, setEventWeeks] = useState([]);
-  const [oldOrders, setOldOrders] = useState([]);   // ✅ SỬA 2: mảng rỗng thay vì object
+  const [oldOrders, setOldOrders] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [warning, setWarning] = useState({ show: false, message: "" });
   const [error, setError] = useState({ show: false, message: "" });
   const [forYou, setForYou] = useState({ type: "popular", events: [], loading: true });
+
+  // ✅ State cho sự kiện đã quan tâm (localStorage)
+  const [recentEvents, setRecentEvents] = useState([]);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -225,6 +238,32 @@ export default function HomeUser() {
     fetchRecommendations();
   }, []);
 
+  useEffect(() => {
+    if (token) return; // Đã đăng nhập → bỏ qua
+
+    const ids = getRecentEventIds();
+    if (ids.length === 0) return;
+
+    const fetchRecentEvents = async () => {
+      try {
+        const results = await Promise.all(
+          ids.map((id) =>
+            fetch(`${API_BASE}/api/events/${id}`)
+              .then((r) => r.json())
+              .then((d) => (d.success ? d.data : null))
+              .catch(() => null)
+          )
+        );
+
+        setRecentEvents(results.filter(Boolean));
+      } catch {
+        // Bỏ qua lỗi — mục này không quan trọng
+      }
+    };
+
+    fetchRecentEvents();
+  }, [token]);
+
   const formatCurrency = (amount) =>
     new Intl.NumberFormat("vi-VN").format(amount) + "đ";
 
@@ -233,13 +272,10 @@ export default function HomeUser() {
       day: "2-digit", month: "2-digit", year: "numeric",
     });
 
-  // ✅ SỬA 1: dùng skeleton thay LoadingUser
   if (loading) return <HomePageSkeleton />;
 
   const tabEvents = activeTab === 0 ? eventWeeks : eventMonth;
 
-  // ✅ SỬA 2: lấy event từ từng đơn hàng — tuỳ API trả về event lồng trong order
-  // Nếu ord.data = [{ event: {...}, ... }] thì dùng dòng này:
   const purchasedEvents = oldOrders
     .map((order) => order.event)
     .filter(Boolean);
@@ -300,7 +336,23 @@ export default function HomeUser() {
         )}
       </section>
 
-      {/* ✅ SỬA 2: Sự kiện đã mua — dùng purchasedEvents */}
+      {/* ✅ Sự kiện bạn đã quan tâm — chỉ hiển thị khi CHƯA đăng nhập & có dữ liệu */}
+      {!token && recentEvents.length > 0 && (
+        <section className="hw-section">
+          <div className="hw-sec-head">
+            <h2 className="hw-sec-title">Sự kiện bạn đã quan tâm</h2>
+          </div>
+          <HSlider itemsVisible={4} className="event-slider">
+            {recentEvents.map((ev) => (
+              <EventCard key={ev.event_id} ev={ev}
+                onClick={() => navigate(`/event/${ev.event_id}`)}
+                formatCurrency={formatCurrency} formatDate={formatDate} />
+            ))}
+          </HSlider>
+        </section>
+      )}
+
+      {/* Sự kiện đã mua */}
       {token && oldOrders.length > 0 && (
         <section className="hw-section">
           <div className="hw-sec-head">

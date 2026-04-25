@@ -7,31 +7,109 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { pool } from "../config/database.js";
 import { getDateContext, formatCurrency } from "../utils/helpers.js";
+import { keyManager } from "./geminiKeyManager.js";
 
-export const llm = new ChatGoogleGenerativeAI({
-  model: "gemini-2.5-flash",
-  apiKey: process.env.GEMINI_API_KEY,
-  temperature: 0.2,
-  maxOutputTokens: 1500,
-});
+// ─────────────────────────────────────────────────────────────────────────────
+// LLM & EMBEDDINGS — tự động dùng key từ KeyManager, fallback khi lỗi
+// ─────────────────────────────────────────────────────────────────────────────
 
-export const embeddings = new GoogleGenerativeAIEmbeddings({
-  model: "gemini-embedding-001",
-  apiKey: process.env.GEMINI_API_KEY,
-  taskType: "RETRIEVAL_QUERY",
-  outputDimensionality: 2000,
-});
+/**
+ * Tạo một LLM instance với API key hiện tại.
+ * Gọi lại hàm này sau khi keyManager.reportError() để lấy instance mới.
+ */
+function createLLM() {
+  return new ChatGoogleGenerativeAI({
+    model: "gemini-2.5-flash",
+    apiKey: keyManager.getCurrentKey(),
+    temperature: 0.2,
+    maxOutputTokens: 1500,
+  });
+}
+
+function createEmbeddings() {
+  return new GoogleGenerativeAIEmbeddings({
+    model: "gemini-embedding-001",
+    apiKey: keyManager.getCurrentKey(),
+    taskType: "RETRIEVAL_QUERY",
+    outputDimensionality: 2000,
+  });
+}
+
+export let llm = createLLM();
+export let embeddings = createEmbeddings();
+
+/**
+ * Wrapper gọi LLM với tự động fallback key khi lỗi.
+ * Thử tối đa MAX_RETRIES lần, mỗi lần dùng key khác.
+ *
+ * @param {Function} fn - async function nhận (llmInstance) => result
+ * @returns {Promise<*>}
+ */
+const MAX_RETRIES = 3;
+
+export async function callWithKeyFallback(fn) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const currentLLM = createLLM();
+    try {
+      const result = await fn(currentLLM);
+      keyManager.reportSuccess();
+      return result;
+    } catch (err) {
+      lastError = err;
+      const isRetryable = _isKeyError(err);
+
+      console.warn(
+        `[ragAgent] ⚠️ Attempt ${attempt}/${MAX_RETRIES} thất bại: ${err.message?.slice(0, 80)}`
+      );
+
+      if (!isRetryable || attempt === MAX_RETRIES) break;
+
+      const newKey = keyManager.reportError(err);
+      if (!newKey) {
+        console.error("[ragAgent] ❌ Hết key khả dụng, dừng retry.");
+        break;
+      }
+
+      // Cập nhật export llm cho các code khác tham chiếu
+      llm = createLLM();
+    }
+  }
+
+  throw lastError;
+}
+
+/**
+ * Kiểm tra lỗi có phải do API key không (rate limit / quota).
+ */
+function _isKeyError(err) {
+  const msg    = (err?.message || "").toLowerCase();
+  const status = err?.status || err?.statusCode;
+  return (
+    status === 429 ||
+    status === 403 ||
+    msg.includes("429") ||
+    msg.includes("rate limit") ||
+    msg.includes("quota") ||
+    msg.includes("resource_exhausted")
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VECTOR STORE
+// ─────────────────────────────────────────────────────────────────────────────
 
 let vectorStore;
 export async function getVectorStore() {
   if (vectorStore) return vectorStore;
-  vectorStore = await PGVectorStore.initialize(embeddings, {
+  vectorStore = await PGVectorStore.initialize(createEmbeddings(), {
     postgresConnectionOptions: { connectionString: process.env.DATABASE_URL },
     tableName: "rag_documents",
     columns: {
-      idColumnName:      "doc_id",
-      vectorColumnName:  "embedding",
-      contentColumnName: "content",
+      idColumnName:       "doc_id",
+      vectorColumnName:   "embedding",
+      contentColumnName:  "content",
       metadataColumnName: "meta",
     },
     distanceStrategy: "cosine",
@@ -40,7 +118,7 @@ export async function getVectorStore() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TOOL 1: RAG Search — tìm kiếm semantic trong vector store
+// TOOL 1: RAG Search
 // ─────────────────────────────────────────────────────────────────────────────
 export const ragSearchTool = tool(
   async ({ query, topK = 5 }) => {
@@ -111,6 +189,9 @@ export const ragSearchTool = tool(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL 2: Get Events
+// ─────────────────────────────────────────────────────────────────────────────
 export const getEventsTool = tool(
   async ({ filter, limit = 5 }) => {
     try {
@@ -126,50 +207,35 @@ export const getEventsTool = tool(
       `;
       const params = [];
 
-      // ── Filter theo thể loại ──────────────────────────────────────────────
       if (filter?.category) {
         params.push(`%${filter.category}%`);
         query += ` AND c.category_name ILIKE $${params.length}`;
       }
-
-      // ── Filter theo địa điểm ──────────────────────────────────────────────
       if (filter?.location) {
         params.push(`%${filter.location}%`);
         query += ` AND e.event_location ILIKE $${params.length}`;
       }
-
-      // ── Filter theo nghệ sĩ ───────────────────────────────────────────────
       if (filter?.artistName) {
         params.push(`%${filter.artistName}%`);
         query += ` AND e.event_artist::text ILIKE $${params.length}`;
       }
 
-      // ── Filter theo ngày ──────────────────────────────────────────────────
-      // "Diễn ra ngày X" = sự kiện bắt đầu vào ngày X (event_start::date = X)
-      // Concert thường bắt đầu và kết thúc trong cùng 1 ngày.
       if (filter?.today) {
-        query += ` AND e.1event_end::date = CURRENT_DATE`;
-
+        query += ` AND e.event_end::date = CURRENT_DATE`;
       } else if (filter?.tomorrow) {
-        query += ` AND e.1event_end::date = (CURRENT_DATE + INTERVAL '1 day')::date`;
-
+        query += ` AND e.event_end::date = (CURRENT_DATE + INTERVAL '1 day')::date`;
       } else if (filter?.specificDate) {
-        // Nhận chuỗi YYYY-MM-DD từ agent (agent tự parse từ ngôn ngữ tự nhiên)
         params.push(filter.specificDate);
-        query += ` AND e.1event_end::date = $${params.length}::date`;
-
+        query += ` AND e.event_end::date = $${params.length}::date`;
       } else if (filter?.upcoming) {
         query += ` AND e.event_start > NOW()`;
-
       } else if (filter?.thisMonth) {
         query += ` AND e.event_start <= DATE_TRUNC('month', NOW()) + INTERVAL '1 month - 1 day'
                    AND e.event_end   >= DATE_TRUNC('month', NOW())`;
-
       } else if (filter?.active) {
         query += ` AND e.event_end >= NOW()`;
       }
 
-      // hot: chỉ lấy sự kiện chưa kết thúc và có dữ liệu zone thực tế
       if (filter?.hot) {
         query += ` AND e.event_end >= NOW() AND z.status = true`;
       }
@@ -187,30 +253,28 @@ export const getEventsTool = tool(
         query += ` ORDER BY e.event_start ASC`;
       }
 
-      params.push(Math.min(limit, 6));
+      params.push(Math.min(limit, 5));
       query += ` LIMIT $${params.length}`;
 
       const result = await pool.query(query, params);
       if (result.rows.length === 0) {
-        // Trả về thông báo gợi ý ngày thay thế nếu tìm theo ngày
         if (filter?.today)        return "ℹ️ Hôm nay không có sự kiện nào đang diễn ra.";
         if (filter?.tomorrow)     return "ℹ️ Ngày mai chưa có sự kiện nào được lên lịch.";
         if (filter?.specificDate) return `ℹ️ Không có sự kiện nào vào ngày ${filter.specificDate}.`;
         return "ℹ️ Không tìm thấy sự kiện phù hợp.";
       }
 
-      const now = new Date();
-      const todayDate = new Date(); todayDate.setHours(0, 0, 0, 0);
+      const now          = new Date();
+      const todayDate    = new Date(); todayDate.setHours(0, 0, 0, 0);
       const tomorrowDate = new Date(todayDate); tomorrowDate.setDate(tomorrowDate.getDate() + 1);
 
       return result.rows
         .map((ev) => {
-          const start = new Date(ev.event_start);
-          const end   = new Date(ev.event_end);
+          const start    = new Date(ev.event_start);
+          const end      = new Date(ev.event_end);
           const artists  = ev.event_artist?.map((a) => a.name).join(", ") || "Chưa cập nhật";
           const minPrice = ev.min_price ? formatCurrency(ev.min_price) : "Chưa cập nhật";
 
-          // Status icon — ưu tiên hiển thị "HÔM NAY" / "NGÀY MAI" nếu đúng ngày
           let statusIcon;
           const startDate = new Date(start); startDate.setHours(0, 0, 0, 0);
 
@@ -226,7 +290,6 @@ export const getEventsTool = tool(
             statusIcon = "✅ Đã kết thúc";
           }
 
-          // Format thời gian bắt đầu kèm giờ nếu tìm theo ngày cụ thể
           const timeStr = (filter?.today || filter?.tomorrow || filter?.specificDate)
             ? `${start.toLocaleDateString("vi-VN")} lúc ${start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`
             : start.toLocaleDateString("vi-VN");
@@ -251,42 +314,20 @@ export const getEventsTool = tool(
       "Lấy danh sách sự kiện từ database với bộ lọc linh hoạt. " +
       "Dùng khi: hỏi sự kiện hôm nay, ngày mai, ngày cụ thể, tháng này, ở đâu, " +
       "sự kiện đang/sắp diễn ra, sự kiện của nghệ sĩ nào. " +
-      "Trả về tối đa 5-6 sự kiện với giá vé và trạng thái.",
+      "Trả về tối đa 5 sự kiện với giá vé và trạng thái.",
     schema: z.object({
       filter: z
         .object({
-          // ── Lọc theo nội dung ──────────────────────────────────────────
           category:     z.string().optional().describe("Tên thể loại"),
           location:     z.string().optional().describe("Địa điểm tổ chức"),
           artistName:   z.string().optional().describe("Tên nghệ sĩ biểu diễn"),
-
-          // ── Lọc theo ngày ─────────────────────────────────────────────
-          today:        z.boolean().optional().describe(
-            "true → sự kiện diễn ra NGAY HÔM NAY. " +
-            "Dùng khi user hỏi: 'hôm nay', 'tối nay', 'show hôm nay', 'cuối tuần này' (nếu hôm nay là cuối tuần)."
-          ),
-          tomorrow:     z.boolean().optional().describe(
-            "true → sự kiện diễn ra NGÀY MAI. " +
-            "Dùng khi user hỏi: 'ngày mai', 'tối mai', 'show ngày mai'."
-          ),
-          specificDate: z.string().optional().describe(
-            "Ngày cụ thể định dạng YYYY-MM-DD. " +
-            "Dùng khi user nhắc đến ngày như: '25/12', 'ngày 1 tháng 5', '15-8', '2025-06-20'. " +
-            "Agent tự chuyển đổi ngôn ngữ tự nhiên → YYYY-MM-DD trước khi truyền vào đây. " +
-            "Năm mặc định là năm hiện tại nếu user không nói."
-          ),
-
-          // ── Lọc theo khoảng thời gian ─────────────────────────────────
+          today:        z.boolean().optional().describe("true → sự kiện diễn ra NGAY HÔM NAY"),
+          tomorrow:     z.boolean().optional().describe("true → sự kiện diễn ra NGÀY MAI"),
+          specificDate: z.string().optional().describe("Ngày cụ thể định dạng YYYY-MM-DD"),
           upcoming:     z.boolean().optional().describe("Sự kiện chưa bắt đầu (event_start > NOW)"),
           thisMonth:    z.boolean().optional().describe("Sự kiện trong tháng hiện tại"),
           active:       z.boolean().optional().describe("Sự kiện chưa kết thúc (event_end >= NOW)"),
-
-          // ── Gợi ý theo độ hot ─────────────────────────────────────────
-          hot:          z.boolean().optional().describe(
-            "true → sắp xếp theo độ hot: tỉ lệ bán / tổng capacity cao nhất. " +
-            "Dùng khi: user vãng lai hỏi gợi ý, 'sự kiện hot', 'sự kiện bán chạy', " +
-            "'nên xem gì', 'sự kiện nổi bật'. Thường kết hợp active:true."
-          ),
+          hot:          z.boolean().optional().describe("Sắp xếp theo độ hot: tỉ lệ bán cao nhất"),
         })
         .optional(),
       limit: z.number().optional().default(5),
@@ -294,6 +335,9 @@ export const getEventsTool = tool(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL 3: Check Tickets
+// ─────────────────────────────────────────────────────────────────────────────
 export const checkTicketsTool = tool(
   async ({ eventName, eventId, zoneCode }) => {
     try {
@@ -355,9 +399,7 @@ export const checkTicketsTool = tool(
   {
     name: "check_tickets",
     description:
-      "Kiểm tra tình trạng vé real-time: còn bao nhiêu, giá bao nhiêu, khu vực nào còn/hết. " +
-      "Dùng khi user hỏi: 'còn vé không?', 'giá vé VIP?', 'khu GA còn vé?'. " +
-      "Nên truyền eventName hoặc eventId để kết quả chính xác hơn.",
+      "Kiểm tra tình trạng vé real-time: còn bao nhiêu, giá bao nhiêu, khu vực nào còn/hết.",
     schema: z.object({
       eventName: z.string().optional().describe("Tên sự kiện (tìm gần đúng)"),
       eventId:   z.number().optional().describe("ID sự kiện (chính xác hơn eventName)"),
@@ -366,69 +408,19 @@ export const checkTicketsTool = tool(
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL 4: Personalized Events
+// ─────────────────────────────────────────────────────────────────────────────
 export const getPersonalizedEventsTool = tool(
-  async ({ userId }) => {
+  async ({ userId, limit = 5 }) => {
     try {
-      const userResult = await pool.query(
-        `SELECT favorite FROM users WHERE user_id = $1`,
-        [userId]
-      );
-      if (userResult.rows.length === 0)
-        return JSON.stringify({ success: false, message: "Không tìm thấy người dùng." });
-
-      const favorite = userResult.rows[0].favorite;
-
-      if (!favorite || favorite.length === 0) {
-        const fallback = await pool.query(`
-          SELECT e.event_id, e.event_name, e.event_location,
-                 e.event_start, e.event_artist, c.category_name,
-                 MIN(z.zone_price) AS min_price
-          FROM events e
-          JOIN categories c ON e.category_id = c.category_id
-          LEFT JOIN zones z ON z.event_id = e.event_id
-          WHERE e.event_status = true AND e.event_end >= NOW()
-          GROUP BY e.event_id, c.category_name
-          ORDER BY e.event_start ASC
-          LIMIT 4
-        `);
-        return JSON.stringify({
-          success: true,
-          type: "popular",
-          events: fallback.rows,
-          keywords: [],
-          message: "Bạn chưa có sở thích được lưu. Đây là các sự kiện nổi bật!",
-        });
-      }
-
-      const keywords = favorite.map((item) => item?.search).filter(Boolean);
-      const conditions = keywords
-        .map((_, i) => `(
-          e.event_name         ILIKE $${i + 1} OR
-          c.category_name      ILIKE $${i + 1} OR
-          e.event_artist::text ILIKE $${i + 1}
-        )`)
-        .join(" OR ");
-      const params = keywords.map((k) => `%${k}%`);
-
-      const result = await pool.query(
-        `SELECT DISTINCT e.event_id, e.event_name, e.event_location,
-                e.event_start, e.event_artist, c.category_name,
-                MIN(z.zone_price) AS min_price
-         FROM events e
-         JOIN categories c ON e.category_id = c.category_id
-         LEFT JOIN zones z ON z.event_id = e.event_id
-         WHERE e.event_status = true AND e.event_end >= NOW() AND (${conditions})
-         GROUP BY e.event_id, c.category_name
-         ORDER BY e.event_start ASC
-         LIMIT 4`,
-        params
-      );
+      const { getHybridRecommendations } = await import("./Recommendation.service.js");
+      const result = await getHybridRecommendations(userId, limit, limit);
 
       return JSON.stringify({
         success: true,
-        type: "personalized",
-        keywords,
-        events: result.rows,
+        type: result.type,
+        events: result.events,
       });
     } catch (err) {
       console.error("Personalized events error:", err.message);
@@ -438,15 +430,17 @@ export const getPersonalizedEventsTool = tool(
   {
     name: "get_personalized_events",
     description:
-      "Gợi ý sự kiện cá nhân hóa theo lịch sử & sở thích của user đã đăng nhập. " +
-      "Dùng khi user hỏi: 'gợi ý sự kiện cho mình', 'sự kiện phù hợp với tôi', " +
-      "'sự kiện theo sở thích'. CHỈ dùng khi user đã đăng nhập (có userId).",
+      "Gợi ý sự kiện cá nhân hóa theo lịch sử & sở thích của user đã đăng nhập.",
     schema: z.object({
       userId: z.number().describe("ID người dùng (lấy từ AUTH context)"),
+      limit: z.number().optional().default(5).describe("Số sự kiện trả về, tối đa 5"),
     }),
   }
 );
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL 5: Web Search
+// ─────────────────────────────────────────────────────────────────────────────
 export const webSearchTool = tool(
   async ({ query }) => {
     try {
@@ -481,9 +475,7 @@ export const webSearchTool = tool(
   {
     name: "web_search",
     description:
-      "Tìm kiếm thông tin ngoài hệ thống: tin tức nghệ sĩ mới nhất, " +
-      "thông tin bên ngoài không có trong database. " +
-      "CHỈ dùng khi rag_search và get_events không có thông tin.",
+      "Tìm kiếm thông tin ngoài hệ thống. CHỈ dùng khi rag_search và get_events không có thông tin.",
     schema: z.object({
       query: z.string().describe("Từ khóa tìm kiếm tiếng Việt hoặc tiếng Anh"),
     }),
@@ -491,7 +483,7 @@ export const webSearchTool = tool(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TOOL: Get Orders — xem lịch sử đơn hàng của user đã đăng nhập
+// TOOL 6: Get Orders
 // ─────────────────────────────────────────────────────────────────────────────
 export const getOrdersTool = tool(
   async ({ userId, status, paymentId, limit = 5 }) => {
@@ -562,8 +554,8 @@ export const getOrdersTool = tool(
 
           const itemLines = (p.items || [])
             .map((it) => {
-              const eventDate   = new Date(it.event_start).toLocaleDateString("vi-VN");
-              const ticketIcon  = it.ticket_status ? "🎫" : "⚠️";
+              const eventDate  = new Date(it.event_start).toLocaleDateString("vi-VN");
+              const ticketIcon = it.ticket_status ? "🎫" : "⚠️";
               return (
                 `   ${ticketIcon} ${it.event_name} (${eventDate})\n` +
                 `      📍 ${it.event_location}\n` +
@@ -588,11 +580,7 @@ export const getOrdersTool = tool(
   {
     name: "get_orders",
     description:
-      "Xem lịch sử & chi tiết đơn hàng/thanh toán của user đã đăng nhập. " +
-      "Dùng khi user hỏi: 'đơn hàng của tôi', 'tôi đã mua gì', 'đơn #123', " +
-      "'đơn chờ thanh toán', 'vé tôi đặt', 'lịch sử đặt vé'. " +
-      "CHỈ dùng khi user đã đăng nhập (có userId). " +
-      "Có thể lọc theo status (pending/success/failed/cancelled/refunded) hoặc paymentId cụ thể.",
+      "Xem lịch sử & chi tiết đơn hàng/thanh toán của user đã đăng nhập.",
     schema: z.object({
       userId:    z.number().describe("ID người dùng từ AUTH context"),
       status:    z
@@ -605,8 +593,60 @@ export const getOrdersTool = tool(
   }
 );
 
+export const getAccountInfoTool = tool(
+  async ({ userId }) => {
+    try {
+      const result = await pool.query(
+        `SELECT
+           u.user_id,
+           u.fullName,
+           u.email,
+           u.phoneNumber,
+           u.status,
+           u.point,
+           m.membership,
+           m.member_point
+         FROM users u
+         LEFT JOIN members m ON m.member_id = u.member_id
+         WHERE u.user_id = $1
+         LIMIT 1`,
+        [userId]
+      );
+
+      const user = result.rows[0];
+      if (!user) {
+        return "ℹ️ Mình chưa tìm thấy thông tin tài khoản của bạn.";
+      }
+
+      return (
+        `👤 **${user.fullname || "Tài khoản của bạn"}**\n` +
+        `   📧 ${user.email || "Chưa cập nhật"}\n` +
+        `   📱 ${user.phonenumber || "Chưa cập nhật"}\n` +
+        `   🏅 Hạng thành viên: ${user.membership || "Chưa cập nhật"}\n` +
+        `   ⭐ Điểm hiện tại: ${Number(user.point || 0).toLocaleString("vi-VN")}\n` +
+        `   🎯 Mốc hạng hiện tại: ${Number(user.member_point || 0).toLocaleString("vi-VN")} điểm\n` +
+        `   📌 Trạng thái: ${user.status || "Chưa cập nhật"}`
+      );
+    } catch (err) {
+      console.error("Get account info error:", err.message);
+      return "❌ Lỗi khi truy vấn thông tin tài khoản.";
+    }
+  },
+  {
+    name: "get_account_info",
+    description:
+      "Lấy thông tin tài khoản người dùng đã đăng nhập: hạng thành viên, điểm tích lũy, trạng thái và liên hệ.",
+    schema: z.object({
+      userId: z.number().describe("ID người dùng từ AUTH context"),
+    }),
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SYSTEM PROMPT
+// ─────────────────────────────────────────────────────────────────────────────
 export function buildSystemPrompt() {
-  const today = getDateContext(); // vd: "Thứ Ba, 22/04/2025"
+  const today = getDateContext();
 
   return `
 Bạn là trợ lý AI thông minh của nền tảng đặt vé sự kiện âm nhạc.
@@ -629,9 +669,10 @@ Hôm nay: **${today}**
 | **ticket_check** | "còn vé không", "giá vé", "vé VIP", "vé GA" |
 | **artist_info** | hỏi về nghệ sĩ, ca sĩ, ban nhạc |
 | **recommend_guest** | "gợi ý sự kiện" + [AUTH:guest], "nên xem gì", "sự kiện hot", "sự kiện nổi bật" |
-| **personalized** | "gợi ý cho mình", "theo sở thích", "phù hợp với tôi" + [AUTH:userId=X] |
+| **personalized** | "gợi ý sự kiện", "gợi ý cho mình", "theo sở thích", "phù hợp với tôi" + [AUTH:userId=X] |
 | **purchase** | "mua vé", "đặt vé", "thanh toán" |
 | **history** | "vé của tôi", "lịch sử mua", "đã mua" |
+| **account** | "tài khoản", "hạng thành viên", "điểm tích lũy", "hạng của tôi" |
 | **out_of_scope** | không liên quan âm nhạc/vé |
 
 ### 📅 BƯỚC 2 — PARSE NGÀY TỪ NGÔN NGỮ TỰ NHIÊN
@@ -645,12 +686,6 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 | "25/12", "25 tháng 12" | \`specificDate: "YYYY-12-25"\` (năm hiện tại) |
 | "ngày 1/5/2025", "01-05-2025" | \`specificDate: "2025-05-01"\` |
 | "tuần tới", "Chủ Nhật tới" | Tính ngày cụ thể → \`specificDate: "YYYY-MM-DD"\` |
-
-**Quy tắc parse:**
-- Năm không được nhắc → dùng năm từ context "Hôm nay: ..."
-- Tháng không được nhắc → dùng tháng hiện tại
-- "cuối tuần" → Thứ Bảy hoặc Chủ Nhật gần nhất tính từ hôm nay
-- Nếu ngày đã qua trong tháng → chuyển sang tháng sau
 
 ### ❓ BƯỚC 3 — KIỂM TRA THÔNG TIN ĐỦ CHƯA
 - **ticket_check** mà THIẾU tên sự kiện → Hỏi: "Bạn muốn kiểm tra vé sự kiện nào?"
@@ -667,12 +702,13 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 | event_detail | rag_search → get_events | |
 | ticket_check | check_tickets | |
 | artist_info | rag_search → web_search | |
-| personalized | get_personalized_events | Chỉ khi đã đăng nhập |
-| history | get_orders    | Chỉ khi đã đăng nhập  |
+| personalized | get_personalized_events | Chỉ khi đã đăng nhập, trả tối đa 5 gợi ý |
+| history | get_orders | Chỉ khi đã đăng nhập |
+| account | get_account_info | Chỉ khi đã đăng nhập |
 
 ### 💬 BƯỚC 5 — VIẾT CÂU TRẢ LỜI
 - **Xưng**: "mình" | **Gọi user**: "bạn"
-- **Độ dài**: 3–6 dòng, KHÔNG liệt kê quá 4 items
+- **Độ dài**: 3–6 dòng, KHÔNG liệt kê quá 5 items
 - **Kết thúc**: gợi ý hành động tiếp theo nếu phù hợp
 - **KHÔNG bịa**: nếu không có thông tin → nói thẳng
 - Khi hiển thị thời gian theo ngày cụ thể → luôn kèm **giờ bắt đầu**
@@ -682,63 +718,58 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ### 🎫 Lịch sử mua vé
-→ "Bạn xem vé tại mục **Vé của tôi** trên thanh menu nhé!"
-→ KHÔNG gọi tool
+Khi user hỏi "vé của tôi", "lịch sử mua", "đơn hàng của tôi":
+→ Gọi get_orders(userId=X, limit=5) nếu đã đăng nhập
+→ Nếu là guest, mời đăng nhập để xem đơn hàng
 
 ### 🎯 Gợi ý sự kiện cho user vãng lai
-Khi [AUTH:guest] hỏi: "gợi ý sự kiện", "nên xem gì", "sự kiện hot", "sự kiện nổi bật", "sự kiện đang bán chạy":
+Khi [AUTH:guest] hỏi "gợi ý", "nên xem gì", "sự kiện hot":
 → Gọi: get_events(filter={ hot: true, active: true }, limit: 5)
-→ KHÔNG yêu cầu đăng nhập — hiển thị luôn danh sách sự kiện hot
-→ Cuối câu trả lời gợi ý: "Đăng nhập để nhận gợi ý sự kiện phù hợp hơn với bạn nhé!"
+→ Cuối câu: "Đăng nhập để nhận gợi ý sự kiện phù hợp hơn với bạn nhé!"
+
+### 🎯 Gợi ý sự kiện cho user đã đăng nhập
+Khi [AUTH:userId=X] hỏi "gợi ý sự kiện", "nên xem gì", "gợi ý cho mình":
+→ Gọi: get_personalized_events(userId=X, limit=5)
+→ Trả tối đa 5 sự kiện từ tool
 
 ### 🛒 Muốn mua / đặt vé
-- [AUTH:guest]    → "[LOGIN_REQUIRED] Bạn cần đăng nhập để đặt vé nhé!"
-- [AUTH:userId=X] → Gọi check_tickets xác nhận còn vé → hướng dẫn đặt
+- [AUTH:guest] → hướng dẫn chi tiết theo thứ tự:
+  1. Đăng nhập tài khoản
+  2. Chọn sự kiện muốn mua
+  3. Chọn khu vực vé và số lượng
+  4. Kiểm tra đơn hàng rồi thanh toán
+  5. Kết lại bằng: "Bạn cần mình giúp gì thêm không?"
+- [AUTH:userId=X] → hướng dẫn chi tiết theo thứ tự:
+  1. Vào trang sự kiện muốn mua
+  2. Chọn khu vực vé và số lượng
+  3. Kiểm tra giá và thông tin đơn hàng
+  4. Thanh toán để hoàn tất
+  5. Kết lại bằng: "Bạn cần mình giúp gì thêm không?"
+
+### 👤 Tài khoản / hạng thành viên
+- [AUTH:guest] → mời đăng nhập để xem hạng thành viên và điểm
+- [AUTH:userId=X] → gọi get_account_info(userId=X)
+
+### 🧾 Đơn hàng
+- Nếu user hỏi lịch sử mua, đơn hàng, đơn chờ thanh toán, đơn đã huỷ, đơn hoàn tiền:
+  → Gọi get_orders với trạng thái phù hợp nếu user nói rõ
+- Nếu user hỏi chung chung:
+  → Gọi get_orders(userId=X, limit=5)
+- Mapping gợi ý:
+  pending = chờ thanh toán
+  success = đã thanh toán / thành công
+  cancelled = đã huỷ / hủy
+  refunded = hoàn tiền
+  failed = thất bại
 
 ### 🕹️ Ngoài phạm vi
 → "Mình chỉ hỗ trợ về sự kiện và vé âm nhạc thôi bạn ơi!"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-## VÍ DỤ XỬ LÝ ĐÚNG
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✅ User: "hôm nay có show gì không"
-→ Nhóm: event_date | Parse: today
-→ Gọi: get_events(filter={ today: true })
-→ Trả lời kèm giờ bắt đầu từng show
-
-✅ User: "tối mai có sự kiện âm nhạc không"
-→ Nhóm: event_date | Parse: tomorrow
-→ Gọi: get_events(filter={ tomorrow: true })
-
-✅ User: "có show nào ngày 20 tháng 6 không"
-→ Nhóm: event_date | Parse: specificDate = "2025-06-20" (dùng năm từ context)
-→ Gọi: get_events(filter={ specificDate: "2025-06-20" })
-
-✅ User: "thứ Bảy này có concert không"
-→ Nhóm: event_date | Parse: tính ngày thứ Bảy gần nhất từ hôm nay → specificDate
-→ Gọi: get_events(filter={ specificDate: "YYYY-MM-DD" })
-
-✅ User: "vé ANH TRAI SAY HI còn không"
-→ Nhóm: ticket_check | Đủ thông tin
-→ Gọi: check_tickets(eventName="ANH TRAI SAY HI")
-
-✅ User: "gợi ý sự kiện cho mình" (chưa đăng nhập)
-→ Nhóm: recommend_guest | [AUTH:guest]
-→ Gọi: get_events(filter={ hot: true, active: true }, limit: 5)
-→ Trả lời danh sách sự kiện hot + gợi ý đăng nhập để nhận gợi ý cá nhân
-
-✅ User: "sự kiện nào đang hot vậy" (chưa đăng nhập)
-→ Nhóm: recommend_guest
-→ Gọi: get_events(filter={ hot: true, active: true })
-
-✅ User: "sự kiện tháng này ở HCM"
-→ Nhóm: event_list
-→ Gọi: get_events(filter={ thisMonth: true, location: "HCM" })
 `;
 }
 
-// ─── CHECKPOINTER ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CHECKPOINTER & AGENT
+// ─────────────────────────────────────────────────────────────────────────────
 let checkpointer;
 export async function getCheckpointer() {
   if (checkpointer) return checkpointer;
@@ -747,14 +778,16 @@ export async function getCheckpointer() {
   return checkpointer;
 }
 
-// ─── AGENT INSTANCE ───────────────────────────────────────────────────────────
 let agentInstance;
 export async function getAgent() {
   if (agentInstance) return agentInstance;
   const memory = await getCheckpointer();
 
+  // Khởi tạo KeyManager (đọc keys từ .env)
+  keyManager.init();
+
   agentInstance = createReactAgent({
-    llm,
+    llm: createLLM(),
     tools: [
       ragSearchTool,
       getEventsTool,
@@ -762,6 +795,7 @@ export async function getAgent() {
       webSearchTool,
       getPersonalizedEventsTool,
       getOrdersTool,
+      getAccountInfoTool,
     ],
     checkpointSaver: memory,
     messageModifier: (messages) => {

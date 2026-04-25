@@ -24,6 +24,9 @@ const INTENT_PATTERNS = [
     patterns: [
       /gợi ý.*sự kiện/,
       /sự kiện.*gợi ý/,
+      /gợi ý.*show/,
+      /show.*gợi ý/,
+      /gợi ý.*concert/,
       /nên xem gì/,
       /sự kiện.*hot/,
       /sự kiện.*nổi bật/,
@@ -37,7 +40,18 @@ const INTENT_PATTERNS = [
   },
   {
     intent: "purchase_intent",
-    patterns: [/mua vé/, /đặt vé/, /book vé/, /thanh toán/, /checkout/],
+    patterns: [
+      /mua vé/,
+      /đặt vé/,
+      /book vé/,
+      /thanh toán/,
+      /checkout/,
+      /cách mua vé/,
+      /hướng dẫn mua vé/,
+      /làm sao để mua vé/,
+      /muốn mua/,
+      /muốn đặt vé/,
+    ],
   },
   {
     intent: "event_detail",
@@ -57,15 +71,29 @@ const INTENT_PATTERNS = [
   },
   {
     intent: "account",
-    patterns: [/tài khoản/, /đăng nhập/, /đăng ký/, /mật khẩu/, /profile/],
+    patterns: [
+      /tài khoản/,
+      /đăng nhập/,
+      /đăng ký/,
+      /mật khẩu/,
+      /profile/,
+      /hạng thành viên/,
+      /member(ship)?/i,
+      /điểm tích lũy/,
+      /điểm thành viên/,
+      /hạng của tôi/,
+      /thành viên hạng gì/,
+    ],
   },
   {
     intent: "refund",
     patterns: [/hoàn tiền/, /hủy vé/, /đổi vé/, /refund/],
   },
-  {
+{
   intent: "history",
   patterns: [/vé của tôi/, /lịch sử mua/, /đã mua/, /vé đã đặt/, /my ticket/, /đơn hàng/, /đơn của tôi/, /đơn #\d+/, /đơn số/, /tôi đã đặt/, /đơn chờ/, /đơn đã huỷ/,
+    /đơn hủy/, /đơn đã thanh toán/, /đơn thành công/, /đơn thất bại/, /đơn hoàn tiền/,
+    /lịch sử thanh toán/, /mã đơn/, /mã thanh toán/, /chi tiết đơn/, /kiểm tra đơn/,
   ],
 },
 ];
@@ -78,6 +106,7 @@ function classifyIntent(message, toolsUsed = []) {
     rag_search:              "event_detail",
     web_search:              "web_search",
     get_orders:              "history", 
+    get_account_info:        "account",
   };
   for (const [toolName, intent] of Object.entries(toolIntentMap)) {
     if (toolsUsed.includes(toolName)) return intent;
