@@ -11,6 +11,7 @@ router.post("/create", AdminControllers.create);
 router.get("/search", AdminControllers.searchAdmin); 
 router.get("/", AdminControllers.getAllAdmin);
 router.get("/:id", AdminControllers.getAdminById); 
+router.delete("/:id", AdminControllers.deleteAdmin); 
 router.put("/update/:id", AdminControllers.updateAdmin); 
 router.put("/update-profile", adminAuth, AdminControllers.updateProfile); 
 

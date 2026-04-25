@@ -337,4 +337,24 @@ export const AdminControllers = {
     }
   },
 
+  async deleteAdmin(req, res) {
+    try {
+      const { id } = req.params;
+
+      const query = `
+        DELETE FROM admins
+        WHERE admin_id = $1
+      `
+
+      await pool.query(query, [id])
+
+      res.status(200).json({
+        success: true,
+        message: "Xóa dữ liệu quản trị viên thành công!"
+      })
+    } catch (err) {
+      console.error("Lỗi xóa quản trị viên:", err);
+      return res.status(500).json({ message: "Lỗi server!" });
+    }
+  }
 };
