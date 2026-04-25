@@ -532,3 +532,163 @@
   padding: 24px 0;
   text-align: center;
 }
+
+/* ─── Skeleton chung ──────────────────────────────────────── */
+.hw-sk {
+  background: #2d2d35;
+  border-radius: var(--hw-radius);
+  animation: hw-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes hw-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.hw-sk-banner {
+  height: 220px;
+  border-radius: var(--hw-radius);
+  width: 100%;
+}
+
+.hw-sk-thumb {
+  width: 100%;
+  aspect-ratio: 3/2;
+  border-radius: var(--hw-radius) var(--hw-radius) 0 0;
+}
+
+/* ─── Skeleton row: dùng cùng logic flex với slider ─────── */
+.hw-skeleton-row {
+  display: flex;
+  gap: 14px;
+  overflow: hidden;
+  padding: 4px 2px 8px;
+}
+
+/* Skeleton card — 4 cột mặc định, co theo breakpoint */
+.hw-skeleton-card {
+  flex: 0 0 calc(25% - 11px);
+  min-width: 0;
+}
+
+/* ─── Responsive skeleton ──────────────────────────────── */
+@media (max-width: 1024px) {
+  .hw-skeleton-card {
+    flex: 0 0 calc(33.333% - 10px);
+  }
+}
+
+@media (max-width: 768px) {
+  .hw-skeleton-card {
+    flex: 0 0 calc(50% - 7px);
+  }
+
+  .hw-sk-banner {
+    height: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hw-skeleton-card {
+    flex: 0 0 calc(70% - 7px);
+  }
+
+  .hw-sk-banner {
+    height: 130px;
+  }
+}
+
+/* ─── Recommendation Badge ─────────────────────────────── */
+.hw-rec-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-left: 10px;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+
+.hw-rec-badge--personal {
+  background: #2e1065;
+  color: #c4b5fd;
+  border: 1px solid #5b21b6;
+}
+
+/* ─── Empty state ────────────────────────────────────────── */
+.hw-empty {
+  color: var(--hw-text-2);
+  font-size: 14px;
+  padding: 24px 0;
+  text-align: center;
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE — Banner + Sliders
+══════════════════════════════════════════ */
+
+/* Tablet (≤ 1024px): 3 items */
+@media (max-width: 1024px) {
+  .trending-slider .hslider-track > *,
+  .event-slider .hslider-track > * {
+    flex: 0 0 calc(33.333% - 10px);
+  }
+}
+
+/* Tablet hẹp (≤ 768px): 2 items + banner 1 cột */
+@media (max-width: 768px) {
+  .banner-slides {
+    grid-template-columns: 1fr;
+  }
+
+  .banner-slide:nth-child(2) { display: none; }
+  .banner-slide { aspect-ratio: 16/8; }
+
+  .trending-slider .hslider-track > *,
+  .event-slider .hslider-track > * {
+    flex: 0 0 calc(50% - 7px);
+  }
+
+  .hslider-arrow { font-size: 18px; }
+
+  .trend-num {
+    font-size: clamp(56px, 10vw, 80px);
+  }
+}
+
+/* Mobile (≤ 480px): peek 1.5 */
+@media (max-width: 480px) {
+  .banner-carousel { padding: 0 28px; }
+
+  .banner-slide { aspect-ratio: 16/9; }
+
+  .trending-slider .hslider-track > * {
+    flex: 0 0 calc(60% - 7px);
+  }
+
+  .event-slider .hslider-track > * {
+    flex: 0 0 calc(72% - 7px);
+  }
+
+  .hslider-arrow { width: 28px; height: 28px; font-size: 16px; }
+  .hslider-prev { margin-right: 4px; }
+  .hslider-next { margin-left: 4px; }
+
+  .ev-card-title { font-size: 12px; margin-bottom: 12px; }
+  .ev-card-price { font-size: 12px; }
+  .ev-card-date  { font-size: 11px; }
+  .hw-tab        { font-size: 13px; padding: 8px 10px 10px; }
+  .hw-sec-title  { font-size: 14px; }
+  .hw-section    { padding: 0 8px; }
+}
+
+/* Very small (≤ 360px) */
+@media (max-width: 360px) {
+  .event-slider .hslider-track > *,
+  .trending-slider .hslider-track > * {
+    flex: 0 0 calc(80% - 7px);
+  }
+}

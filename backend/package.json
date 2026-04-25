@@ -19,6 +19,7 @@
     "@langchain/langgraph": "^0.2.0",
     "@langchain/langgraph-checkpoint": "^1.0.1",
     "@langchain/langgraph-checkpoint-postgres": "^1.0.1",
+    "@langchain/openai": "^1.4.4",
     "bcrypt": "^6.0.0",
     "cloudinary": "^1.41.3",
     "cookie-parser": "^1.4.7",

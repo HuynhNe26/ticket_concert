@@ -1,27 +1,41 @@
 import { pool } from "../../config/database.js";
 
 export const OrderControllers = {
-  async getOrderById(req, res) {
+  async getOldOrderById(req, res) {
     try {
-      const { id } = req.params;
+      const userId = req.user.userId;
 
-      const query = `SELECT * FROM layout WHERE event_id = $1`;
-      const { rows } = await pool.query(query, [id]); 
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: "Người dùng chưa đăng nhập!"
+        })
+      };
 
-      if (rows.length === 0) {
-        return res.status(404).json({
-          success: false, 
-          message: "Không tìm thấy layout cho sự kiện này"
-        });
-      }
+      const query = `
+        SELECT DISTINCT ON (e.event_id)
+          e.event_id,
+          e.event_name,
+          e.banner_url,
+          e.event_end,
+          p.created_at,
+          (SELECT MIN(zone_price) FROM zones WHERE event_id = e.event_id) as min_price
+        FROM payments p
+        JOIN payment_detail pd ON pd.payment_id = p.payment_id
+        JOIN events e ON e.event_id = pd.event_id
+        WHERE p.user_id = $1
+        ORDER BY e.event_id, p.created_at DESC
+        LIMIT 10;
+      `;
 
-      return res.status(200).json({
-        success: true, 
-        message: "Lấy layout thành công!", 
-        data: rows[0]
-      });
-    }
-    catch (error) {
+      const { rows } = await pool.query(query, [userId]);
+
+      res.status(200).json({
+        data: rows,
+        success: true,
+        message: "Lấy dữ liệu thành công!"
+      })
+    } catch (error) {
       console.error("Lỗi lấy layout:", error);
       return res.status(500).json({
         success: false,

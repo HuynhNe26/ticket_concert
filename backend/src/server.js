@@ -27,6 +27,7 @@ import voucherRouteruser from "./router/users/voucher.js"
 import ticketRouter from "./router/users/ticket.js"
 import agentRoutes from "./router/users/agent.js"
 import recommendationsRoutes from "./router/users/recommendations.js"
+import orderUserRouter  from "./router/users/order.js"
 // admins
 import adminRouter from "./router/admins/admins.js";
 import eventRouter from "./router/admins/events.js";
@@ -68,6 +69,7 @@ app.use("/api/vouchers", voucherRouteruser)
 app.use("/api/my-ticket", ticketRouter);
 app.use("/api/agent", agentRoutes);
 app.use("/api/recommendations", recommendationsRoutes);
+app.use("/api/orders", orderUserRouter);
 
 app.use("/api/admin/users", userRouter);
 app.use("/api/admin/auth", adminRouter);
