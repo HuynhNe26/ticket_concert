@@ -381,7 +381,7 @@ export default function ManageAdmin() {
                                     <label className="ma-form-label">Vai Trò <span className="ma-req">*</span></label>
                                     <select className="ma-form-input" name="role" value={editForm.role} onChange={handleEditChange}>
                                         <option value="">-- Chọn --</option>
-                                        <option value="supperadmin">Quản trị viên cấp cao</option>
+                                        <option value="superadmin">Quản trị viên cấp cao</option>
                                         <option value="admin">Nhân viên soát vé</option>
                                     </select>
                                     {editErrors.role && <span className="ma-form-err">{editErrors.role}</span>}
