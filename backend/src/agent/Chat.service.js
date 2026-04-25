@@ -1,6 +1,9 @@
 import { pool } from "../config/database.js";
 import { getAgent } from "./ragAgent.js";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// INTENT PATTERNS — phân loại câu hỏi từ phía client
+// ─────────────────────────────────────────────────────────────────────────────
 const INTENT_PATTERNS = [
   {
     intent: "event_date",
@@ -13,9 +16,9 @@ const INTENT_PATTERNS = [
       /show.*ngày mai/,
       /thứ (hai|ba|tư|năm|sáu|bảy|chủ nhật)/i,
       /cuối tuần/,
-      /ngày\s+\d{1,2}[\/\-]\d{1,2}/,           
-      /ngày\s+\d{1,2}\s+tháng\s+\d{1,2}/,       
-      /\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?/,   
+      /ngày\s+\d{1,2}[\/\-]\d{1,2}/,
+      /ngày\s+\d{1,2}\s+tháng\s+\d{1,2}/,
+      /\d{1,2}[\/\-]\d{1,2}([\/\-]\d{2,4})?/,
       /tuần (này|tới|sau)/,
     ],
   },
@@ -24,19 +27,29 @@ const INTENT_PATTERNS = [
     patterns: [
       /gợi ý.*sự kiện/,
       /sự kiện.*gợi ý/,
-      /gợi ý.*show/,
-      /show.*gợi ý/,
-      /gợi ý.*concert/,
       /nên xem gì/,
       /sự kiện.*hot/,
       /sự kiện.*nổi bật/,
       /sự kiện.*bán chạy/,
       /xem gì.*hôm nay/,
+      /event.*hot/i,
+      /sự kiện.*đang hot/,
     ],
   },
   {
     intent: "ticket_check",
-    patterns: [/còn vé/, /hết vé/, /giá vé/, /mua vé gì/, /khu vực.*vé/, /vé.*giá/, /zone.*vé/],
+    patterns: [
+      /còn vé/,
+      /hết vé/,
+      /giá vé/,
+      /mua vé gì/,
+      /khu vực.*vé/,
+      /vé.*giá/,
+      /zone.*vé/,
+      /vé.*zone/,
+      /còn slot/,
+      /ticket.*còn/,
+    ],
   },
   {
     intent: "purchase_intent",
@@ -46,28 +59,59 @@ const INTENT_PATTERNS = [
       /book vé/,
       /thanh toán/,
       /checkout/,
-      /cách mua vé/,
-      /hướng dẫn mua vé/,
-      /làm sao để mua vé/,
-      /muốn mua/,
-      /muốn đặt vé/,
+      /tôi muốn mua/,
+      /làm sao.*mua/,
+      /cách mua/,
+      /hướng dẫn.*mua/,
+      /mua như thế nào/,
     ],
   },
   {
     intent: "event_detail",
-    patterns: [/thông tin.*sự kiện/, /chi tiết.*show/, /biểu diễn.*khi nào/, /concert.*ở đâu/],
+    patterns: [
+      /thông tin.*sự kiện/,
+      /chi tiết.*show/,
+      /biểu diễn.*khi nào/,
+      /concert.*ở đâu/,
+      /sự kiện.*ở đâu/,
+      /show.*diễn ra/,
+    ],
   },
   {
     intent: "event_list",
-    patterns: [/sự kiện.*tháng/, /show.*tháng/, /có.*sự kiện/, /sự kiện.*sắp/, /concert.*nào/],
+    patterns: [
+      /sự kiện.*tháng/,
+      /show.*tháng/,
+      /có.*sự kiện/,
+      /sự kiện.*sắp/,
+      /concert.*nào/,
+      /list.*sự kiện/,
+      /danh sách.*sự kiện/,
+    ],
   },
   {
     intent: "artist_info",
-    patterns: [/nghệ sĩ/, /ca sĩ/, /ban nhạc/, /idol/, /singer/],
+    patterns: [
+      /nghệ sĩ/,
+      /ca sĩ/,
+      /ban nhạc/,
+      /idol/,
+      /singer/,
+      /rapper/,
+      /nhóm nhạc/,
+    ],
   },
   {
     intent: "personalized",
-    patterns: [/gợi ý.*tôi/, /gợi ý.*mình/, /theo sở thích/, /phù hợp.*tôi/, /recommend/],
+    patterns: [
+      /gợi ý.*tôi/,
+      /gợi ý.*mình/,
+      /theo sở thích/,
+      /phù hợp.*tôi/,
+      /recommend/,
+      /đề xuất.*tôi/,
+      /phù hợp.*mình/,
+    ],
   },
   {
     intent: "account",
@@ -77,36 +121,83 @@ const INTENT_PATTERNS = [
       /đăng ký/,
       /mật khẩu/,
       /profile/,
+      /thông tin.*cá nhân/,
+    ],
+  },
+  {
+    // ── Hạng thành viên ─────────────────────────────────────────────────────
+    intent: "membership",
+    patterns: [
       /hạng thành viên/,
-      /member(ship)?/i,
+      /thành viên.*hạng/,
       /điểm tích lũy/,
-      /điểm thành viên/,
-      /hạng của tôi/,
-      /thành viên hạng gì/,
+      /bao nhiêu.*điểm/,
+      /điểm.*bao nhiêu/,
+      /quyền lợi.*thành viên/,
+      /thành viên.*quyền lợi/,
+      /tôi đang hạng/,
+      /hạng.*gì/,
+      /lên hạng/,
+      /membership/i,
+      /rank.*thành viên/,
+      /thẻ thành viên/,
+      /điểm thưởng/,
     ],
   },
   {
     intent: "refund",
-    patterns: [/hoàn tiền/, /hủy vé/, /đổi vé/, /refund/],
+    patterns: [
+      /hoàn tiền/,
+      /hủy vé/,
+      /đổi vé/,
+      /refund/,
+      /cancel.*vé/,
+      /vé.*cancel/,
+    ],
   },
-{
-  intent: "history",
-  patterns: [/vé của tôi/, /lịch sử mua/, /đã mua/, /vé đã đặt/, /my ticket/, /đơn hàng/, /đơn của tôi/, /đơn #\d+/, /đơn số/, /tôi đã đặt/, /đơn chờ/, /đơn đã huỷ/,
-    /đơn hủy/, /đơn đã thanh toán/, /đơn thành công/, /đơn thất bại/, /đơn hoàn tiền/,
-    /lịch sử thanh toán/, /mã đơn/, /mã thanh toán/, /chi tiết đơn/, /kiểm tra đơn/,
-  ],
-},
+  {
+    // ── Lịch sử đơn hàng — mở rộng thêm nhiều pattern ──────────────────────
+    intent: "history",
+    patterns: [
+      /vé của tôi/,
+      /lịch sử mua/,
+      /đã mua/,
+      /vé đã đặt/,
+      /my ticket/i,
+      /đơn hàng/,
+      /đơn của tôi/,
+      /đơn #\d+/,
+      /đơn số/,
+      /tôi đã đặt/,
+      /đơn chờ/,
+      /đơn đã huỷ/,
+      /đơn huỷ/,
+      /đơn hoàn tiền/,
+      /đơn thất bại/,
+      /đơn.*thanh toán/,
+      /thanh toán.*đơn/,
+      /xem đơn/,
+      /kiểm tra đơn/,
+      /order.*của tôi/i,
+      /payment.*của tôi/i,
+      /tôi đã mua gì/,
+    ],
+  },
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// CLASSIFY INTENT
+// ─────────────────────────────────────────────────────────────────────────────
 function classifyIntent(message, toolsUsed = []) {
+  // Ưu tiên intent từ tool đã được agent dùng
   const toolIntentMap = {
     check_tickets:           "ticket_check",
-    get_events:              "event_list",   
+    get_events:              "event_list",
     get_personalized_events: "personalized",
     rag_search:              "event_detail",
     web_search:              "web_search",
-    get_orders:              "history", 
-    get_account_info:        "account",
+    get_orders:              "history",
+    get_membership:          "membership",
   };
   for (const [toolName, intent] of Object.entries(toolIntentMap)) {
     if (toolsUsed.includes(toolName)) return intent;
@@ -120,6 +211,9 @@ function classifyIntent(message, toolsUsed = []) {
   return "general";
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
 const CLARIFICATION_PATTERNS = [
   /bạn muốn kiểm tra .+\?/i,
   /bạn đang hỏi về .+\?/i,
@@ -164,6 +258,9 @@ function extractToolsUsed(messages) {
   ];
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SAVE CHAT MESSAGE
+// ─────────────────────────────────────────────────────────────────────────────
 function saveChatMessage({
   userId,
   sessionId,
@@ -191,6 +288,9 @@ function saveChatMessage({
     .catch((err) => console.error("[Chat] saveChatMessage error:", err.message));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PUBLIC API
+// ─────────────────────────────────────────────────────────────────────────────
 export async function getChatHistory(sessionId, limit = 50) {
   const result = await pool.query(
     `SELECT chat_id, user_id, sender, message, intent,
@@ -248,9 +348,9 @@ export async function agentChat(
       .reverse()
       .find((m) => m._getType?.() === "ai" || m.role === "assistant");
 
-    const toolsUsed   = extractToolsUsed(messages);
-    const finalIntent = classifyIntent(userMessage, toolsUsed);
-    const answerStr   = extractAnswer(lastAI) ?? "Xin lỗi, mình không thể xử lý yêu cầu này.";
+    const toolsUsed    = extractToolsUsed(messages);
+    const finalIntent  = classifyIntent(userMessage, toolsUsed);
+    const answerStr    = extractAnswer(lastAI) ?? "Xin lỗi, mình không thể xử lý yêu cầu này.";
     const isClarifying = isClarificationQuestion(answerStr);
 
     saveChatMessage({
@@ -269,18 +369,34 @@ export async function agentChat(
     console.error("[Agent] Full error:", err);
     console.error("[Agent] Message:", err.message);
 
-    if (err.message?.includes("429")) {
+    // ── Rate limit ───────────────────────────────────────────────────────────
+    if (err.message?.includes("429") || err.message?.includes("rate_limit")) {
       const busyMsg = "Hệ thống đang bận, bạn vui lòng thử lại sau 1 phút nhé!";
-      saveChatMessage({ userId, sessionId, message: busyMsg, sender: "bot",
-        intent: "error", metaJson: { error: "rate_limit" } });
+      saveChatMessage({
+        userId, sessionId, message: busyMsg, sender: "bot",
+        intent: "error", metaJson: { error: "rate_limit" },
+      });
       return { answer: busyMsg, toolsUsed: [], sessionId, intent: "error" };
     }
 
+    // ── Quota hết ────────────────────────────────────────────────────────────
+    if (err.message?.includes("quota") || err.message?.includes("resource_exhausted")) {
+      const quotaMsg = "Dịch vụ AI đang tạm quá tải, bạn vui lòng thử lại sau ít phút nhé!";
+      saveChatMessage({
+        userId, sessionId, message: quotaMsg, sender: "bot",
+        intent: "error", metaJson: { error: "quota_exceeded" },
+      });
+      return { answer: quotaMsg, toolsUsed: [], sessionId, intent: "error" };
+    }
+
+    // ── Context / token overflow ─────────────────────────────────────────────
     if (err.message?.includes("context") || err.message?.includes("token")) {
       const overflowMsg =
         "Cuộc trò chuyện quá dài rồi! Bạn thử bắt đầu cuộc hội thoại mới nhé (nhấn nút Làm mới).";
-      saveChatMessage({ userId, sessionId, message: overflowMsg, sender: "bot",
-        intent: "error", metaJson: { error: "context_overflow" } });
+      saveChatMessage({
+        userId, sessionId, message: overflowMsg, sender: "bot",
+        intent: "error", metaJson: { error: "context_overflow" },
+      });
       return { answer: overflowMsg, toolsUsed: [], sessionId, intent: "error" };
     }
 

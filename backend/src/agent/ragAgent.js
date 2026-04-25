@@ -9,14 +9,6 @@ import { pool } from "../config/database.js";
 import { getDateContext, formatCurrency } from "../utils/helpers.js";
 import { keyManager } from "./geminiKeyManager.js";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LLM & EMBEDDINGS — tự động dùng key từ KeyManager, fallback khi lỗi
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Tạo một LLM instance với API key hiện tại.
- * Gọi lại hàm này sau khi keyManager.reportError() để lấy instance mới.
- */
 function createLLM() {
   return new ChatGoogleGenerativeAI({
     model: "gemini-2.5-flash",
@@ -253,7 +245,7 @@ export const getEventsTool = tool(
         query += ` ORDER BY e.event_start ASC`;
       }
 
-      params.push(Math.min(limit, 5));
+      params.push(Math.min(limit, 10));
       query += ` LIMIT $${params.length}`;
 
       const result = await pool.query(query, params);
@@ -314,7 +306,7 @@ export const getEventsTool = tool(
       "Lấy danh sách sự kiện từ database với bộ lọc linh hoạt. " +
       "Dùng khi: hỏi sự kiện hôm nay, ngày mai, ngày cụ thể, tháng này, ở đâu, " +
       "sự kiện đang/sắp diễn ra, sự kiện của nghệ sĩ nào. " +
-      "Trả về tối đa 5 sự kiện với giá vé và trạng thái.",
+      "Trả về tối đa 10 sự kiện với giá vé và trạng thái.",
     schema: z.object({
       filter: z
         .object({
@@ -330,7 +322,7 @@ export const getEventsTool = tool(
           hot:          z.boolean().optional().describe("Sắp xếp theo độ hot: tỉ lệ bán cao nhất"),
         })
         .optional(),
-      limit: z.number().optional().default(5),
+      limit: z.number().optional().default(10),
     }),
   }
 );
@@ -412,15 +404,99 @@ export const checkTicketsTool = tool(
 // TOOL 4: Personalized Events
 // ─────────────────────────────────────────────────────────────────────────────
 export const getPersonalizedEventsTool = tool(
-  async ({ userId, limit = 5 }) => {
+  async ({ userId }) => {
     try {
-      const { getHybridRecommendations } = await import("./Recommendation.service.js");
-      const result = await getHybridRecommendations(userId, limit, limit);
+      const userResult = await pool.query(
+        `SELECT favorite FROM users WHERE user_id = $1`,
+        [userId]
+      );
+      if (userResult.rows.length === 0)
+        return JSON.stringify({ success: false, message: "Không tìm thấy người dùng." });
+
+      const favorite = userResult.rows[0].favorite;
+
+      // ── Chưa có sở thích → fallback sự kiện HOT thay vì chỉ mới nhất ──────
+      if (!favorite || favorite.length === 0) {
+        const fallback = await pool.query(`
+          SELECT e.event_id, e.event_name, e.event_location,
+                 e.event_start, e.event_artist, c.category_name,
+                 MIN(z.zone_price) AS min_price,
+                 ROUND(
+                   SUM(z.sold_quantity)::numeric / NULLIF(SUM(z.zone_quantity), 0) * 100, 1
+                 ) AS sell_rate
+          FROM events e
+          JOIN categories c ON e.category_id = c.category_id
+          LEFT JOIN zones z ON z.event_id = e.event_id AND z.status = true
+          WHERE e.event_status = true AND e.event_end >= NOW()
+          GROUP BY e.event_id, c.category_name
+          HAVING SUM(z.zone_quantity) > 0
+          ORDER BY sell_rate DESC, SUM(z.sold_quantity) DESC, e.event_start ASC
+          LIMIT 8
+        `);
+        return JSON.stringify({
+          success: true,
+          type: "hot_fallback",
+          events: fallback.rows,
+          keywords: [],
+          message: "Bạn chưa có sở thích được lưu. Đây là các sự kiện đang hot nhất!",
+        });
+      }
+
+      // ── Có sở thích → tìm theo keyword + bổ sung hot nếu thiếu ───────────
+      const keywords   = favorite.map((item) => item?.search).filter(Boolean);
+      const conditions = keywords
+        .map((_, i) => `(
+          e.event_name         ILIKE $${i + 1} OR
+          c.category_name      ILIKE $${i + 1} OR
+          e.event_artist::text ILIKE $${i + 1}
+        )`)
+        .join(" OR ");
+      const params = keywords.map((k) => `%${k}%`);
+
+      const result = await pool.query(
+        `SELECT DISTINCT e.event_id, e.event_name, e.event_location,
+                e.event_start, e.event_artist, c.category_name,
+                MIN(z.zone_price) AS min_price
+         FROM events e
+         JOIN categories c ON e.category_id = c.category_id
+         LEFT JOIN zones z ON z.event_id = e.event_id
+         WHERE e.event_status = true AND e.event_end >= NOW() AND (${conditions})
+         GROUP BY e.event_id, c.category_name
+         ORDER BY e.event_start ASC
+         LIMIT 8`,
+        params
+      );
+
+      // Nếu kết quả ít hơn 4 → bổ sung thêm sự kiện hot để đủ
+      let extra = [];
+      if (result.rows.length < 4) {
+        const existingIds = result.rows.map((r) => r.event_id);
+        const excludeClause = existingIds.length
+          ? `AND e.event_id NOT IN (${existingIds.map((_, i) => `$${i + 1}`).join(",")})`
+          : "";
+        const hotResult = await pool.query(
+          `SELECT e.event_id, e.event_name, e.event_location,
+                  e.event_start, e.event_artist, c.category_name,
+                  MIN(z.zone_price) AS min_price
+           FROM events e
+           JOIN categories c ON e.category_id = c.category_id
+           LEFT JOIN zones z ON z.event_id = e.event_id AND z.status = true
+           WHERE e.event_status = true AND e.event_end >= NOW() ${excludeClause}
+           GROUP BY e.event_id, c.category_name
+           HAVING SUM(z.zone_quantity) > 0
+           ORDER BY SUM(z.sold_quantity) DESC, e.event_start ASC
+           LIMIT ${4 - result.rows.length}`,
+          existingIds
+        );
+        extra = hotResult.rows;
+      }
 
       return JSON.stringify({
         success: true,
-        type: result.type,
-        events: result.events,
+        type: "personalized",
+        keywords,
+        events: [...result.rows, ...extra],
+        extraNote: extra.length > 0 ? "Bổ sung thêm sự kiện hot phù hợp với bạn." : null,
       });
     } catch (err) {
       console.error("Personalized events error:", err.message);
@@ -430,10 +506,11 @@ export const getPersonalizedEventsTool = tool(
   {
     name: "get_personalized_events",
     description:
-      "Gợi ý sự kiện cá nhân hóa theo lịch sử & sở thích của user đã đăng nhập.",
+      "Gợi ý sự kiện cá nhân hóa theo lịch sử & sở thích của user đã đăng nhập. " +
+      "Trả về tối đa 8 sự kiện: ưu tiên theo sở thích, bổ sung hot nếu thiếu. " +
+      "CHỈ dùng khi user đã đăng nhập (có userId).",
     schema: z.object({
       userId: z.number().describe("ID người dùng (lấy từ AUTH context)"),
-      limit: z.number().optional().default(5).describe("Số sự kiện trả về, tối đa 5"),
     }),
   }
 );
@@ -593,49 +670,103 @@ export const getOrdersTool = tool(
   }
 );
 
-export const getAccountInfoTool = tool(
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL 7: Get Membership — xem hạng thành viên & điểm tích lũy
+// ─────────────────────────────────────────────────────────────────────────────
+export const getMembershipTool = tool(
   async ({ userId }) => {
     try {
       const result = await pool.query(
-        `SELECT
-           u.user_id,
-           u.fullName,
-           u.email,
-           u.phoneNumber,
-           u.status,
-           u.point,
-           m.membership,
-           m.member_point
-         FROM users u
-         LEFT JOIN members m ON m.member_id = u.member_id
-         WHERE u.user_id = $1
-         LIMIT 1`,
+        `SELECT m.membership_id, m.tier, m.points, m.joined_at,
+                u.full_name, u.email
+         FROM memberships m
+         JOIN users u ON u.user_id = m.user_id
+         WHERE m.user_id = $1`,
         [userId]
       );
 
-      const user = result.rows[0];
-      if (!user) {
-        return "ℹ️ Mình chưa tìm thấy thông tin tài khoản của bạn.";
+      if (result.rows.length === 0) {
+        return JSON.stringify({
+          success: false,
+          message: "Bạn chưa có thông tin thành viên. Hãy mua vé để bắt đầu tích điểm!",
+        });
       }
 
-      return (
-        `👤 **${user.fullname || "Tài khoản của bạn"}**\n` +
-        `   📧 ${user.email || "Chưa cập nhật"}\n` +
-        `   📱 ${user.phonenumber || "Chưa cập nhật"}\n` +
-        `   🏅 Hạng thành viên: ${user.membership || "Chưa cập nhật"}\n` +
-        `   ⭐ Điểm hiện tại: ${Number(user.point || 0).toLocaleString("vi-VN")}\n` +
-        `   🎯 Mốc hạng hiện tại: ${Number(user.member_point || 0).toLocaleString("vi-VN")} điểm\n` +
-        `   📌 Trạng thái: ${user.status || "Chưa cập nhật"}`
-      );
+      const m = result.rows[0];
+
+      // Định nghĩa hạng & quyền lợi
+      const TIER_INFO = {
+        bronze: {
+          icon:    "🥉",
+          label:   "Đồng",
+          nextTier: "Bạc",
+          pointsNeeded: 500,
+          benefits: ["Ưu tiên mua vé sớm hơn 30 phút", "Giảm 2% phí dịch vụ"],
+        },
+        silver: {
+          icon:    "🥈",
+          label:   "Bạc",
+          nextTier: "Vàng",
+          pointsNeeded: 2000,
+          benefits: ["Ưu tiên mua vé sớm 1 giờ", "Giảm 5% phí dịch vụ", "Hoàn tiền 1% mỗi đơn"],
+        },
+        gold: {
+          icon:    "🥇",
+          label:   "Vàng",
+          nextTier: "Bạch Kim",
+          pointsNeeded: 5000,
+          benefits: ["Ưu tiên mua vé sớm 3 giờ", "Giảm 8% phí dịch vụ", "Hoàn tiền 2% mỗi đơn", "Hỗ trợ ưu tiên"],
+        },
+        platinum: {
+          icon:    "💎",
+          label:   "Bạch Kim",
+          nextTier: null,
+          pointsNeeded: null,
+          benefits: ["Ưu tiên mua vé sớm 6 giờ", "Giảm 12% phí dịch vụ", "Hoàn tiền 3% mỗi đơn", "Hỗ trợ VIP 24/7", "Tặng vé sự kiện đặc biệt"],
+        },
+      };
+
+      const tierKey  = m.tier?.toLowerCase() ?? "bronze";
+      const tierData = TIER_INFO[tierKey] ?? TIER_INFO.bronze;
+      const joinedAt = new Date(m.joined_at).toLocaleDateString("vi-VN");
+
+      const progressLine = tierData.pointsNeeded
+        ? `📈 Cần thêm **${Math.max(0, tierData.pointsNeeded - m.points)} điểm** để lên hạng **${tierData.nextTier}**`
+        : `🏆 Bạn đang ở hạng cao nhất!`;
+
+      const benefitLines = tierData.benefits.map((b) => `  ✔ ${b}`).join("\n");
+
+      return JSON.stringify({
+        success: true,
+        membership: {
+          tier:         tierData.label,
+          icon:         tierData.icon,
+          points:       m.points,
+          joinedAt,
+          nextTier:     tierData.nextTier,
+          pointsNeeded: tierData.pointsNeeded,
+          benefits:     tierData.benefits,
+        },
+        formatted:
+          `${tierData.icon} **Thành viên ${tierData.label}** — ${m.full_name}\n` +
+          `   🎯 Điểm tích lũy: **${m.points} điểm**\n` +
+          `   📅 Tham gia từ: ${joinedAt}\n` +
+          `   ${progressLine}\n\n` +
+          `**Quyền lợi của bạn:**\n${benefitLines}`,
+      });
     } catch (err) {
-      console.error("Get account info error:", err.message);
-      return "❌ Lỗi khi truy vấn thông tin tài khoản.";
+      console.error("Get membership error:", err.message);
+      return JSON.stringify({ success: false, message: "Lỗi khi truy vấn thông tin thành viên." });
     }
   },
   {
-    name: "get_account_info",
+    name: "get_membership",
     description:
-      "Lấy thông tin tài khoản người dùng đã đăng nhập: hạng thành viên, điểm tích lũy, trạng thái và liên hệ.",
+      "Xem hạng thành viên, điểm tích lũy và quyền lợi của user đã đăng nhập. " +
+      "Dùng khi user hỏi: 'hạng thành viên của tôi', 'tôi có bao nhiêu điểm', " +
+      "'quyền lợi thành viên', 'tôi đang ở hạng gì', 'còn bao nhiêu điểm lên hạng', " +
+      "'membership của tôi', 'tài khoản của tôi'. " +
+      "CHỈ dùng khi user đã đăng nhập (có userId).",
     schema: z.object({
       userId: z.number().describe("ID người dùng từ AUTH context"),
     }),
@@ -669,10 +800,9 @@ Hôm nay: **${today}**
 | **ticket_check** | "còn vé không", "giá vé", "vé VIP", "vé GA" |
 | **artist_info** | hỏi về nghệ sĩ, ca sĩ, ban nhạc |
 | **recommend_guest** | "gợi ý sự kiện" + [AUTH:guest], "nên xem gì", "sự kiện hot", "sự kiện nổi bật" |
-| **personalized** | "gợi ý sự kiện", "gợi ý cho mình", "theo sở thích", "phù hợp với tôi" + [AUTH:userId=X] |
+| **personalized** | "gợi ý cho mình", "theo sở thích", "phù hợp với tôi" + [AUTH:userId=X] |
 | **purchase** | "mua vé", "đặt vé", "thanh toán" |
 | **history** | "vé của tôi", "lịch sử mua", "đã mua" |
-| **account** | "tài khoản", "hạng thành viên", "điểm tích lũy", "hạng của tôi" |
 | **out_of_scope** | không liên quan âm nhạc/vé |
 
 ### 📅 BƯỚC 2 — PARSE NGÀY TỪ NGÔN NGỮ TỰ NHIÊN
@@ -702,13 +832,12 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 | event_detail | rag_search → get_events | |
 | ticket_check | check_tickets | |
 | artist_info | rag_search → web_search | |
-| personalized | get_personalized_events | Chỉ khi đã đăng nhập, trả tối đa 5 gợi ý |
-| history | get_orders | Chỉ khi đã đăng nhập |
-| account | get_account_info | Chỉ khi đã đăng nhập |
+| personalized | get_personalized_events | Chỉ khi đã đăng nhập |
+| history | get_orders    | Chỉ khi đã đăng nhập  |
 
 ### 💬 BƯỚC 5 — VIẾT CÂU TRẢ LỜI
 - **Xưng**: "mình" | **Gọi user**: "bạn"
-- **Độ dài**: 3–6 dòng, KHÔNG liệt kê quá 5 items
+- **Độ dài**: 3–6 dòng, KHÔNG liệt kê quá 4 items
 - **Kết thúc**: gợi ý hành động tiếp theo nếu phù hợp
 - **KHÔNG bịa**: nếu không có thông tin → nói thẳng
 - Khi hiển thị thời gian theo ngày cụ thể → luôn kèm **giờ bắt đầu**
@@ -717,53 +846,70 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 ## QUY TẮC ĐẶC BIỆT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-### 🎫 Lịch sử mua vé
-Khi user hỏi "vé của tôi", "lịch sử mua", "đơn hàng của tôi":
-→ Gọi get_orders(userId=X, limit=5) nếu đã đăng nhập
-→ Nếu là guest, mời đăng nhập để xem đơn hàng
+### 🎯 Gợi ý sự kiện — PHÂN BIỆT THEO AUTH
+**[AUTH:guest]** hỏi "gợi ý", "nên xem gì", "sự kiện hot", "sự kiện nổi bật":
+→ Gọi: get_events(filter={ hot: true, active: true }, limit: 10)
+→ Hiển thị tối đa 6 sự kiện hot nhất
+→ Cuối câu: "Đăng nhập để nhận gợi ý sự kiện phù hợp hơn với sở thích của bạn nhé! 🎵"
 
-### 🎯 Gợi ý sự kiện cho user vãng lai
-Khi [AUTH:guest] hỏi "gợi ý", "nên xem gì", "sự kiện hot":
-→ Gọi: get_events(filter={ hot: true, active: true }, limit: 5)
-→ Cuối câu: "Đăng nhập để nhận gợi ý sự kiện phù hợp hơn với bạn nhé!"
+**[AUTH:userId=X]** hỏi "gợi ý cho mình", "theo sở thích", "đề xuất cho tôi":
+→ Gọi: get_personalized_events(userId: X)
+→ Hiển thị đầy đủ danh sách (tối đa 8), phân biệt sự kiện theo sở thích vs bổ sung hot
+→ KHÔNG gợi ý đăng nhập vì đã đăng nhập rồi
 
-### 🎯 Gợi ý sự kiện cho user đã đăng nhập
-Khi [AUTH:userId=X] hỏi "gợi ý sự kiện", "nên xem gì", "gợi ý cho mình":
-→ Gọi: get_personalized_events(userId=X, limit=5)
-→ Trả tối đa 5 sự kiện từ tool
+### 🛒 Muốn mua / đặt vé — HƯỚNG DẪN CHI TIẾT
+**[AUTH:guest]**:
+→ "[LOGIN_REQUIRED] Bạn cần đăng nhập để đặt vé nhé! Bạn có thể đăng nhập tại góc trên bên phải màn hình."
+→ Sau đó hỏi: "Mình có thể giúp gì thêm cho bạn không?"
 
-### 🛒 Muốn mua / đặt vé
-- [AUTH:guest] → hướng dẫn chi tiết theo thứ tự:
-  1. Đăng nhập tài khoản
-  2. Chọn sự kiện muốn mua
-  3. Chọn khu vực vé và số lượng
-  4. Kiểm tra đơn hàng rồi thanh toán
-  5. Kết lại bằng: "Bạn cần mình giúp gì thêm không?"
-- [AUTH:userId=X] → hướng dẫn chi tiết theo thứ tự:
-  1. Vào trang sự kiện muốn mua
-  2. Chọn khu vực vé và số lượng
-  3. Kiểm tra giá và thông tin đơn hàng
-  4. Thanh toán để hoàn tất
-  5. Kết lại bằng: "Bạn cần mình giúp gì thêm không?"
+**[AUTH:userId=X]** nói "tôi muốn mua vé", "làm sao mua vé", "đặt vé như thế nào":
+→ Bước 1: Gọi check_tickets xác nhận còn vé (nếu đã biết tên sự kiện)
+→ Bước 2: Hướng dẫn chi tiết:
+   "Để đặt vé, bạn làm theo các bước sau nhé:
+   1️⃣ Vào trang sự kiện → chọn **[Mua vé]**
+   2️⃣ Chọn khu vực (zone) và số lượng vé
+   3️⃣ Nhấn **[Thêm vào giỏ]** → kiểm tra lại đơn hàng
+   4️⃣ Chọn phương thức thanh toán → nhấn **[Thanh toán]**
+   5️⃣ Vé sẽ được gửi về email và lưu tại mục **Vé của tôi**"
+→ Bước 3: Kết thúc bằng: "Bạn cần mình hỗ trợ thêm gì không? 😊"
 
-### 👤 Tài khoản / hạng thành viên
-- [AUTH:guest] → mời đăng nhập để xem hạng thành viên và điểm
-- [AUTH:userId=X] → gọi get_account_info(userId=X)
+### 📋 Hỏi đơn hàng / lịch sử
+**[AUTH:guest]** → "[LOGIN_REQUIRED] Bạn cần đăng nhập để xem đơn hàng nhé!"
+**[AUTH:userId=X]** → Gọi get_orders với filter phù hợp:
+- "đơn chờ thanh toán" → status: "pending"
+- "đơn đã huỷ" → status: "cancelled"
+- "đơn #123" → paymentId: 123
+- "đơn hoàn tiền" → status: "refunded"
+- Không filter cụ thể → lấy 5 đơn gần nhất
 
-### 🧾 Đơn hàng
-- Nếu user hỏi lịch sử mua, đơn hàng, đơn chờ thanh toán, đơn đã huỷ, đơn hoàn tiền:
-  → Gọi get_orders với trạng thái phù hợp nếu user nói rõ
-- Nếu user hỏi chung chung:
-  → Gọi get_orders(userId=X, limit=5)
-- Mapping gợi ý:
-  pending = chờ thanh toán
-  success = đã thanh toán / thành công
-  cancelled = đã huỷ / hủy
-  refunded = hoàn tiền
-  failed = thất bại
+### 🏅 Hỏi hạng thành viên / điểm
+**[AUTH:guest]** → "Bạn cần đăng nhập để xem thông tin thành viên nhé! Đăng nhập để tích điểm và nhận quyền lợi hấp dẫn 🎁"
+**[AUTH:userId=X]** → Gọi get_membership(userId: X) → hiển thị formatted từ kết quả tool
 
 ### 🕹️ Ngoài phạm vi
-→ "Mình chỉ hỗ trợ về sự kiện và vé âm nhạc thôi bạn ơi!"
+→ "Mình chỉ hỗ trợ về sự kiện, vé và tài khoản thành viên thôi bạn ơi! Bạn cần hỏi gì về âm nhạc không?"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## VÍ DỤ XỬ LÝ ĐÚNG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ [AUTH:guest] "gợi ý sự kiện cho tôi"
+→ get_events(filter={ hot:true, active:true }, limit:10) → hiển thị 6 hot nhất → gợi ý đăng nhập
+
+✅ [AUTH:userId=5] "gợi ý sự kiện cho tôi"
+→ get_personalized_events(userId:5) → hiển thị đầy đủ theo sở thích
+
+✅ [AUTH:userId=5] "tôi muốn mua vé concert Sơn Tùng"
+→ check_tickets(eventName:"Sơn Tùng") → hướng dẫn 5 bước → hỏi cần giúp gì thêm
+
+✅ [AUTH:userId=5] "hạng thành viên của tôi"
+→ get_membership(userId:5) → hiển thị hạng, điểm, quyền lợi
+
+✅ [AUTH:userId=5] "đơn chờ thanh toán của tôi"
+→ get_orders(userId:5, status:"pending")
+
+✅ [AUTH:userId=5] "xem đơn #42"
+→ get_orders(userId:5, paymentId:42)
 `;
 }
 
@@ -795,7 +941,7 @@ export async function getAgent() {
       webSearchTool,
       getPersonalizedEventsTool,
       getOrdersTool,
-      getAccountInfoTool,
+      getMembershipTool,
     ],
     checkpointSaver: memory,
     messageModifier: (messages) => {
