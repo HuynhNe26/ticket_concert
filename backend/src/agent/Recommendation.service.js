@@ -83,6 +83,7 @@ export async function getHotEvents(limit = 10) {
   );
   return rows;
 }
+
 async function getUserContext(userId) {
   const [purchaseRes, userRes] = await Promise.all([
     pool.query(
@@ -115,15 +116,17 @@ function buildUserProfileText(userContext) {
   );
 
   const favoriteKeywords = favorite.map((f) => f?.search).filter(Boolean);
+
   for (const kw of favoriteKeywords) {
-    parts.push(kw, kw, kw);
+    parts.push(kw, kw, kw, kw);
   }
 
   const purchasedCategories = [
     ...new Set(purchasedEvents.map((e) => e.category_name).filter(Boolean)),
   ];
+
   for (const cat of purchasedCategories) {
-    parts.push(cat, cat);
+    parts.push(cat);
   }
 
   const purchasedArtists = [
@@ -136,8 +139,9 @@ function buildUserProfileText(userContext) {
       })
     ),
   ];
+
   for (const artist of purchasedArtists) {
-    parts.push(artist, artist);
+    parts.push(artist);
   }
 
   const purchasedNames = purchasedEvents.map((e) => e.event_name).filter(Boolean);
@@ -151,9 +155,14 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
   const { purchasedEvents, favorite } = userContext;
 
   const queries = new Set();
-  
+
+  let favoritesQuery = "";
+
   const favKws = favorite.map((f) => f?.search).filter(Boolean).join(", ");
-  if (favKws) queries.add(favKws);
+  if (favKws) {
+    queries.add(favKws);
+    favoritesQuery = favKws; 
+  }
 
   const cats = [...new Set(purchasedEvents.map((e) => e.category_name).filter(Boolean))];
   if (cats.length) queries.add(cats.join(", "));
@@ -182,7 +191,10 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
   await Promise.all(
     [...queries].map(async (q) => {
       try {
-        const results = await vectorStore.similaritySearchWithScore(q, topK);
+        const isFromFavorite = q === favoritesQuery;
+        const k = isFromFavorite ? topK * 2 : topK;
+
+        const results = await vectorStore.similaritySearchWithScore(q, k);
         for (const [doc, score] of results) {
           if (score < THRESHOLD) continue;
 
@@ -195,9 +207,11 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
 
           if (!eventId) continue;
 
+          const weightedScore = isFromFavorite ? score * 2 : score;
+
           const prev = scoreAccum.get(eventId) ?? { totalScore: 0, hitCount: 0 };
           scoreAccum.set(eventId, {
-            totalScore: prev.totalScore + score,
+            totalScore: prev.totalScore + weightedScore,
             hitCount:   prev.hitCount + 1,
           });
         }
@@ -220,6 +234,10 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
 
   const favoriteEventIds = new Set(favorite.map((f) => f?.event_id).filter(Boolean));
 
+  const favoriteKeywords = new Set(
+    favorite.map((f) => f?.search?.toLowerCase()).filter(Boolean)
+  );
+
   const purchasedCategoryIds = new Set(
     purchasedEvents.map((e) => e.category_id).filter(Boolean)
   );
@@ -233,7 +251,7 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
     })
   );
 
-  const W = { semantic: 0.25, favorite: 0.20, category: 0.25, artist: 0.20 };
+  const W = { semantic: 0.15, favorite: 0.45, category: 0.10, artist: 0.10 };
 
   return candidates
     .filter((ev) => !purchasedIds.has(ev.event_id))
@@ -247,15 +265,36 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
         : [];
       const artistMatch = evArtists.some((a) => purchasedArtistNames.has(a)) ? 1 : 0;
 
-      const totalScore =
-        W.semantic  * semanticScore +
-        W.favorite  * isFavorite    +
-        W.category  * categoryMatch +
+      const evNameLower     = ev.event_name?.toLowerCase() || "";
+      const evCategoryLower = ev.category_name?.toLowerCase() || "";
+      const favoriteKeywordMatch = [...favoriteKeywords].some(
+        (kw) => evNameLower.includes(kw) || evCategoryLower.includes(kw) ||
+                evArtists.some((a) => a.includes(kw))
+      ) ? 1 : 0;
+
+      const isFavoriteSignal = Math.max(isFavorite, favoriteKeywordMatch);
+
+      let totalScore =
+        W.semantic  * semanticScore     +
+        W.favorite  * isFavoriteSignal  +
+        W.category  * categoryMatch     +
         W.artist    * artistMatch;
+
+      const overlapBonus = isFavoriteSignal && (categoryMatch || artistMatch) ? 0.15 : 0;
+      totalScore += overlapBonus;
 
       return {
         ...ev,
-        _scores: { semanticScore, isFavorite, categoryMatch, artistMatch, totalScore },
+        _scores: {
+          semanticScore,
+          isFavorite,
+          favoriteKeywordMatch,
+          isFavoriteSignal,
+          categoryMatch,
+          artistMatch,
+          overlapBonus,
+          totalScore,
+        },
       };
     })
     .sort((a, b) => b._scores.totalScore - a._scores.totalScore);
@@ -270,17 +309,28 @@ async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
 
   const eventList = topCandidates
     .map((ev) => {
-      const { semanticScore, isFavorite, categoryMatch, artistMatch, totalScore } =
-        ev._scores;
+      const {
+        semanticScore,
+        isFavorite,
+        favoriteKeywordMatch,
+        isFavoriteSignal,
+        categoryMatch,
+        artistMatch,
+        overlapBonus,
+        totalScore,
+      } = ev._scores;
 
-      const favLabel  = isFavorite    ? " ⭐[YÊU THÍCH]"    : "";
-      const catLabel  = categoryMatch ? " 🎵[CÙNG THỂ LOẠI]" : "";
-      const artLabel  = artistMatch   ? " 🎤[NGHỆ SĨ YÊU THÍCH]" : "";
-      const semLabel  = semanticScore > 0.5 ? " 🔥[LIÊN QUAN CAO]" : "";
-      const scoreStr  = (totalScore * 100).toFixed(0);
+      const favLabel     = isFavorite         ? " ⭐[YÊU THÍCH]"         : "";
+      const favKwLabel   = !isFavorite && favoriteKeywordMatch
+                                              ? " ⭐[KHỚP SỞ THÍCH]"     : "";
+      const catLabel     = categoryMatch       ? " 🎵[CÙNG THỂ LOẠI]"    : "";
+      const artLabel     = artistMatch         ? " 🎤[NGHỆ SĨ YÊU THÍCH]": "";
+      const semLabel     = semanticScore > 0.5 ? " 🔥[LIÊN QUAN CAO]"    : "";
+      const overlapLabel = overlapBonus > 0    ? " 💎[TRÙNG SỞ THÍCH]"   : "";
+      const scoreStr     = (totalScore * 100).toFixed(0);
 
       return (
-        `[ID:${ev.event_id}][Score:${scoreStr}%]${favLabel}${catLabel}${artLabel}${semLabel}\n` +
+        `[ID:${ev.event_id}][Score:${scoreStr}%]${favLabel}${favKwLabel}${catLabel}${artLabel}${semLabel}${overlapLabel}\n` +
         `  Tên: ${ev.event_name}\n` +
         `  Thể loại: ${ev.category_name} | ` +
         `Ngày: ${new Date(ev.event_start).toLocaleDateString("vi-VN")} | ` +
@@ -303,12 +353,18 @@ async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
     `Lịch sử mua vé gần đây:\n${historyText}\n\n` +
 
     `## DANH SÁCH ỨNG VIÊN (đã pre-score bằng embedding + heuristic)\n` +
-    `Giải thích nhãn: ⭐ đã lưu yêu thích | 🎵 cùng thể loại đã mua | 🎤 nghệ sĩ yêu thích | 🔥 liên quan ngữ nghĩa cao\n\n` +
+    `Giải thích nhãn:\n` +
+    `  ⭐ đã lưu yêu thích trực tiếp\n` +
+    `  ⭐ khớp từ khóa sở thích\n` +
+    `  💎 vừa khớp sở thích VÀ trùng lịch sử mua (ưu tiên cao nhất)\n` +
+    `  🎵 cùng thể loại đã mua\n` +
+    `  🎤 nghệ sĩ yêu thích\n` +
+    `  🔥 liên quan ngữ nghĩa cao\n\n` +
     `${eventList}\n\n` +
 
     `## YÊU CẦU\n` +
     `Dựa trên hồ sơ người dùng và điểm sẵn có, chọn đúng ${k} sự kiện phù hợp nhất.\n` +
-    `Ưu tiên theo thứ tự: ⭐ yêu thích > 🔥 liên quan > 🎤 nghệ sĩ > 🎵 thể loại.\n` +
+    `Ưu tiên theo thứ tự: 💎 trùng sở thích > ⭐ yêu thích/khớp sở thích > 🔥 liên quan > 🎤 nghệ sĩ > 🎵 thể loại.\n` +
     `Đảm bảo đa dạng thể loại nếu có thể.\n` +
     `CHỈ trả về dãy ID cách nhau bởi dấu phẩy, không giải thích thêm.\n` +
     `Ví dụ: 3,7,1,5,2`;
@@ -320,14 +376,13 @@ async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
     .split(",")
     .map((s) => parseInt(s.trim()))
     .filter((id) => !isNaN(id))
-    .filter((id, i, arr) => arr.indexOf(id) === i) // dedup
+    .filter((id, i, arr) => arr.indexOf(id) === i) 
     .slice(0, k);
 
   return selectedIds;
 }
 
 function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
-  // Lookup map: event_id → scored event object
   const idToEvent = Object.fromEntries(
     rankedCandidates.map((e) => [e.event_id, e])
   );
@@ -349,9 +404,11 @@ function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
 }
 
 export async function getHybridRecommendations(userId = null, limit = 20, topK = 5) {
+  const safeLimit = Math.min(limit || 5, 5);
+
   if (!userId) {
-    const events = await getGuestEvents(limit);
-    return { type: "guest", events };
+    const events = await getHotEvents(safeLimit);
+    return { type: "hot", events };
   }
 
   const [candidates, userContext] = await Promise.all([
@@ -367,7 +424,7 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
   const hasContext = purchasedEvents.length > 0 || favorite.length > 0;
 
   if (!hasContext) {
-    const events = await getHotEvents(limit);
+    const events = await getHotEvents(safeLimit);
     return { type: "hot", events };
   }
 
@@ -380,15 +437,19 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
     const rankedCandidates = scoreAndRankCandidates(candidates, semanticScoreMap, userContext);
 
     if (!rankedCandidates.length) {
-      const events = await getHotEvents(limit);
+      const events = await getHotEvents(safeLimit);
       return { type: "hot", events };
     }
 
-    const selectedIds = await selectTopKWithAI(rankedCandidates, userContext, topK);
+    const selectedIds = await selectTopKWithAI(
+      rankedCandidates,
+      userContext,
+      Math.min(topK || 5, safeLimit)
+    );
 
     if (!selectedIds.length) {
       console.warn("[Recommendation] AI returned no selections, falling back to hot.");
-      const events = await getHotEvents(limit);
+      const events = await getHotEvents(safeLimit);
       return { type: "hot", events };
     }
 
@@ -396,7 +457,7 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
 
     if (!events.length) {
       console.warn("[Recommendation] All AI-selected IDs were invalid, falling back to hot.");
-      const hotEvents = await getHotEvents(limit);
+      const hotEvents = await getHotEvents(safeLimit);
       return { type: "hot", events: hotEvents };
     }
 
@@ -404,7 +465,7 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
 
   } catch (err) {
     console.error("[Recommendation] Pipeline error:", err.message);
-    const events = await getHotEvents(limit);
+    const events = await getHotEvents(safeLimit);
     return { type: "hot", events };
   }
 }

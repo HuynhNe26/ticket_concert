@@ -5,6 +5,25 @@ import "./event.css";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
+// ─── Helper: lưu event_id vào localStorage (tối đa 10) ───────────────────────
+function saveRecentEvent(eventId) {
+    const KEY = "recent_event_ids";
+    try {
+        const raw = localStorage.getItem(KEY);
+        const ids = raw ? JSON.parse(raw) : [];
+
+        // Xoá nếu đã tồn tại (để đưa lên đầu)
+        const filtered = ids.filter((id) => id !== eventId);
+
+        // Thêm vào đầu, giới hạn 10
+        const updated = [eventId, ...filtered].slice(0, 10);
+
+        localStorage.setItem(KEY, JSON.stringify(updated));
+    } catch {
+        // Bỏ qua lỗi localStorage (private mode, storage full…)
+    }
+}
+
 export default function EventDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -29,6 +48,8 @@ export default function EventDetail() {
                 
                 if (dataEvent.success) {
                     setEvent(dataEvent.data);
+                    // ✅ Lưu event_id vào localStorage khi xem chi tiết
+                    saveRecentEvent(id);
                 }
                 
                 if (dataZones.success) {

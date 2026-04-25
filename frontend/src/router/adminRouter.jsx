@@ -6,7 +6,6 @@ import UserManagement from "../admin/pages/user/manage_user";
 import AdminProfile from "../admin/pages/admin/adminProfile/adminProfile";
 import ManageAdmin from "../admin/pages/admin/manageAdmin/manageAdmin";
 import AddAdmin from "../admin/pages/admin/addAdmin/addAdmin";
-import AdminDetail from "../admin/pages/admin/adminDetail/adminDetail";
 import ManageEvent from "../admin/pages/layout_event/event/event";
 import AddEvent from "../admin/pages/layout_event/add_event/add_event";
 import EventDetail from "../admin/pages/layout_event/event_detail/event_detail";
@@ -32,7 +31,6 @@ export function AdminRoutes() {
         <Route index element={<HomeAdmin />} />
         
         <Route path="manage_admin" element={<ManageAdmin />} />
-        <Route path="manage_admin/:id" element={<AdminDetail />} />
         <Route path="add" element={<AddAdmin />} />
 
         <Route path="events" element={<ManageEvent />} />
