@@ -5,7 +5,6 @@
   --tb-green-dark: #17a348;
   --tb-green-light: #25d066;
   --tb-white: #ffffff;
-
   --tb-text-secondary: rgba(255,255,255,0.85);
   --tb-text-muted: rgba(255,255,255,0.65);
   --tb-surface: rgba(255,255,255,0.12);
@@ -19,7 +18,6 @@
   --tb-header-h: 60px;
   --tb-transition: 0.18s ease;
 }
-
 
 /* ── Header shell ── */
 .tb-header {
@@ -59,12 +57,13 @@
   white-space: nowrap;
 }
 
-/* ── Desktop Search ── */
+/* ── Desktop Search wrapper (relative for dropdown) ── */
 .tb-search-wrapper {
   flex: 1;
   width: 400px;
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .tb-search-box {
@@ -76,11 +75,12 @@
   padding: 0 6px 0 14px;
   height: 40px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  transition: box-shadow var(--tb-transition);
+  transition: box-shadow var(--tb-transition), border-radius var(--tb-transition);
 }
 
-.tb-search-box:focus-within {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+.tb-search-box:focus-within,
+.tb-search-box.focused {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
 
 .tb-search-icon {
@@ -106,6 +106,32 @@
   color: #bbb;
 }
 
+/* ── Clear button inside search box ── */
+.tb-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #aaa;
+  border-radius: 50%;
+  transition: color var(--tb-transition), background var(--tb-transition);
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.tb-clear-btn:hover {
+  color: #555;
+  background: #f0f0f0;
+}
+
+.tb-clear-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
 .tb-search-btn {
   flex-shrink: 0;
   background: var(--tb-green);
@@ -128,6 +154,142 @@
 
 .tb-search-btn:active {
   transform: scale(0.96);
+}
+
+/* ── Search History Dropdown ── */
+.tb-history-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.07);
+  overflow: hidden;
+  z-index: 999;
+  animation: tbDropIn 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+@keyframes tbDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tb-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.tb-history-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: var(--tb-font);
+}
+
+.tb-history-title svg {
+  width: 14px;
+  height: 14px;
+  color: #aaa;
+}
+
+.tb-history-clear-all {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--tb-font);
+  font-size: 12px;
+  font-weight: 600;
+  color: #3d8dbc;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background var(--tb-transition), color var(--tb-transition);
+}
+
+.tb-history-clear-all:hover {
+  background: #eef6ff;
+  color: #2a6d9e;
+}
+
+.tb-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0 8px;
+}
+
+.tb-history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.tb-history-item:hover {
+  background: #f7f9fc;
+}
+
+.tb-history-item:hover .tb-history-delete {
+  opacity: 1;
+}
+
+.tb-history-icon {
+  width: 16px;
+  height: 16px;
+  color: #bbb;
+  flex-shrink: 0;
+}
+
+.tb-history-text {
+  flex: 1;
+  font-family: var(--tb-font);
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.tb-history-delete {
+  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  color: #bbb;
+  transition: opacity 0.15s, color var(--tb-transition), background var(--tb-transition);
+  flex-shrink: 0;
+}
+
+.tb-history-delete:hover {
+  background: #f0f0f0;
+  color: #e53935;
+}
+
+.tb-history-delete svg {
+  width: 13px;
+  height: 13px;
 }
 
 /* ── Right nav ── */
@@ -166,28 +328,6 @@
 /* Mobile search btn — hidden on desktop */
 .tb-mobile-search-btn {
   display: none;
-}
-
-/* ── Create event button ── */
-.tb-create-btn {
-  display: flex;
-  align-items: center;
-  border: 1.5px solid rgba(255,255,255,0.7);
-  border-radius: var(--tb-radius-full);
-  padding: 0 14px;
-  height: 36px;
-  color: var(--tb-white);
-  font-family: var(--tb-font);
-  font-size: 15px;
-  font-weight: 500;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: background var(--tb-transition), border-color var(--tb-transition);
-}
-
-.tb-create-btn:hover {
-  background: var(--tb-surface-hover);
-  border-color: var(--tb-white);
 }
 
 /* ── Nav link (Vé của tôi) ── */
@@ -236,12 +376,6 @@
   justify-content: center;
   flex-shrink: 0;
   border: 2px solid rgba(255,255,255,0.3);
-}
-
-.tb-avatar-guest {
-  background: var(--tb-surface);
-  color: var(--tb-white);
-  border-color: rgba(255,255,255,0.4);
 }
 
 /* ── Chevron icon ── */
@@ -365,11 +499,10 @@
 .tb-mobile-search-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.45);
   z-index: 9998;
   display: flex;
   align-items: flex-start;
-  padding-top: 0;
   animation: tbFadeIn 0.15s ease;
 }
 
@@ -378,20 +511,26 @@
   to   { opacity: 1; }
 }
 
-.tb-mobile-search-bar {
-  display: flex;
-  align-items: center;
+/* Container for bar + mobile history */
+.tb-mobile-search-container {
   width: 100%;
-  background: var(--tb-green);
-  padding: 10px 16px;
-  gap: 10px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  background: transparent;
   animation: tbSlideDown 0.18s ease;
 }
 
 @keyframes tbSlideDown {
   from { transform: translateY(-100%); }
   to   { transform: translateY(0); }
+}
+
+.tb-mobile-search-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: linear-gradient(135deg, #3d8dbc 0%, #00b872 100%);
+  padding: 10px 16px;
+  gap: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 
 .tb-mobile-search-bar .tb-search-icon {
@@ -426,6 +565,22 @@
 
 .tb-mobile-close:hover {
   opacity: 1;
+}
+
+/* Mobile history panel (below the bar) */
+.tb-mobile-history {
+  background: #ffffff;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  overflow: hidden;
+}
+
+.tb-mobile-history .tb-history-header {
+  background: #fafafa;
+}
+
+.tb-mobile-history .tb-history-item:hover {
+  background: #f5f9ff;
 }
 
 /* ── Login modal ── */
@@ -481,60 +636,29 @@
   color: #222;
 }
 
+/* ── Responsive ── */
 @media (max-width: 900px) {
   .tb-search-wrapper {
     max-width: 300px;
   }
-
-  .tb-create-btn {
-    display: none;
-  }
-
-  .tb-nav-label {
-    display: none;
-  }
-
-  .tb-nav-link {
-    padding: 0 6px;
-  }
-
-  .tb-username {
-    display: none;
-  }
-
-  .tb-login-label {
-  }
-
-  .tb-flag-btn .tb-chevron {
-    display: none;
-  }
+  .tb-create-btn { display: none; }
+  .tb-nav-label  { display: none; }
+  .tb-nav-link   { padding: 0 6px; }
+  .tb-username   { display: none; }
 }
 
 @media (max-width: 640px) {
-  :root {
-    --tb-header-h: 56px;
-  }
+  :root { --tb-header-h: 56px; }
 
   .tb-container {
     padding: 0 12px;
     gap: 8px;
   }
 
-  /* Hide desktop search on mobile */
-  .tb-search-wrapper {
-    display: none;
-  }
+  .tb-search-wrapper { display: none; }
+  .tb-mobile-search-btn { display: flex; }
+  .tb-logo-text { font-size: 20px; }
 
-  /* Show mobile search icon */
-  .tb-mobile-search-btn {
-    display: flex;
-  }
-
-  .tb-logo-text {
-    font-size: 20px;
-  }
-
-  /* Compact nav */
   .tb-nav-link {
     gap: 0;
   }
@@ -544,9 +668,7 @@
     height: 20px;
   }
 
-  .tb-create-btn {
-    display: none;
-  }
+  .tb-create-btn { display: none; }
 
   .tb-user-trigger,
   .tb-login-btn {
@@ -554,23 +676,15 @@
     padding: 4px;
   }
 
-  /* Dropdown goes full-width-ish on small screens */
   .tb-user-menu {
     right: -4px;
     min-width: 180px;
   }
 }
 
-/* ── Very small (≤ 380px) ── */
 @media (max-width: 380px) {
-  .tb-logo-text {
-    font-size: 18px;
-  }
-
-  .tb-flag-btn {
-    display: none;
-  }
-
+  .tb-logo-text { font-size: 18px; }
+  .tb-flag-btn  { display: none; }
   .tb-avatar {
     width: 28px;
     height: 28px;
