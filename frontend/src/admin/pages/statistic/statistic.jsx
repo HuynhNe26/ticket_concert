@@ -32,16 +32,23 @@ const FILTERS = [
 ];
 
 export default function StatisticPage() {
-  const [activeTab, setActiveTab] = useState("Thời gian");
   const [reportType, setReportType] = useState("Báo cáo theo ngày");
-  const [startDate, setStartDate] = useState("2026-01-01");
-  const [endDate, setEndDate] = useState("2026-09-01");
+  
+  // Tự động lấy ngày đầu tháng và ngày cuối tháng hiện tại
+  const [startDate, setStartDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 2).toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const now = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return lastDay.toISOString().split('T')[0];
+  });
+
   const [allOrders, setAllOrders] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [summary, setSummary] = useState({
     revenue: 0,
-    capital: 0,
-    returns: 0,
   });
 
   useEffect(() => {
@@ -52,27 +59,10 @@ export default function StatisticPage() {
         if (result.success) setAllOrders(result.data);
       } catch (err) {
         console.error("Lỗi tải dữ liệu:", err);
-        // Demo data khi không có API
-        const demo = generateDemoData();
-        setAllOrders(demo);
       }
     };
     fetchOrders();
   }, []);
-
-  const generateDemoData = () => {
-    const data = [];
-    const start = new Date("2026-01-01");
-    const end = new Date("2026-09-01");
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 3)) {
-      data.push({
-        created_at: d.toISOString(),
-        total_price: Math.floor(Math.random() * 50_000_000) + 5_000_000,
-        payment_status: "Thành công",
-      });
-    }
-    return data;
-  };
 
   useEffect(() => {
     if (!allOrders.length) return;
@@ -101,11 +91,10 @@ export default function StatisticPage() {
         key = `${d.getMonth() + 1}/${d.getFullYear()}`;
       }
 
-      const prev = map.get(key) || { revenue: 0, capital: 0 };
+      const prev = map.get(key) || { revenue: 0 };
       const price = Number(o.total_price || 0);
       map.set(key, {
         revenue: prev.revenue + price,
-        capital: prev.capital + price * 0.6,
       });
     });
 
@@ -129,8 +118,6 @@ export default function StatisticPage() {
     );
     setSummary({
       revenue: totalRevenue,
-      capital: Math.round((totalRevenue * 1869000) / 285961001),
-      returns: 0,
     });
   }, [allOrders, reportType, startDate, endDate]);
 
@@ -142,83 +129,65 @@ export default function StatisticPage() {
   return (
     <div className="statics-wrapper">
       <div className="statics-pageTitle">Báo cáo doanh thu</div>
-      <div className="statics-filterRow">
-        <div className="statics-filterGroup">
-          <label className="statics-label">Loại thời gian</label>
-          <select
-            className="statics-select"
-            value={reportType}
-            onChange={(e) => setReportType(e.target.value)}
-          >
-            {FILTERS.map((f) => (
-              <option key={f}>{f}</option>
-            ))}
-          </select>
+      
+      <div className="statics-headerCombined">
+        <div className="statics-filterRow">
+          <div className="statics-filterGroup">
+            <label className="statics-label">Loại thời gian</label>
+            <select
+              className="statics-select"
+              value={reportType}
+              onChange={(e) => setReportType(e.target.value)}
+            >
+              {FILTERS.map((f) => (
+                <option key={f}>{f}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="statics-filterGroup">
+            <label className="statics-label">Ngày bắt đầu</label>
+            <input
+              type="date"
+              className="statics-input"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+
+          <div className="statics-filterGroup">
+            <label className="statics-label">Ngày kết thúc</label>
+            <input
+              type="date"
+              className="statics-input"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+
+          <button className="statics-searchBtn">Tìm kiếm</button>
         </div>
 
-        <div className="statics-filterGroup">
-          <label className="statics-label">Lọc tất cả</label>
-          <select className="statics-select">
-            <option>Tất cả</option>
-          </select>
-        </div>
-
-        <div className="statics-filterGroup">
-          <label className="statics-label">Ngày bắt đầu</label>
-          <input
-            type="date"
-            className="statics-input"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
+        <div className="statics-summaryRight">
+          <SummaryCard
+            color="#3b82f6"
+            label="Tổng doanh thu"
+            value={summary.revenue}
+            icon="💰"
           />
         </div>
-
-        <div className="statics-filterGroup">
-          <label className="statics-label">Ngày kết thúc</label>
-          <input
-            type="date"
-            className="statics-input"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </div>
-
-        <button className="statics-searchBtn">Tìm kiếm</button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="statics-cardRow">
-        <SummaryCard
-          color="#3b82f6"
-          label="Doanh thu"
-          value={summary.revenue}
-          icon="💰"
-        />
-        <SummaryCard
-          color="#10b981"
-          label="Trả hàng"
-          value={summary.returns}
-          icon="↩️"
-        />
-      </div>
-
-      {/* Chart Section */}
       <div className="statics-chartCard">
-        {/* Sub-tabs */}
         <div className="statics-subTabs">
-          <span className="statics-subTab statics-subTabActive">
-            Tổng quan
-          </span>
+          <span className="statics-subTab statics-subTabActive">Tổng quan</span>
           <span className="statics-subTab">Chi tiết</span>
         </div>
 
-        <div className="statics-chartTitle">DOANH THU VÀ VỐN THEO THỜI GIAN</div>
+        <div className="statics-chartTitle">DOANH THU THEO THỜI GIAN</div>
 
         <div className="statics-legendRow">
-          <span
-            className="statics-legendDot"
-            style={{ background: "#3b82f6" }}
-          />
+          <span className="statics-legendDot" style={{ background: "#3b82f6" }} />
           <span className="statics-legendText">Doanh thu</span>
         </div>
 
@@ -228,33 +197,12 @@ export default function StatisticPage() {
             margin={{ top: 10, right: 20, left: 20, bottom: 5 }}
             barCategoryGap="40%"
           >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              vertical={false}
-              stroke="#e5e7eb"
-            />
-            <XAxis
-              dataKey="name"
-              tick={{ fontSize: 11, fill: "#6b7280" }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              tickFormatter={formatShort}
-              tick={{ fontSize: 11, fill: "#6b7280" }}
-              axisLine={false}
-              tickLine={false}
-            />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
+            <YAxis tickFormatter={formatShort} tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
             <Tooltip
-              formatter={(value, name) => [
-                formatCurrency(value),
-                name === "revenue" ? "Doanh thu" : "Tiền vốn",
-              ]}
-              contentStyle={{
-                fontSize: 12,
-                borderRadius: 6,
-                border: "1px solid #e5e7eb",
-              }}
+              formatter={(value) => [formatCurrency(value), "Doanh thu"]}
+              contentStyle={{ fontSize: 12, borderRadius: 6, border: "1px solid #e5e7eb" }}
             />
             <Bar dataKey="revenue" fill="#3b82f6" radius={[2, 2, 0, 0]} />
           </BarChart>
@@ -267,10 +215,7 @@ export default function StatisticPage() {
 function SummaryCard({ color, label, value, icon }) {
   return (
     <div className="statics-card">
-      <div
-        className="statics-summaryIcon"
-        style={{ background: color }}
-      >
+      <div className="statics-summaryIcon" style={{ background: color }}>
         {icon}
       </div>
       <div className="statics-summaryContent">
