@@ -45,7 +45,7 @@ function getEventStatus(startDate, endDate) {
   return { label: "Đang diễn ra", type: "ongoing" };
 }
 
-// ── Calendar ───────────────────────────────────────────────
+// ── Calendar Component ──────────────────────────────────────
 function MonthCalendar({ year, month, selectedStart, selectedEnd, hoverDate, onDayClick, onDayHover, showPrev, showNext, onPrev, onNext }) {
   const today = new Date();
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
@@ -96,7 +96,7 @@ function MonthCalendar({ year, month, selectedStart, selectedEnd, hoverDate, onD
   );
 }
 
-// ── Main ───────────────────────────────────────────────────
+// ── Main Search Page ────────────────────────────────────────
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -104,7 +104,7 @@ export default function SearchPage() {
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [dbCategories, setDbCategories] = useState([]); // Thể loại từ database
+  const [dbCategories, setDbCategories] = useState([]);
 
   // Date picker state
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -126,7 +126,7 @@ export default function SearchPage() {
   const dateRef = useRef();
   const filterRef = useRef();
 
-  // 1. Lấy danh sách thể loại từ Database khi load trang
+  // Load danh mục từ database
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -140,7 +140,7 @@ export default function SearchPage() {
     fetchCategories();
   }, []);
 
-  // 2. Click outside dropdown
+  // Xử lý đóng dropdown khi click ra ngoài
   useEffect(() => {
     const handler = (e) => {
       if (dateRef.current && !dateRef.current.contains(e.target)) setShowDatePicker(false);
@@ -157,7 +157,7 @@ export default function SearchPage() {
       if (start) url += `&dateStart=${start}`;
       if (end)   url += `&dateEnd=${end}`;
       if (loc && loc !== "Toàn quốc") url += `&location=${encodeURIComponent(loc)}`;
-      if (g.length) url += `&genres=${encodeURIComponent(g.join(","))}`;
+      if (g.length > 0) url += `&genres=${encodeURIComponent(g.join(","))}`; // Gửi danh sách thể loại cách nhau bởi dấu phẩy
 
       const res = await fetch(url);
       const data = await res.json();
@@ -169,9 +169,10 @@ export default function SearchPage() {
     }
   };
 
+  // Tự động tải lại khi từ khóa hoặc các bộ lọc thay đổi
   useEffect(() => {
-    fetchEvents();
-  }, [queryFromUrl]);
+    fetchEvents(selectedStart, selectedEnd, location, genres);
+  }, [queryFromUrl, location, genres]); 
 
   // ── Handlers ──
   const applyQuickTab = (tab) => {
@@ -215,13 +216,41 @@ export default function SearchPage() {
     }
   };
 
-  const handleApplyDate = () => { setShowDatePicker(false); fetchEvents(selectedStart, selectedEnd); };
-  const handleResetDate = () => { setSelectedStart(""); setSelectedEnd(""); setQuickTab("all"); setShowDatePicker(false); fetchEvents("", ""); };
+  const handleApplyDate = () => { 
+    setShowDatePicker(false); 
+    fetchEvents(selectedStart, selectedEnd); 
+  };
+  
+  const handleResetDate = () => { 
+    setSelectedStart(""); 
+    setSelectedEnd(""); 
+    setQuickTab("all"); 
+    setShowDatePicker(false); 
+    fetchEvents("", ""); 
+  };
 
-  const openFilter = () => { setTempLocation(location); setTempGenres([...genres]); setShowFilter(true); setShowDatePicker(false); };
-  const handleApplyFilter = () => { setLocation(tempLocation); setGenres(tempGenres); setShowFilter(false); fetchEvents(selectedStart, selectedEnd, tempLocation, tempGenres); };
-  const handleResetFilter = () => { setTempLocation("Toàn quốc"); setTempGenres([]); };
-  const toggleGenre = (gName) => { setTempGenres(prev => prev.includes(gName) ? prev.filter(x => x !== gName) : [...prev, gName]); };
+  const openFilter = () => { 
+    setTempLocation(location); 
+    setTempGenres([...genres]); 
+    setShowFilter(true); 
+    setShowDatePicker(false); 
+  };
+
+  const handleApplyFilter = () => { 
+    setLocation(tempLocation); 
+    setGenres(tempGenres); 
+    setShowFilter(false); 
+    // fetchEvents sẽ được gọi tự động nhờ useEffect dependency array
+  };
+
+  const handleResetFilter = () => { 
+    setTempLocation("Toàn quốc"); 
+    setTempGenres([]); 
+  };
+
+  const toggleGenre = (gName) => { 
+    setTempGenres(prev => prev.includes(gName) ? prev.filter(x => x !== gName) : [...prev, gName]); 
+  };
 
   const isDateActive = !!selectedStart;
   const isFilterActive = location !== "Toàn quốc" || genres.length > 0;
@@ -238,7 +267,7 @@ export default function SearchPage() {
   return (
     <div className="sp-wrapper">
       <div className="sp-filter-bar">
-        {/* Date picker pill */}
+        {/* Date Filter Pill */}
         <div className="sp-pill-wrap" ref={dateRef}>
           <button className={`sp-pill ${isDateActive ? "active" : ""}`} onClick={() => { setShowDatePicker(v => !v); setShowFilter(false); }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -265,7 +294,7 @@ export default function SearchPage() {
           )}
         </div>
 
-        {/* Filter pill */}
+        {/* General Filter Pill */}
         <div className="sp-pill-wrap" ref={filterRef}>
           <button className={`sp-pill ${isFilterActive ? "active" : ""}`} onClick={openFilter}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
@@ -305,12 +334,14 @@ export default function SearchPage() {
         </div>
       </div>
 
+      {/* Results Count Label */}
       {queryFromUrl && !loading && (
         <p className="sp-result-label">
           {events.length > 0 ? <><strong>{events.length}</strong> kết quả cho "<strong>{queryFromUrl}</strong>"</> : <>Không tìm thấy kết quả cho "<strong>{queryFromUrl}</strong>"</>}
         </p>
       )}
 
+      {/* Body Grid */}
       <div className="sp-body">
         {loading ? (
           <div className="sp-grid">
