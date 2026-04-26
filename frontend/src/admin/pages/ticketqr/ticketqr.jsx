@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode"
 import "./ticketqr.css";
 
 const API_BASE = process.env.REACT_APP_API_URL || "";
