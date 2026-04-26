@@ -1,5 +1,5 @@
 import express from "express";
-import { TicketQRController, getInfo } from "../../controllers/admins/TicketQR.js";
+import { TicketQRController } from "../../controllers/admins/TicketQR.js";
 import { adminAuth } from "../../middlewares/adminAuth.js";
 
 const router = express.Router();

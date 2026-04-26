@@ -2,9 +2,7 @@ import { pool } from "../../config/database.js";
 
 export const TicketQRController = {
     async scanQR(req, res) {
-
-        // Chỉ level 2 (staff trực tiếp) mới được quét
-        if (req.admin.level !== 1) {
+        if (req.admin.level !== 2) {
             return res.status(403).json({
                 success: false,
                 message: "Chỉ nhân viên trực tiếp mới được thực hiện check-in",
@@ -77,7 +75,7 @@ export const TicketQRController = {
             // 4. Đánh dấu đã dùng + ghi thời gian
             await client.query(
                 `UPDATE payment_detail
-                 SET ticket_status = false, useat = NOW()
+                 SET ticket_status = true, useat = NOW()
                  WHERE payment_detail_id = $1`,
                 [ticket.payment_detail_id]
             );
