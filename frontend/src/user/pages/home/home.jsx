@@ -317,7 +317,6 @@ export default function HomeUser() {
             Dành cho bạn
             {!forYou.loading && <RecommendBadge type={forYou.type} />}
           </h2>
-          <Link to="/search" className="hw-viewmore">Xem thêm ›</Link>
         </div>
         {forYou.loading ? (
           <div className="hw-skeleton-row">
@@ -376,7 +375,6 @@ export default function HomeUser() {
             <button className={`hw-tab ${activeTab === 0 ? "active" : ""}`} onClick={() => setActiveTab(0)}>Cuối tuần này</button>
             <button className={`hw-tab ${activeTab === 1 ? "active" : ""}`} onClick={() => setActiveTab(1)}>Tháng này</button>
           </div>
-          <Link to="/search" className="hw-viewmore">Xem thêm ›</Link>
         </div>
         {tabEvents.length > 0 && (
           <HSlider itemsVisible={4} className="event-slider">

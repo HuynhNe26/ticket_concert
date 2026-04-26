@@ -45,7 +45,7 @@ export const EventSocket = (io) => {
             }
         });
 
-        socket.on("requestAllEvents", async () => {
+        socket.on("requestAllEvents", async ({ offset = 0, limit = 5 } = {}) => {
             try {
                 const { rows } = await pool.query(`
                     SELECT 
@@ -57,19 +57,24 @@ export const EventSocket = (io) => {
                         SUM(z.zone_quantity) AS totalTickets,
                         SUM(z.sold_quantity) AS ticketsSold,
                         SUM(z.sold_quantity * z.zone_price) AS revenue,
-                        c.category_name
+                        c.category_name,
+                        COUNT(*) OVER() AS total_count   -- tổng số để biết còn hay không
                     FROM events e
                     JOIN zones z ON e.event_id = z.event_id
                     JOIN categories c ON e.category_id = c.category_id
                     GROUP BY e.event_id, c.category_name
                     ORDER BY e.event_start DESC
-                    LIMIT 5
-                `);
+                    LIMIT $1 OFFSET $2
+                `, [limit, offset]);
 
-                io.to("admin_dashboard").emit("allEvents", rows);
+                socket.emit("allEvents", {
+                    events: rows,
+                    offset,
+                    total: rows[0]?.total_count ?? 0,
+                });
 
             } catch (err) {
-                console.error("🔥 Hot events error:", err);
+                console.error("🔥 All events error:", err);
             }
         });
 
