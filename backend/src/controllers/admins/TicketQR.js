@@ -136,7 +136,7 @@ async getInfo(req, res) {
 
         const ticket = rows[0];
 
-        if (!ticket.ticket_status) {
+        if (ticket.ticket_status) {
             return res.status(409).json({
                 success: false,
                 message: "Vé này đã được sử dụng trước đó",
