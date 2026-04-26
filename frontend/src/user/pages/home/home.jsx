@@ -356,7 +356,6 @@ export default function HomeUser() {
         <section className="hw-section">
           <div className="hw-sec-head">
             <h2 className="hw-sec-title">Sự kiện đã mua</h2>
-            <Link to="/orders" className="hw-viewmore">Xem thêm ›</Link>
           </div>
           <HSlider itemsVisible={4} className="event-slider">
             {oldOrders.map((ev) => (
