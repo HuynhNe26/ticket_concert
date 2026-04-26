@@ -171,7 +171,7 @@ export default function TicketQR() {
       const cameraId   = backCamera ? backCamera.id : cameras[0].id;
 
       await html5QrCode.start(
-        cameraId,
+        {facingMode: "environment", deviceId: { exact: "environment" }},
         { fps: 15, qrbox: { width: 220, height: 220 } },
         (qrValue) => handleScanRef.current(qrValue),
         () => {}
