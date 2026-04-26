@@ -18,6 +18,13 @@ function formatVND(n) {
   return Number(n).toLocaleString("vi-VN") + " ₫";
 }
 
+// ─── Trạng thái panel phải ───────────────────────────────────────────────────
+// pending  = vừa quét, chờ staff xác nhận
+// confirmed = đã xác nhận check-in thành công
+// used     = vé đã dùng rồi
+// notfound = không tìm thấy
+// error    = lỗi server
+
 const STATUS_CFG = {
   pending:   { color: "#fbbf24", bg: "rgba(251,191,36,0.08)",   border: "rgba(251,191,36,0.25)",   icon: "?", label: "Chờ xác nhận" },
   confirmed: { color: "#4ade80", bg: "rgba(74,222,128,0.08)",   border: "rgba(74,222,128,0.25)",   icon: "✓", label: "Check-in thành công!" },
@@ -26,8 +33,8 @@ const STATUS_CFG = {
   error:     { color: "#f87171", bg: "rgba(248,113,113,0.08)",  border: "rgba(248,113,113,0.25)",  icon: "!", label: "Lỗi kết nối" },
 };
 
-// ─── Info Panel ───────────────────────────────────────────────────────────────
-function InfoPanel({ scan, onConfirm, onDiscard, confirming }) {
+// ─── Info Panel (phải) ───────────────────────────────────────────────────────
+function InfoPanel({ scan, stats, onConfirm, onDiscard, confirming }) {
   if (!scan) {
     return (
       <div className="tqr-info-panel">
@@ -70,30 +77,40 @@ function InfoPanel({ scan, onConfirm, onDiscard, confirming }) {
 
         {/* Ticket info */}
         {ticket && (
-          <div className="tqr-field-grid">
-            {[
-              ["Sự kiện",  ticket.event_name],
-              ["Mã đơn",   `#${ticket.payment_ref}`],
-              ["Khu vực",  ticket.zone_name || "—"],
-              ["Số lượng", `${ticket.ticket_quantity} vé`],
-            ].map(([label, val]) => (
-              <div key={label}>
-                <div className="tqr-field-label">{label}</div>
-                <div className="tqr-field-value">{val}</div>
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="tqr-field-grid">
+              {[
+                ["Sự kiện",      ticket.event_name],
+                ["Mã đơn",       `#${ticket.payment_ref}`],
+                ["Khu vực",      ticket.zone_name || "—"],
+                ["Số lượng",     `${ticket.ticket_quantity} vé`]
+              ].map(([label, val]) => (
+                <div key={label}>
+                  <div className="tqr-field-label">{label}</div>
+                  <div className="tqr-field-value">{val}</div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Actions — chỉ hiện khi pending */}
         {scan.status === "pending" && (
           <div className="tqr-actions">
-            <button className="tqr-btn-cancel" onClick={onDiscard} disabled={confirming}>
+            <button
+              className="tqr-btn-cancel"
+              onClick={onDiscard}
+              disabled={confirming}
+            >
               Bỏ qua
             </button>
             <button
               className="tqr-btn-confirm"
-              style={{ background: "#4ade80", color: "#0f172a", boxShadow: "0 4px 16px rgba(74,222,128,0.3)" }}
+              style={{
+                background: "#4ade80",
+                color: "#0f172a",
+                boxShadow: "0 4px 16px rgba(74,222,128,0.3)",
+              }}
               onClick={onConfirm}
               disabled={confirming}
             >
@@ -102,15 +119,13 @@ function InfoPanel({ scan, onConfirm, onDiscard, confirming }) {
           </div>
         )}
 
-        {/* Banner kết quả */}
+        {/* Kết quả sau xác nhận */}
         {(scan.status === "confirmed" || scan.status === "used") && (
           <div
             className="tqr-banner"
             style={{ background: `${cfg.color}15`, color: cfg.color, border: `1px solid ${cfg.color}30` }}
           >
-            {scan.status === "confirmed"
-              ? "✓ Đã check-in thành công — có thể quét vé tiếp theo"
-              : "✕ Vé này đã được sử dụng trước đó"}
+            {scan.status === "confirmed" ? "✓ Đã check-in thành công — có thể quét vé tiếp theo" : "✕ Vé này đã được sử dụng trước đó"}
           </div>
         )}
       </div>
@@ -122,8 +137,8 @@ function InfoPanel({ scan, onConfirm, onDiscard, confirming }) {
 export default function TicketQR() {
   const [scanning,    setScanning]    = useState(false);
   const [cameraError, setCameraError] = useState("");
-  const [scan,        setScan]        = useState(null);
-  const [confirming,  setConfirming]  = useState(false);
+  const [scan,        setScan]        = useState(null);   // thông tin vừa quét
+  const [confirming,  setConfirming]  = useState(false);  // đang gọi API confirm
   const [stats,       setStats]       = useState({ total: 0, success: 0, failed: 0 });
 
   const scannerRef    = useRef(null);
@@ -131,7 +146,7 @@ export default function TicketQR() {
   const handleScanRef = useRef(null);
   const token         = localStorage.getItem("authToken");
 
-  // ── Stop camera ───────────────────────────────────────────────────────────
+  // ── Stop camera ──────────────────────────────────────────────────────────
   const stopScanner = useCallback(async () => {
     if (scannerRef.current) {
       try { await scannerRef.current.stop(); } catch {}
@@ -140,7 +155,7 @@ export default function TicketQR() {
     setScanning(false);
   }, []);
 
-  // ── Start camera — dùng facingMode: environment cho camera sau mobile ─────
+  // ── Start camera ─────────────────────────────────────────────────────────
   const startScanner = useCallback(async () => {
     if (scannerRef.current) return;
     setCameraError("");
@@ -148,6 +163,12 @@ export default function TicketQR() {
     try {
       const html5QrCode = new Html5Qrcode("qr-reader");
       scannerRef.current = html5QrCode;
+
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras?.length) throw new Error("Không tìm thấy camera");
+
+      const backCamera = cameras.find(c => /back|rear|environment/i.test(c.label));
+      const cameraId   = backCamera ? backCamera.id : cameras[0].id;
 
       await html5QrCode.start(
         { facingMode: { exact: "environment" } }, // ← camera sau, báo lỗi nếu không có
@@ -157,32 +178,17 @@ export default function TicketQR() {
       );
       setScanning(true);
     } catch {
-      // Fallback: nếu exact "environment" fail (desktop/một số dt) thì thử ideal
-      try {
-        await scannerRef.current?.stop().catch(() => {});
-        const html5QrCode = new Html5Qrcode("qr-reader");
-        scannerRef.current = html5QrCode;
-
-        await html5QrCode.start(
-          { facingMode: "environment" }, // ← ideal, không bắt buộc camera sau
-          { fps: 15, qrbox: { width: 220, height: 220 } },
-          (qrValue) => handleScanRef.current(qrValue),
-          () => {}
-        );
-        setScanning(true);
-      } catch {
-        setCameraError("Không thể truy cập camera. Vui lòng cấp quyền và thử lại.");
-        scannerRef.current = null;
-      }
+      setCameraError("Không thể truy cập camera. Vui lòng cấp quyền và thử lại.");
+      scannerRef.current = null;
     }
   }, []);
 
   useEffect(() => {
-    startScanner();
+    startScanner(); // tự động bật camera khi vào trang
     return () => { stopScanner(); };
   }, []); // eslint-disable-line
 
-  // ── Bước 1: Quét QR → hiện thông tin, chưa check-in ─────────────────────
+  // ── Bước 1: Quét QR → lấy thông tin vé (chưa check-in) ──────────────────
   handleScanRef.current = async (qrValue) => {
     if (processingRef.current) return;
     processingRef.current = true;
@@ -199,8 +205,10 @@ export default function TicketQR() {
       const data = await res.json();
 
       if (res.ok && data.success) {
+        // Vé hợp lệ — hiện thông tin, chờ staff xác nhận
         setScan({ status: "pending", ticket: data.ticket, qr_code: qrValue, message: "Kiểm tra thông tin và xác nhận check-in" });
       } else if (res.status === 409) {
+        // Vé đã dùng — hiện luôn, không cần xác nhận
         setScan({ status: "used", ticket: data.ticket, message: data.message });
         setStats(s => ({ ...s, total: s.total + 1, failed: s.failed + 1 }));
       } else if (res.status === 404) {
@@ -216,7 +224,7 @@ export default function TicketQR() {
     }
   };
 
-  // ── Bước 2: Xác nhận → check-in thật ────────────────────────────────────
+  // ── Bước 2: Staff bấm Xác nhận → gọi API check-in thật ──────────────────
   const handleConfirm = async () => {
     if (!scan?.qr_code) return;
     setConfirming(true);
@@ -247,10 +255,11 @@ export default function TicketQR() {
     }
   };
 
-  // ── Bỏ qua → reset panel, camera tiếp tục ────────────────────────────────
+  // ── Bỏ qua / reset panel phải, camera vẫn chạy ───────────────────────────
   const handleDiscard = () => {
     setScan(null);
     processingRef.current = false;
+    // Restart camera nếu đã stop
     if (!scannerRef.current) startScanner();
   };
 
@@ -266,9 +275,9 @@ export default function TicketQR() {
         </div>
         <div className="tqr-stats">
           {[
-            { label: "Tổng", value: stats.total,   color: "#94a3b8" },
-            { label: "OK",   value: stats.success,  color: "#4ade80" },
-            { label: "Lỗi",  value: stats.failed,   color: "#f87171" },
+            { label: "Tổng",  value: stats.total,   color: "#94a3b8" },
+            { label: "OK",    value: stats.success,  color: "#4ade80" },
+            { label: "Lỗi",   value: stats.failed,   color: "#f87171" },
           ].map(({ label, value, color }) => (
             <div key={label} className="tqr-stat">
               <div className="tqr-stat-value" style={{ color }}>{value}</div>
@@ -278,10 +287,10 @@ export default function TicketQR() {
         </div>
       </div>
 
-      {/* Body */}
+      {/* Body: camera trái — info phải */}
       <div className="tqr-body">
 
-        {/* Trái: camera */}
+        {/* ── Trái: camera ── */}
         <div className="tqr-camera-panel">
           <div className={`tqr-viewport ${scanning ? "scanning" : "idle"}`}>
             <div id="qr-reader" />
@@ -321,9 +330,10 @@ export default function TicketQR() {
           )}
         </div>
 
-        {/* Phải: thông tin vé */}
+        {/* ── Phải: thông tin vé ── */}
         <InfoPanel
           scan={scan}
+          stats={stats}
           onConfirm={handleConfirm}
           onDiscard={handleDiscard}
           confirming={confirming}
