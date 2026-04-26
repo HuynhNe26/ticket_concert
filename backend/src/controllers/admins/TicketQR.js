@@ -3,7 +3,8 @@ import { pool } from "../../config/database.js";
 export const TicketQRController = {
     async scanQR(req, res) {
 
-        if (req.user.level !== 2) {
+        // Chỉ level 2 (staff trực tiếp) mới được quét
+        if (req.admin.level !== 1) {
             return res.status(403).json({
                 success: false,
                 message: "Chỉ nhân viên trực tiếp mới được thực hiện check-in",
@@ -23,34 +24,32 @@ export const TicketQRController = {
         try {
             await client.query("BEGIN");
 
-            // 1. Tìm vé theo ticket_qr, lock row
+            // 1. Tìm vé theo ticket_qr trong bảng payments, lock row
             const { rows } = await client.query(
                 `SELECT
-                    t.ticket_id,
-                    t.ticket_status,
-                    t.ticket_quantity,
-                    t.ticket_qr,
+                    p.payment_id,
+                    p.ticket_qr,
+                    p.payment_ref,
+                    p.method,
+                    p.created_at,
                     pd.payment_detail_id,
+                    pd.ticket_quantity,
+                    pd.ticket_status,
                     pd.price,
                     pd.total_price,
-                    pd.payment_ref,
-                    pd.method,
-                    pd.created_at,
                     e.event_name,
                     e.event_end,
                     e.event_location,
                     e.banner_url,
                     z.zone_name,
-                    u.full_name,
                     u.email
-                FROM tickets t
-                JOIN payment_detail pd ON t.payment_detail_id = pd.payment_detail_id
-                JOIN payments       p  ON pd.payment_id       = p.payment_id
-                JOIN events         e  ON pd.event_id         = e.event_id
-                LEFT JOIN zones     z  ON pd.zone_id          = z.zone_id
-                LEFT JOIN users     u  ON p.user_id           = u.user_id
-                WHERE t.ticket_qr = $1
-                FOR UPDATE`,
+                FROM payments p
+                JOIN payment_detail pd ON pd.payment_id = p.payment_id
+                JOIN events         e  ON pd.event_id   = e.event_id
+                JOIN zones          z  ON pd.zone_id    = z.zone_id
+                JOIN users          u  ON p.user_id     = u.user_id
+                WHERE p.ticket_qr = $1
+                FOR UPDATE OF p, pd`,
                 [qr_code.trim()]
             );
 
@@ -75,17 +74,12 @@ export const TicketQRController = {
                 });
             }
 
-            // 4. Đánh dấu đã dùng
+            // 4. Đánh dấu đã dùng + ghi thời gian
             await client.query(
-                `UPDATE tickets SET ticket_status = false WHERE ticket_id = $1`,
-                [ticket.ticket_id]
-            );
-
-            // 5. Ghi log — admin_id của staff đang quét
-            await client.query(
-                `INSERT INTO check_in_logs (ticket_id, scanned_by, scanned_at)
-                 VALUES ($1, $2, NOW())`,
-                [ticket.ticket_id, req.user.admin_id]
+                `UPDATE payment_detail
+                 SET ticket_status = false, useat = NOW()
+                 WHERE payment_detail_id = $1`,
+                [ticket.payment_detail_id]
             );
 
             await client.query("COMMIT");
@@ -112,19 +106,11 @@ export const TicketQRController = {
 
 function formatTicket(row) {
     return {
-        ticket_id:       row.ticket_id,
         payment_ref:     row.payment_ref,
         event_name:      row.event_name,
-        event_end:       row.event_end,
-        event_location:  row.event_location,
-        banner_url:      row.banner_url,
         zone_name:       row.zone_name,
         ticket_quantity: row.ticket_quantity,
-        price:           row.price,
-        total_price:     row.total_price,
-        method:          row.method,
-        created_at:      row.created_at,
-        full_name:       row.full_name,
+        fullname:        row.fullname,
         email:           row.email,
     };
 }
