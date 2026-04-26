@@ -188,7 +188,7 @@ export default function TicketQR() {
     processingRef.current = true;
 
     try {
-      const res  = await fetch(`${API_BASE}/api/admin/ticket-qr`, {
+      const res  = await fetch(`${API_BASE}/api/admin/ticket-qr/info`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
