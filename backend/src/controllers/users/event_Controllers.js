@@ -2,26 +2,29 @@ import { pool } from "../../config/database.js";
 
 export const EventControllers = {
 
-  async searchEvents(req, res) {
+async searchEvents(req, res) {
     try {
-      const { q, dateStart, dateEnd, location } = req.query; 
+      // Nhận thêm tham số genres từ query
+      const { q, dateStart, dateEnd, location, genres } = req.query; 
 
       let query = `
-        SELECT event_id, event_name, banner_url, event_start, event_end, event_location, event_artist,
-              (SELECT MIN(zone_price) FROM zones WHERE event_id = events.event_id) as min_price
-        FROM events
+        SELECT e.event_id, e.event_name, e.banner_url, e.event_start, e.event_end, e.event_location, e.event_artist,
+              (SELECT MIN(zone_price) FROM zones WHERE event_id = e.event_id) as min_price
+        FROM events e
+        LEFT JOIN categories c ON e.category_id = c.category_id
         WHERE 1=1
       `;
 
       const params = [];
       let paramCount = 1;
 
+      // Logic tìm kiếm theo từ khóa (giữ nguyên của bạn)
       if (q && q.trim() !== "") {
         const words = q.trim().split(/\s+/).filter(Boolean);
         words.forEach(word => {
           query += ` AND (
-            event_name ILIKE $${paramCount}
-            OR jsonb_path_exists(COALESCE(event_artist, '[]'::jsonb), $${paramCount + 1}::jsonpath)
+            e.event_name ILIKE $${paramCount}
+            OR jsonb_path_exists(COALESCE(e.event_artist, '[]'::jsonb), $${paramCount + 1}::jsonpath)
           )`;
           params.push(`%${word}%`);
           params.push(`$[*] ? (@.name like_regex "${word}" flag "i")`);
@@ -29,23 +32,34 @@ export const EventControllers = {
         });
       }
 
+      // Lọc theo ngày
       if (dateStart) {
-        query += ` AND event_start >= $${paramCount}`;
+        query += ` AND e.event_start >= $${paramCount}`;
         params.push(dateStart);
         paramCount++;
       }
       if (dateEnd) {
-        query += ` AND event_start <= $${paramCount}`;
+        query += ` AND e.event_start <= $${paramCount}`;
         params.push(dateEnd + ' 23:59:59'); 
         paramCount++;
       }
 
+      // Lọc theo địa điểm
       if (location && location !== 'Toàn quốc') {
-        query += ` AND event_location ILIKE $${paramCount}`;
+        query += ` AND e.event_location ILIKE $${paramCount}`;
         params.push(`%${location}%`);
         paramCount++;
       }
-      query += ` ORDER BY event_start ASC`;
+
+      // --- PHẦN BỔ SUNG: Lọc theo Thể loại (Genres) ---
+      if (genres && genres.trim() !== "") {
+        const genreList = genres.split(",");
+        query += ` AND c.category_name = ANY($${paramCount})`;
+        params.push(genreList);
+        paramCount++;
+      }
+
+      query += ` ORDER BY e.event_start ASC`;
 
       const { rows } = await pool.query(query, params);
 

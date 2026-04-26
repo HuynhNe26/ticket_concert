@@ -4,6 +4,7 @@ import { useAdminAuth } from "../../context/authAdmin";
 import "./home.css";
 
 const API_BASE = process.env.REACT_APP_API_URL;
+
 /* ===== ICON COMPONENT ===== */
 const Icon = ({ children, size = 24 }) => (
   <svg
@@ -75,7 +76,6 @@ export default function HomeAdmin() {
         const data = await res.json();
         if (data.success) {
           setOrders(data.data);
-          // Tính toán thống kê đơn hàng và doanh thu trong tháng hiện tại
           const thisMonthOrders = data.data.filter(o => {
             const date = new Date(o.order_date || o.created_at);
             return (date.getMonth() + 1) === currentMonth && date.getFullYear() === currentYear;
@@ -103,12 +103,18 @@ export default function HomeAdmin() {
     getOrder();
   }, [currentMonth, currentYear]);
 
-  const totalRevenue = orders.reduce((sum, item) => sum + Number(item.revenue), 0);
-
   const stats = [
-    {
+{
       title: "Người dùng",
-      value: `${users.length} (+${currentMonthUsers} trong tháng)`,
+      value: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {users.length} 
+          <span style={{ color: '#10b981', fontSize: '0.85rem', display: 'flex', alignItems: 'center' }}>
+            <Icon size={14}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></Icon>
+            +{currentMonthUsers}
+          </span>
+        </div>
+      ),
       icon: (
         <Icon>
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -122,7 +128,6 @@ export default function HomeAdmin() {
     },
     {
       title: "Đơn hàng tháng này",
-      // Thay đổi từ Sự kiện đang bán sang Tổng đơn hàng trong tháng
       value: `${currentMonthOrders}`,
       icon: (
         <Icon>
@@ -149,7 +154,6 @@ export default function HomeAdmin() {
     },
     {
       title: "Doanh thu tháng này",
-      // Thay đổi từ Tổng doanh thu sang Doanh thu trong tháng
       value: `${currentMonthRevenue.toLocaleString("vi-VN")} đ`,
       icon: (
         <Icon>
@@ -245,37 +249,13 @@ export default function HomeAdmin() {
         {/* MAIN CONTENT */}
         <div className="main-content">
           
-          {/* LEFT COLUMN */}
+          {/* LEFT COLUMN - Đẩy phần thống kê lên đầu */}
           <div className="content-left">
-            
-            {/* QUICK ACTIONS */}
             <div className="section-card">
               <div className="section-header">
-                <h2 className="section-title">Hành động nhanh</h2>
-              </div>
-              <div className="quick-actions-grid">
-                {quickActions.map((action, index) => (
-                  <button
-                    key={index}
-                    className={`action-card action-${action.color}`}
-                    onClick={() => navigate(action.link)}
-                  >
-                    <div className="action-icon">{action.icon}</div>
-                    <div className="action-content">
-                      <div className="action-title">{action.title}</div>
-                      <div className="action-description">{action.description}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* CHART PLACEHOLDER */}
-              <div className="section-card">
-                <div className="section-header">
-                  <h2 className="section-title">Thống kê lượt bán</h2>
-                  <p className="section-subtitle">Tỉ lệ vé được bán trong           
-                      <select 
+                <h2 className="section-title">Thống kê lượt bán</h2>
+                <p className="section-subtitle">Tỉ lệ vé được bán trong           
+                    <select 
                       value={selectedYear} 
                       onChange={(e) => setSelectedYear(Number(e.target.value))}
                       className="year-filter-select"
@@ -284,107 +264,81 @@ export default function HomeAdmin() {
                         <option key={y} value={y}>Năm {y}</option>
                       ))}
                     </select> 
-                  </p>
-                </div>
-                <div className="month-filter-list">
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setSelectedMonth(m)}
-                      className={`month-filter-btn ${selectedMonth === m ? "active" : ""}`}
-                    >
-                      T.{m}
-                    </button>
-                  ))}
-                </div>
-                {ticketStats.length === 0 ? (
-                  <p className="empty-stats-message">
-                    Không có sự kiện trong tháng {selectedMonth}
-                  </p>
-                ) : (
-                  ticketStats.map((ev, i) => {
-                    const sold = Number(ev.sold_tickets);
-                    const total = Number(ev.total_tickets);
-                    const pct = total > 0 ? Math.min(Math.round((sold / total) * 100), 100) : 0;
-                    const color = pct >= 80 ? "#185FA5" : pct >= 50 ? "#0F6E56" : "#888780";
-                    
-                    return (
-                      <div key={i} className="event-stat-item">
-                        <div className="event-stat-header">
-                          <span className="event-stat-name" title={ev.event_name}>
-                            {ev.event_name}
-                          </span>
-                          <span 
-                            className="event-stat-count" 
-                            style={{ color: color }}
-                          >
-                            {sold.toLocaleString("vi-VN")} / {total.toLocaleString("vi-VN")} vé ({pct}%)
-                          </span>
-                        </div>
-                        
-                        <div className="progress-bar-container">
-                          <div
-                            className="progress-bar-fill"
-                            style={{
-                              width: `${pct}%`,
-                              background: color,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+                </p>
               </div>
-
+              <div className="month-filter-list">
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setSelectedMonth(m)}
+                    className={`month-filter-btn ${selectedMonth === m ? "active" : ""}`}
+                  >
+                    T.{m}
+                  </button>
+                ))}
+              </div>
+              {ticketStats.length === 0 ? (
+                <p className="empty-stats-message">
+                  Không có sự kiện trong tháng {selectedMonth}
+                </p>
+              ) : (
+                ticketStats.map((ev, i) => {
+                  const sold = Number(ev.sold_tickets);
+                  const total = Number(ev.total_tickets);
+                  const pct = total > 0 ? Math.min(Math.round((sold / total) * 100), 100) : 0;
+                  const color = pct >= 80 ? "#185FA5" : pct >= 50 ? "#0F6E56" : "#888780";
+                  
+                  return (
+                    <div key={i} className="event-stat-item">
+                      <div className="event-stat-header">
+                        <span className="event-stat-name" title={ev.event_name}>
+                          {ev.event_name}
+                        </span>
+                        <span 
+                          className="event-stat-count" 
+                          style={{ color: color }}
+                        >
+                          {sold.toLocaleString("vi-VN")} / {total.toLocaleString("vi-VN")} vé ({pct}%)
+                        </span>
+                      </div>
+                      <div className="progress-bar-container">
+                        <div
+                          className="progress-bar-fill"
+                          style={{
+                            width: `${pct}%`,
+                            background: color,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
 
-          {/* RIGHT COLUMN */}
           <div className="content-right">
 
-            {/* SYSTEM STATUS */}
+            {/* HÀNH ĐỘNG NHANH (Chuyển từ cột trái sang cột phải) */}
             <div className="section-card">
               <div className="section-header">
-                <h2 className="section-title">System Status</h2>
-                <p className="section-subtitle">All systems operational</p>
+                <h2 className="section-title">Hành động nhanh</h2>
               </div>
-              <div className="status-list">
-                <div className="status-item">
-                  <div className="status-info">
-                    <div className="status-name">API Services</div>
-                    <div className="status-badge status-success">Operational</div>
-                  </div>
-                  <div className="status-bar">
-                    <div className="status-progress" style={{ width: "100%" }}></div>
-                  </div>
-                </div>
-                <div className="status-item">
-                  <div className="status-info">
-                    <div className="status-name">Database</div>
-                    <div className="status-badge status-success">Operational</div>
-                  </div>
-                  <div className="status-bar">
-                    <div className="status-progress" style={{ width: "98%" }}></div>
-                  </div>
-                </div>
-                <div className="status-item">
-                  <div className="status-info">
-                    <div className="status-name">Payment Gateway</div>
-                    <div className="status-badge status-success">Operational</div>
-                  </div>
-                  <div className="status-bar">
-                    <div className="status-progress" style={{ width: "100%" }}></div>
-                  </div>
-                </div>
-                <div className="status-item">
-                  <div className="status-info">
-                    <div className="status-name">Storage</div>
-                    <div className="status-badge status-warning">Limited</div>
-                  </div>
-                  <div className="status-bar">
-                    <div className="status-progress status-warning" style={{ width: "78%" }}></div>
-                  </div>
-                </div>
+              <div className="quick-actions-grid" style={{ gridTemplateColumns: '1fr' }}>
+                {quickActions.map((action, index) => (
+                  <button
+                    key={index}
+                    className={`action-card action-${action.color}`}
+                    onClick={() => navigate(action.link)}
+                    style={{ marginBottom: '0.75rem', width: '100%' }}
+                  >
+                    <div className="action-icon">{action.icon}</div>
+                    <div className="action-content">
+                      <div className="action-title">{action.title}</div>
+                      <div className="action-description">{action.description}</div>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
 
