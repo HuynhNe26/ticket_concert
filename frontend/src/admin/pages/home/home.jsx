@@ -87,7 +87,7 @@ export default function HomeAdmin() {
 
     const getEvent = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/admin/events/statistic`);
+        const res = await fetch(`${API_BASE}/api/admin/statistic/calendar`);
         const resTotal = await fetch(`${API_BASE}/api/admin/events/`);
         const data = await res.json();
         const dataTotal = await resTotal.json();
@@ -96,10 +96,24 @@ export default function HomeAdmin() {
         
         if (dataTotal.success) {
           setEventTotal(dataTotal.data);
-          const activeCount = dataTotal.data.filter(event => event.event_status === true).length;
+          
+          const now = new Date();
+          const activeCount = dataTotal.data.filter(event => {
+            const startDate = new Date(event.event_start);
+            const endDate = new Date(event.event_end);
+            
+            return (
+              event.event_status === true && 
+              now >= startDate && 
+              now <= endDate
+            );
+          }).length;
+
           setActiveEventsCount(activeCount);
         }
-      } catch (err) { console.log(err); }
+      } catch (err) { 
+        console.error("Lỗi khi lấy dữ liệu sự kiện:", err); 
+      }
     };
     getUser();
     getEvent();
