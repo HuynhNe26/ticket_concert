@@ -31,10 +31,10 @@ function MessageBubble({ msg, onOpenLogin }) {
   if (content.includes("[LOGIN_REQUIRED]")) {
     const text = content.replace("[LOGIN_REQUIRED]", "").trim();
     return (
-      <div>
+      <>
         {text && <div className="msg-bubble">{text}</div>}
         <LoginRequiredCard onLogin={onOpenLogin} />
-      </div>
+      </>
     );
   }
 
@@ -52,7 +52,7 @@ export default function ChatAI() {
     {
       id: 1,
       type: "bot",
-      content: "Xin chào! 👋 Mình là trợ lý AI hỗ trợ sự kiện. Hỏi mình về vé, sự kiện, hay nghệ sĩ nhé!",
+      content: "Xin chào! 👋 Mình hỗ trợ về vé sự kiện.",
       time: new Date(),
     },
   ]);
@@ -137,7 +137,7 @@ export default function ChatAI() {
             <div className="chat-header">
               <div className="chat-header-avatar">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="rgba(34,197,94,0.8)" />
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="rgba(34,197,94,0.85)" />
                   <path d="M8 12h8M12 8v8" stroke="white" strokeWidth="2" strokeLinecap="round" />
                 </svg>
               </div>
@@ -154,6 +154,8 @@ export default function ChatAI() {
             <div className="chat-messages">
               {messages.map((msg) => (
                 <div key={msg.id} className={`msg-row ${msg.type}`}>
+
+                  {/* Avatar */}
                   <div className={`msg-avatar ${msg.type}`}>
                     {msg.type === "bot" ? (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(34,197,94,0.9)">
@@ -161,7 +163,13 @@ export default function ChatAI() {
                       </svg>
                     ) : "👤"}
                   </div>
-                  <div>
+
+                  {/*
+                    KEY CHANGE: bọc bubble + time trong .msg-col
+                    .msg-col dùng flex-col + align-items để bubble
+                    tự co theo nội dung, không bị ép full-width
+                  */}
+                  <div className="msg-col">
                     {msg.type === "bot" ? (
                       <MessageBubble
                         msg={msg}
@@ -172,9 +180,11 @@ export default function ChatAI() {
                     )}
                     <div className="msg-time">{formatTime(msg.time)}</div>
                   </div>
+
                 </div>
               ))}
 
+              {/* Typing indicator */}
               {isTyping && (
                 <div className="msg-row bot">
                   <div className="msg-avatar bot">
@@ -251,7 +261,7 @@ export default function ChatAI() {
         </button>
       </div>
 
-      {/* Login Modal - Rendered OUTSIDE chat-root để tránh z-index conflicts */}
+      {/* Login Modal */}
       {showLoginModal && (
         <div
           className="chat-modal-overlay"

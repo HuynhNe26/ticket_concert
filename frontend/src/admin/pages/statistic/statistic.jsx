@@ -33,8 +33,6 @@ const FILTERS = [
 
 export default function StatisticPage() {
   const [reportType, setReportType] = useState("Báo cáo theo ngày");
-  
-  // Tự động lấy ngày đầu tháng và ngày cuối tháng hiện tại
   const [startDate, setStartDate] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 2).toISOString().split('T')[0];

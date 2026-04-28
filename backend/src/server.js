@@ -102,12 +102,6 @@ await connectDB();
 cron.schedule("* * * * *", async () => {
   console.log("Cron đang chạy:", new Date());
   try {
-    await pool.query(`
-      UPDATE events
-      SET event_status = false
-      WHERE event_end < NOW()
-        AND event_status = true
-    `);
 
     await pool.query(`
       UPDATE events

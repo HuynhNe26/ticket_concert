@@ -193,9 +193,7 @@ function classifyIntent(message, toolsUsed = []) {
   const toolIntentMap = {
     check_tickets:           "ticket_check",
     get_events:              "event_list",
-    get_personalized_events: "personalized",
     rag_search:              "event_detail",
-    web_search:              "web_search",
     get_orders:              "history",
     get_membership:          "membership",
   };
