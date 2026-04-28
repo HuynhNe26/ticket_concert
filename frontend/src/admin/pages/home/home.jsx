@@ -29,12 +29,10 @@ export default function HomeAdmin() {
   const [events, setEvents] = useState([]);
   const [eventTotal, setEventTotal] = useState([]);
   const [orders, setOrders] = useState([]);
-  
-  // States cho thống kê theo tháng hiện tại
   const [currentMonthUsers, setCurrentMonthUsers] = useState(0);
   const [currentMonthOrders, setCurrentMonthOrders] = useState(0);
   const [currentMonthRevenue, setCurrentMonthRevenue] = useState(0);
-
+  const [activeEventsCount, setActiveEventsCount] = useState(0);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [ticketStats, setTicketStats] = useState([]);
   const currentYear = new Date().getFullYear();
@@ -89,15 +87,34 @@ export default function HomeAdmin() {
 
     const getEvent = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/admin/events/statistic`);
+        const res = await fetch(`${API_BASE}/api/admin/statistic/calendar`);
         const resTotal = await fetch(`${API_BASE}/api/admin/events/`);
         const data = await res.json();
         const dataTotal = await resTotal.json();
+        
         if (data.success) setEvents(data.data);
-        if (dataTotal.success) setEventTotal(dataTotal.data);
-      } catch (err) { console.log(err); }
-    };
+        
+        if (dataTotal.success) {
+          setEventTotal(dataTotal.data);
+          
+          const now = new Date();
+          const activeCount = dataTotal.data.filter(event => {
+            const startDate = new Date(event.event_start);
+            const endDate = new Date(event.event_end);
+            
+            return (
+              event.event_status === true && 
+              now >= startDate && 
+              now <= endDate
+            );
+          }).length;
 
+          setActiveEventsCount(activeCount);
+        }
+      } catch (err) { 
+        console.error("Lỗi khi lấy dữ liệu sự kiện:", err); 
+      }
+    };
     getUser();
     getEvent();
     getOrder();
@@ -140,17 +157,19 @@ export default function HomeAdmin() {
       link: "/admin/orders",
     },
     {
-      title: "Tổng đơn hàng",
-      value: `${orders.length}`,
+      title: "Sự kiện đang mở bán", // Đổi tên tiêu đề
+      value: `${activeEventsCount}`, // Hiển thị số lượng đã lọc
       icon: (
         <Icon>
-          <circle cx="9" cy="21" r="1" />
-          <circle cx="20" cy="21" r="1" />
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+          {/* Bạn có thể giữ icon cũ hoặc đổi sang icon lịch/sự kiện */}
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
         </Icon>
       ),
       color: "green",
-      link: "/admin/orders",
+      link: "/admin/events", // Đổi link dẫn đến trang quản lý sự kiện
     },
     {
       title: "Doanh thu tháng này",
