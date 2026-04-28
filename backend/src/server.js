@@ -107,6 +107,7 @@ cron.schedule("* * * * *", async () => {
       UPDATE events
       SET event_status = true
       WHERE event_start <= NOW()
+        AND event_end >= NOW()
         AND event_status = false
     `);
 
@@ -114,6 +115,7 @@ cron.schedule("* * * * *", async () => {
       UPDATE vouchers
       SET voucher_status = true
       WHERE voucher_start <= NOW()
+        AND voucher_end >= NOW()
         AND voucher_status = false
     `);
 

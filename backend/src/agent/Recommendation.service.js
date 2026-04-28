@@ -2,16 +2,39 @@ import { pool } from "../config/database.js";
 
 export async function getCandidateEvents(limit = 50) {
   const { rows } = await pool.query(
-    `SELECT e.event_id, e.event_name, e.event_location,
-            e.event_start, e.event_end, e.event_artist,
-            e.banner_url, c.category_name, c.category_id,
-            MIN(z.zone_price) AS min_price
-     FROM events e
-     JOIN categories c ON e.category_id = c.category_id
-     LEFT JOIN zones z ON z.event_id = e.event_id
-     WHERE e.event_end >= NOW()
-     GROUP BY e.event_id, c.category_name, c.category_id
-     ORDER BY e.event_start ASC
+    `SELECT * FROM (
+       SELECT e.event_id, e.event_name, e.event_location,
+              e.event_start, e.event_end, e.event_artist,
+              e.banner_url, c.category_name, c.category_id,
+              MIN(z.zone_price) AS min_price,
+              SUM(z.zone_quantity - z.sold_quantity) AS available_tickets,
+              false AS is_coming_soon
+       FROM events e
+       JOIN categories c ON e.category_id = c.category_id
+       JOIN zones z ON z.event_id = e.event_id
+       WHERE e.event_status = true
+         AND e.event_end >= NOW()
+         AND z.status = true
+       GROUP BY e.event_id, c.category_name, c.category_id
+       HAVING SUM(z.zone_quantity - z.sold_quantity) > 0
+
+       UNION ALL
+
+       SELECT e.event_id, e.event_name, e.event_location,
+              e.event_start, e.event_end, e.event_artist,
+              e.banner_url, c.category_name, c.category_id,
+              MIN(z.zone_price) AS min_price,
+              NULL AS available_tickets,
+              true AS is_coming_soon
+       FROM events e
+       JOIN categories c ON e.category_id = c.category_id
+       LEFT JOIN zones z ON z.event_id = e.event_id
+       WHERE e.event_status = false
+         AND e.event_start > NOW()
+         AND e.event_end >= NOW()
+       GROUP BY e.event_id, c.category_name, c.category_id
+     ) combined
+     ORDER BY is_coming_soon ASC, event_start ASC
      LIMIT $1`,
     [limit]
   );
@@ -38,9 +61,9 @@ export async function getGuestEvents(limit = 10) {
      JOIN categories c ON e.category_id = c.category_id
      LEFT JOIN zones z ON z.event_id = e.event_id
      WHERE (
-       (e.event_status = false AND e.event_start > NOW())
+       (e.event_status = false AND e.event_start > NOW()) 
        OR
-       (e.event_status = true  AND e.event_end   >= NOW())
+       (e.event_status = true  AND e.event_end >= NOW())
      )
      GROUP BY e.event_id, c.category_name, c.category_id
      ORDER BY
@@ -107,65 +130,20 @@ async function getUserContext(userId) {
   return { purchasedEvents, purchasedIds, favorite };
 }
 
-function buildUserProfileText(userContext) {
-  const { purchasedEvents, favorite } = userContext;
-  const parts = [];
-
-  const favoriteEventIds = new Set(
-    favorite.map((f) => f?.event_id).filter(Boolean)
-  );
-
-  const favoriteKeywords = favorite.map((f) => f?.search).filter(Boolean);
-
-  for (const kw of favoriteKeywords) {
-    parts.push(kw, kw, kw, kw);
-  }
-
-  const purchasedCategories = [
-    ...new Set(purchasedEvents.map((e) => e.category_name).filter(Boolean)),
-  ];
-
-  for (const cat of purchasedCategories) {
-    parts.push(cat);
-  }
-
-  const purchasedArtists = [
-    ...new Set(
-      purchasedEvents.flatMap((e) => {
-        const a = e.event_artist;
-        if (!a) return [];
-        if (Array.isArray(a)) return a.map((x) => x?.name || x).filter(Boolean);
-        return [];
-      })
-    ),
-  ];
-
-  for (const artist of purchasedArtists) {
-    parts.push(artist);
-  }
-
-  const purchasedNames = purchasedEvents.map((e) => e.event_name).filter(Boolean);
-  parts.push(...purchasedNames);
-
-  return { profileText: parts.join(", ").trim(), favoriteEventIds };
-}
-
-
 async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
   const { purchasedEvents, favorite } = userContext;
 
   const queries = new Set();
 
-  let favoritesQuery = "";
+  // ✅ FIX: mỗi keyword là 1 query riêng (KHÔNG gộp)
+  favorite.forEach((f) => {
+    if (f?.search) queries.add(f.search);
+  });
 
-  const favKws = favorite.map((f) => f?.search).filter(Boolean).join(", ");
-  if (favKws) {
-    queries.add(favKws);
-    favoritesQuery = favKws; 
-  }
-
-  const cats = [...new Set(purchasedEvents.map((e) => e.category_name).filter(Boolean))];
-  if (cats.length) queries.add(cats.join(", "));
+  const cats = [...new Set(
+    purchasedEvents.map((e) => e.category_name).filter(Boolean)
+  )];
+  cats.forEach((c) => queries.add(c));
 
   const artists = [
     ...new Set(
@@ -177,24 +155,24 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
       })
     ),
   ];
-  if (artists.length) queries.add(artists.join(", "));
+  artists.forEach((a) => queries.add(a));
 
   const names = purchasedEvents.slice(0, 5).map((e) => e.event_name).filter(Boolean);
-  if (names.length) queries.add(names.join(", "));
+  names.forEach((n) => queries.add(n));
 
   if (!queries.size) return new Map();
 
   const scoreAccum = new Map();
-
-  const THRESHOLD = 0.3;
+  const THRESHOLD = 0.35; // 🔥 tăng threshold để giảm noise
 
   await Promise.all(
     [...queries].map(async (q) => {
       try {
-        const isFromFavorite = q === favoritesQuery;
-        const k = isFromFavorite ? topK * 2 : topK;
+        const isFavoriteQuery = favorite.some((f) => f?.search === q);
+        const k = isFavoriteQuery ? topK * 2 : topK;
 
         const results = await vectorStore.similaritySearchWithScore(q, k);
+
         for (const [doc, score] of results) {
           if (score < THRESHOLD) continue;
 
@@ -207,32 +185,57 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
 
           if (!eventId) continue;
 
-          const weightedScore = isFromFavorite ? score * 2 : score;
+          // ✅ boost favorite query
+          const weightedScore = isFavoriteQuery ? score * 1.4 : score;
 
-          const prev = scoreAccum.get(eventId) ?? { totalScore: 0, hitCount: 0 };
+          const prev = scoreAccum.get(eventId) ?? { total: 0, count: 0 };
           scoreAccum.set(eventId, {
-            totalScore: prev.totalScore + weightedScore,
-            hitCount:   prev.hitCount + 1,
+            total: prev.total + weightedScore,
+            count: prev.count + 1,
           });
         }
       } catch (err) {
-        console.error(`[Recommendation] Vector search error for query "${q}":`, err.message);
+        console.error("Vector error:", err.message);
       }
     })
   );
 
   const scoreMap = new Map();
-  for (const [eventId, { totalScore, hitCount }] of scoreAccum) {
-    scoreMap.set(eventId, totalScore / hitCount);
+  for (const [eventId, { total, count }] of scoreAccum) {
+    scoreMap.set(eventId, total / count);
   }
 
   return scoreMap;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Scoring & ranking
+//
+// Trọng số:
+//   favorite  0.60 — ưu tiên tuyệt đối sở thích người dùng
+//   artist    0.13 — nghệ sĩ yêu thích (lịch sử mua)
+//   semantic  0.15 — liên quan ngữ nghĩa (vector store)
+//   category  0.12 — cùng thể loại đã mua
+//
+// Quy tắc filter đã mua:
+//   Candidate pool đã lọc "còn bán" từ DB, nên ở đây chỉ cần quyết
+//   có hiển thị lại sự kiện đã mua hay không:
+//
+//   case A — đã mua + còn bán + là favorite/khớp keyword favorite
+//            → GIỮ LẠI, score bình thường, penalty nhỏ -0.05
+//            (ví dụ: concert nhiều đêm, user favorite nghệ sĩ đó)
+//
+//   case B — đã mua + còn bán + KHÔNG phải favorite
+//            → LOẠI BỎ (tránh trùng lặp với đơn đã có)
+//
+//   case C — chưa mua → luôn giữ, tính điểm bình thường
+// ─────────────────────────────────────────────────────────────────────────────
 function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
   const { purchasedEvents, purchasedIds, favorite } = userContext;
 
-  const favoriteEventIds = new Set(favorite.map((f) => f?.event_id).filter(Boolean));
+  const favoriteEventIds = new Set(
+    favorite.map((f) => f?.event_id).filter(Boolean)
+  );
 
   const favoriteKeywords = new Set(
     favorite.map((f) => f?.search?.toLowerCase()).filter(Boolean)
@@ -246,61 +249,103 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
     purchasedEvents.flatMap((e) => {
       const a = e.event_artist;
       if (!a) return [];
-      if (Array.isArray(a)) return a.map((x) => (x?.name || x)?.toLowerCase()).filter(Boolean);
+      if (Array.isArray(a))
+        return a.map((x) => (x?.name || x)?.toLowerCase()).filter(Boolean);
       return [];
     })
   );
 
-  const W = { semantic: 0.15, favorite: 0.45, category: 0.10, artist: 0.10 };
+  // ✅ FIX: lấy artist từ event favorite
+  const favoriteBaseEvents = candidates.filter((ev) =>
+    favoriteEventIds.has(ev.event_id)
+  );
+
+  const favoriteArtists = new Set(
+    favoriteBaseEvents.flatMap((ev) =>
+      Array.isArray(ev.event_artist)
+        ? ev.event_artist.map((a) => (a?.name || a)?.toLowerCase())
+        : []
+    )
+  );
+
+  // ✅ FIX: weight hợp lý hơn
+  const W = {
+    favorite: 0.65,
+    semantic: 0.15,
+    category: 0.1,
+    artist: 0.1,
+  };
+
+  function matchesFavorite(ev) {
+    if (favoriteEventIds.has(ev.event_id)) return true;
+    if (!favoriteKeywords.size) return false;
+
+    const evName = ev.event_name?.toLowerCase() || "";
+    const evCategory = ev.category_name?.toLowerCase() || "";
+
+    const evArtists = Array.isArray(ev.event_artist)
+      ? ev.event_artist.map((a) => (a?.name || a)?.toLowerCase())
+      : [];
+
+    return [...favoriteKeywords].some((kw) => {
+      const words = kw.split(" ");
+      return (
+        words.every((w) => evName.includes(w)) ||
+        words.every((w) => evCategory.includes(w)) ||
+        evArtists.some((a) => words.every((w) => a.includes(w)))
+      );
+    });
+  }
 
   return candidates
-    .filter((ev) => !purchasedIds.has(ev.event_id))
+    .filter((ev) => {
+      if (ev.is_coming_soon) return matchesFavorite(ev);
+      if (!purchasedIds.has(ev.event_id)) return true;
+      return matchesFavorite(ev);
+    })
     .map((ev) => {
-      const semanticScore  = semanticScoreMap.get(ev.event_id) ?? 0;
-      const isFavorite     = favoriteEventIds.has(ev.event_id) ? 1 : 0;
-      const categoryMatch  = purchasedCategoryIds.has(ev.category_id) ? 1 : 0;
+      const isPurchased = purchasedIds.has(ev.event_id);
+      const semanticScore = semanticScoreMap.get(ev.event_id) ?? 0;
 
       const evArtists = Array.isArray(ev.event_artist)
-        ? ev.event_artist.map((a) => (a?.name || a)?.toLowerCase()).filter(Boolean)
+        ? ev.event_artist.map((a) => (a?.name || a)?.toLowerCase())
         : [];
-      const artistMatch = evArtists.some((a) => purchasedArtistNames.has(a)) ? 1 : 0;
 
-      const evNameLower     = ev.event_name?.toLowerCase() || "";
-      const evCategoryLower = ev.category_name?.toLowerCase() || "";
-      const favoriteKeywordMatch = [...favoriteKeywords].some(
-        (kw) => evNameLower.includes(kw) || evCategoryLower.includes(kw) ||
-                evArtists.some((a) => a.includes(kw))
-      ) ? 1 : 0;
+      const isFavorite = favoriteEventIds.has(ev.event_id) ? 1 : 0;
+      const keywordMatch = matchesFavorite(ev) && !isFavorite ? 1 : 0;
+      const favoriteSignal = Math.max(isFavorite, keywordMatch);
 
-      const isFavoriteSignal = Math.max(isFavorite, favoriteKeywordMatch);
+      const categoryMatch = purchasedCategoryIds.has(ev.category_id) ? 1 : 0;
 
-      let totalScore =
-        W.semantic  * semanticScore     +
-        W.favorite  * isFavoriteSignal  +
-        W.category  * categoryMatch     +
-        W.artist    * artistMatch;
+      const artistMatch =
+        evArtists.some((a) => purchasedArtistNames.has(a)) ||
+        evArtists.some((a) => favoriteArtists.has(a))
+          ? 1
+          : 0;
 
-      const overlapBonus = isFavoriteSignal && (categoryMatch || artistMatch) ? 0.15 : 0;
-      totalScore += overlapBonus;
+      let score =
+        W.favorite * favoriteSignal +
+        W.semantic * semanticScore +
+        W.category * categoryMatch +
+        W.artist * artistMatch;
+
+      if (favoriteSignal && (categoryMatch || artistMatch)) {
+        score += 0.1;
+      }
+
+      if (isPurchased) score -= 0.05;
 
       return {
         ...ev,
         _scores: {
-          semanticScore,
-          isFavorite,
-          favoriteKeywordMatch,
-          isFavoriteSignal,
-          categoryMatch,
-          artistMatch,
-          overlapBonus,
-          totalScore,
+          totalScore: score,
         },
       };
     })
     .sort((a, b) => b._scores.totalScore - a._scores.totalScore);
 }
 
-async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
+async function selectTopKWithAI(rankedCandidates, userContext, k = 10) {
   const { llm } = await import("./ragAgent.js");
   const { purchasedEvents, favorite } = userContext;
 
@@ -310,31 +355,34 @@ async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
   const eventList = topCandidates
     .map((ev) => {
       const {
-        semanticScore,
         isFavorite,
         favoriteKeywordMatch,
         isFavoriteSignal,
         categoryMatch,
         artistMatch,
         overlapBonus,
+        isPurchased,
         totalScore,
+        semanticScore,
       } = ev._scores;
 
-      const favLabel     = isFavorite         ? " ⭐[YÊU THÍCH]"         : "";
-      const favKwLabel   = !isFavorite && favoriteKeywordMatch
-                                              ? " ⭐[KHỚP SỞ THÍCH]"     : "";
-      const catLabel     = categoryMatch       ? " 🎵[CÙNG THỂ LOẠI]"    : "";
-      const artLabel     = artistMatch         ? " 🎤[NGHỆ SĨ YÊU THÍCH]": "";
-      const semLabel     = semanticScore > 0.5 ? " 🔥[LIÊN QUAN CAO]"    : "";
-      const overlapLabel = overlapBonus > 0    ? " 💎[TRÙNG SỞ THÍCH]"   : "";
+      const favLabel     = isFavorite                      ? " ⭐[YÊU THÍCH]"             : "";
+      const favKwLabel   = !isFavorite && favoriteKeywordMatch ? " ⭐[KHỚP SỞ THÍCH]"     : "";
+      const catLabel     = categoryMatch                   ? " 🎵[CÙNG THỂ LOẠI]"         : "";
+      const artLabel     = artistMatch                     ? " 🎤[NGHỆ SĨ YÊU THÍCH]"     : "";
+      const semLabel     = semanticScore > 0.1             ? " 🔥[LIÊN QUAN CAO]"         : "";
+      const overlapLabel = overlapBonus > 0                ? " 💎[TRÙNG SỞ THÍCH]"        : "";
+      const purchasedLabel = isPurchased                   ? " 🔁[ĐÃ MUA - CÒN VÉ]"       : "";
+      const comingSoonLabel = ev._scores?.isComingSoon     ? " 🔔[SẮP MỞ BÁN]"             : "";
       const scoreStr     = (totalScore * 100).toFixed(0);
 
       return (
-        `[ID:${ev.event_id}][Score:${scoreStr}%]${favLabel}${favKwLabel}${catLabel}${artLabel}${semLabel}${overlapLabel}\n` +
+        `[ID:${ev.event_id}][Score:${scoreStr}%]${favLabel}${favKwLabel}${catLabel}${artLabel}${semLabel}${overlapLabel}${purchasedLabel}${comingSoonLabel}\n` +
         `  Tên: ${ev.event_name}\n` +
         `  Thể loại: ${ev.category_name} | ` +
         `Ngày: ${new Date(ev.event_start).toLocaleDateString("vi-VN")} | ` +
-        `Từ ${Number(ev.min_price || 0).toLocaleString("vi-VN")}đ`
+        `Từ ${Number(ev.min_price || 0).toLocaleString("vi-VN")}đ | ` +
+        `${ev.is_coming_soon ? 'Mở bán lúc ' + new Date(ev.event_start).toLocaleDateString('vi-VN') : 'Còn ' + ev.available_tickets + ' vé'}`
       );
     })
     .join("\n\n");
@@ -352,37 +400,41 @@ async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
     `Từ khóa yêu thích: ${favKeywords}\n` +
     `Lịch sử mua vé gần đây:\n${historyText}\n\n` +
 
-    `## DANH SÁCH ỨNG VIÊN (đã pre-score bằng embedding + heuristic)\n` +
-    `Giải thích nhãn:\n` +
-    `  ⭐ đã lưu yêu thích trực tiếp\n` +
-    `  ⭐ khớp từ khóa sở thích\n` +
-    `  💎 vừa khớp sở thích VÀ trùng lịch sử mua (ưu tiên cao nhất)\n` +
-    `  🎵 cùng thể loại đã mua\n` +
-    `  🎤 nghệ sĩ yêu thích\n` +
-    `  🔥 liên quan ngữ nghĩa cao\n\n` +
+    `## QUY TẮC QUAN TRỌNG\n` +
+    `- Ưu tiên CAO NHẤT: sự kiện có nhãn ⭐ (yêu thích trực tiếp hoặc khớp sở thích)\n` +
+    `- Sự kiện 🔁 (đã mua nhưng còn vé, là favorite): CÓ THỂ chọn nếu điểm favorite cao\n` +
+    `  → Lý do: concert nhiều đêm, user muốn mua thêm vé cùng sự kiện\n` +
+    `- Sự kiện 🔔 (sắp mở bán): ĐÃ lọc sẵn = chắc chắn khớp favorite → ưu tiên cao\n` +
+    `  → Hiển thị để user biết trước và chuẩn bị đặt vé sớm\n` +
+    `- Đảm bảo đa dạng thể loại khi có thể, nhưng KHÔNG hy sinh favorite để đa dạng\n` +
+    `- Ưu tiên: 💎 trùng sở thích > ⭐ yêu thích > 🔥 liên quan > 🎤 nghệ sĩ > 🎵 thể loại\n\n` +
+
+    `## DANH SÁCH ỨNG VIÊN (tất cả đều còn vé)\n` +
     `${eventList}\n\n` +
 
     `## YÊU CẦU\n` +
-    `Dựa trên hồ sơ người dùng và điểm sẵn có, chọn đúng ${k} sự kiện phù hợp nhất.\n` +
-    `Ưu tiên theo thứ tự: 💎 trùng sở thích > ⭐ yêu thích/khớp sở thích > 🔥 liên quan > 🎤 nghệ sĩ > 🎵 thể loại.\n` +
-    `Đảm bảo đa dạng thể loại nếu có thể.\n` +
-    `CHỈ trả về dãy ID cách nhau bởi dấu phẩy, không giải thích thêm.\n` +
+    `Chọn đúng ${k} sự kiện phù hợp nhất.\n` +
+    `CHỈ trả về dãy ID cách nhau bởi dấu phẩy, không giải thích.\n` +
     `Ví dụ: 3,7,1,5,2`;
 
-  const response  = await llm.invoke([{ role: "user", content: prompt }]);
-  const text      = (response.content || "").trim();
+  const response = await llm.invoke([{ role: "user", content: prompt }]);
+  const text     = (response.content || "").trim();
 
   const selectedIds = text
     .split(",")
     .map((s) => parseInt(s.trim()))
     .filter((id) => !isNaN(id))
-    .filter((id, i, arr) => arr.indexOf(id) === i) 
+    .filter((id, i, arr) => arr.indexOf(id) === i)
     .slice(0, k);
 
   return selectedIds;
 }
 
-function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
+// ─────────────────────────────────────────────────────────────────────────────
+// Build clean result
+// Không cần filter purchasedIds ở đây — scoring đã xử lý
+// ─────────────────────────────────────────────────────────────────────────────
+function buildCleanResult(selectedIds, rankedCandidates) {
   const idToEvent = Object.fromEntries(
     rankedCandidates.map((e) => [e.event_id, e])
   );
@@ -391,9 +443,8 @@ function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
 
   return selectedIds
     .filter((id) => {
-      if (!idToEvent[id])        return false;
-      if (purchasedIds.has(id))  return false;
-      if (seen.has(id))          return false;
+      if (!idToEvent[id]) return false;
+      if (seen.has(id))   return false;
       seen.add(id);
       return true;
     })
@@ -403,16 +454,19 @@ function buildCleanResult(selectedIds, rankedCandidates, purchasedIds) {
     });
 }
 
-export async function getHybridRecommendations(userId = null, limit = 20, topK = 5) {
-  const safeLimit = Math.min(limit || 5, 5);
+// ─────────────────────────────────────────────────────────────────────────────
+// Main export
+// ─────────────────────────────────────────────────────────────────────────────
+export async function getHybridRecommendations(userId = null, limit = 20, topK = 10) {
+  const safeLimit = 20;
 
   if (!userId) {
-    const events = await getHotEvents(safeLimit);
-    return { type: "hot", events };
+    const events = await getGuestEvents(safeLimit);
+    return { type: "guest", events };
   }
 
   const [candidates, userContext] = await Promise.all([
-    getCandidateEvents(50),
+    getCandidateEvents(50),   // chỉ sự kiện còn bán được
     getUserContext(userId),
   ]);
 
@@ -420,7 +474,7 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
     return { type: "popular", events: [] };
   }
 
-  const { purchasedEvents, purchasedIds, favorite } = userContext;
+  const { purchasedEvents, favorite } = userContext;
   const hasContext = purchasedEvents.length > 0 || favorite.length > 0;
 
   if (!hasContext) {
@@ -433,7 +487,6 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
     const vectorStore = await getVectorStore();
 
     const semanticScoreMap = await buildSemanticScoreMap(userContext, vectorStore, 20);
-
     const rankedCandidates = scoreAndRankCandidates(candidates, semanticScoreMap, userContext);
 
     if (!rankedCandidates.length) {
@@ -444,7 +497,7 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
     const selectedIds = await selectTopKWithAI(
       rankedCandidates,
       userContext,
-      Math.min(topK || 5, safeLimit)
+      safeLimit
     );
 
     if (!selectedIds.length) {
@@ -453,7 +506,7 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
       return { type: "hot", events };
     }
 
-    const events = buildCleanResult(selectedIds, rankedCandidates, purchasedIds);
+    const events = buildCleanResult(selectedIds, rankedCandidates);
 
     if (!events.length) {
       console.warn("[Recommendation] All AI-selected IDs were invalid, falling back to hot.");

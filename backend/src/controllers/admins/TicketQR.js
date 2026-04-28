@@ -2,9 +2,7 @@ import { pool } from "../../config/database.js";
 
 export const TicketQRController = {
     async scanQR(req, res) {
-
-        // Chỉ level 2 (staff trực tiếp) mới được quét
-        if (req.admin.level !== 1) {
+        if (req.admin.level !== 2) {
             return res.status(403).json({
                 success: false,
                 message: "Chỉ nhân viên trực tiếp mới được thực hiện check-in",
@@ -65,7 +63,7 @@ export const TicketQRController = {
             const ticket = rows[0];
 
             // 3. Vé đã sử dụng (ticket_status = false)
-            if (!ticket.ticket_status) {
+            if (ticket.ticket_status) {
                 await client.query("ROLLBACK");
                 return res.status(409).json({
                     success: false,
@@ -77,7 +75,7 @@ export const TicketQRController = {
             // 4. Đánh dấu đã dùng + ghi thời gian
             await client.query(
                 `UPDATE payment_detail
-                 SET ticket_status = false, useat = NOW()
+                 SET ticket_status = true, useat = NOW()
                  WHERE payment_detail_id = $1`,
                 [ticket.payment_detail_id]
             );
@@ -102,6 +100,60 @@ export const TicketQRController = {
             client.release();
         }
     },
+
+    // Thêm vào TicketQRController
+async getInfo(req, res) {
+    if (req.admin.level !== 2) {
+        return res.status(403).json({ success: false, message: "Không có quyền" });
+    }
+
+    const { qr_code } = req.body;
+
+    if (!qr_code?.trim()) {
+        return res.status(400).json({ success: false, message: "QR code không hợp lệ" });
+    }
+
+    try {
+        const { rows } = await pool.query(
+            `SELECT
+                p.payment_ref, p.method, p.created_at,
+                pd.payment_detail_id, pd.ticket_quantity,
+                pd.ticket_status, pd.price, pd.total_price,
+                e.event_name, e.event_end, e.event_location,
+                z.zone_name, u.email
+            FROM payments p
+            JOIN payment_detail pd ON pd.payment_id = p.payment_id
+            JOIN events         e  ON pd.event_id   = e.event_id
+            JOIN zones          z  ON pd.zone_id    = z.zone_id
+            JOIN users          u  ON p.user_id     = u.user_id
+            WHERE p.ticket_qr = $1`,
+            [qr_code.trim()]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy vé" });
+        }
+
+        const ticket = rows[0];
+
+        if (ticket.ticket_status) {
+            return res.status(409).json({
+                success: false,
+                message: "Vé này đã được sử dụng trước đó",
+                ticket: formatTicket(ticket),
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            ticket: formatTicket(ticket),
+        });
+
+    } catch (err) {
+        console.error("Lỗi lấy thông tin vé:", err);
+        return res.status(500).json({ success: false, message: "Lỗi server!" });
+    }
+},
 };
 
 function formatTicket(row) {
