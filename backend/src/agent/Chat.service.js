@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 import { pool } from "../config/database.js";
 import { getAgent } from "./ragAgent.js";
 
@@ -408,4 +406,3 @@ export async function clearSession(sessionId) {
   await deleteSessionHistory(sessionId);
   console.log(`[Chat] Session ${sessionId} cleared.`);
 }
->>>>>>> 74f599c07986e1806ea8d88811df67eb2169f682
