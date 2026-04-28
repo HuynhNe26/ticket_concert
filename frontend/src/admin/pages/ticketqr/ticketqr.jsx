@@ -125,7 +125,7 @@ function InfoPanel({ scan, stats, onConfirm, onDiscard, confirming }) {
             className="tqr-banner"
             style={{ background: `${cfg.color}15`, color: cfg.color, border: `1px solid ${cfg.color}30` }}
           >
-            {scan.status === "confirmed" ? "✓ Đã check-in thành công — có thể quét vé tiếp theo" : "✕ Vé này đã được sử dụng trước đó"}
+            {scan.status === "confirmed" ? "Đã check-in thành công" : "Vé đã được sử dụng "}
           </div>
         )}
       </div>

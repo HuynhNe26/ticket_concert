@@ -62,7 +62,7 @@ export const TicketQRController = {
 
             const ticket = rows[0];
 
-            // 3. Vé đã sử dụng (ticket_status = false)
+            // 3. Vé đã sử dụng 
             if (ticket.ticket_status) {
                 await client.query("ROLLBACK");
                 return res.status(409).json({
