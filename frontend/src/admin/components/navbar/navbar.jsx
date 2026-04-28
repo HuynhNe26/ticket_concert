@@ -131,7 +131,7 @@ const MENU = [
   },
   {
     label: "Quản lý vé",
-    allowLevels: [1, 2],
+    allowLevels: [2],
     icon: (
       <Icon>
         <path d="M20 7l-8-4-8 4" />
