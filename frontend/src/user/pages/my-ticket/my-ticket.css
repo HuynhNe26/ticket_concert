@@ -1,33 +1,31 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 
-/* ── Reset & Root ── */
 *, *::before, *::after { box-sizing: border-box; }
 
+/* ── Root ── */
 .mtp-root {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Be Vietnam Pro', sans-serif;
   min-height: 100vh;
   padding: 36px 24px 60px;
-  background: #f4f6fb;
-  color: #1e293b;
+  background: #27272a;
+  color: #fafafa;
 }
 
 /* ── Header ── */
-.mtp-header {
-  margin-bottom: 28px;
-}
+.mtp-header { margin-bottom: 28px; }
 
 .mtp-title {
   font-family: 'Be Vietnam Pro', sans-serif;
   font-size: 42px;
   letter-spacing: .08em;
   margin: 0 0 4px;
-  color: #0f172a;
+  color: #fafafa;
   line-height: 1;
 }
 
 .mtp-sub {
   font-size: 13px;
-  color: #94a3b8;
+  color: #71717a;
   letter-spacing: .02em;
 }
 
@@ -42,11 +40,10 @@
 .filter-group {
   display: flex;
   gap: 4px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: #2f2f33;
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px;
   padding: 4px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
 
 .filter-btn {
@@ -54,16 +51,16 @@
   border-radius: 9px;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: #71717a;
   font-size: 13px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Be Vietnam Pro', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: all .2s;
   white-space: nowrap;
 }
 
-.filter-btn:hover { color: #334155; }
+.filter-btn:hover { color: #d4d4d8; }
 .filter-btn.active { background: #7c3aed; color: #fff; }
 .filter-btn.time.active { background: #4f46e5; color: #fff; }
 
@@ -71,50 +68,52 @@
 .mtp-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-/* ── Ticket Card (list) ── */
+/* ── Ticket Card ── */
 .tc-card {
   display: grid;
-  grid-template-columns: 90px 1fr auto;
+  grid-template-columns: 86px 1fr auto;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   transition: transform .2s, box-shadow .2s, border-color .2s;
-  box-shadow: 0 1px 6px rgba(0,0,0,.05);
+  box-shadow: 0 2px 12px rgba(0,0,0,.25);
 }
 
 .tc-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(124,58,237,.3);
-  box-shadow: 0 8px 32px rgba(124,58,237,.12), 0 0 0 1px rgba(124,58,237,.15);
+  border-color: rgba(167,139,250,.5);
+  box-shadow: 0 10px 36px rgba(0,0,0,.35), 0 0 0 1px rgba(167,139,250,.25);
 }
 
+/* Left stripe */
 .tc-left {
-  background: linear-gradient(160deg, #7c3aed 0%, #4f46e5 100%);
+  background: linear-gradient(160deg, #5b21b6 0%, #3730a3 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border-right: 1px dashed rgba(255,255,255,.25);
+  border-right: 1px dashed rgba(255,255,255,.18);
   padding: 16px 8px;
 }
 
-.tc-left-icon { font-size: 26px; line-height: 1; }
+.tc-left-icon { font-size: 24px; line-height: 1; }
 
 .tc-qty {
-  color: #ede9fe;
+  color: #ddd6fe;
   font-weight: 700;
   font-size: 13px;
   letter-spacing: .04em;
 }
 
+/* Middle */
 .tc-middle {
-  padding: 16px 18px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -122,8 +121,8 @@
 }
 
 .tc-event {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 19px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 18px;
   letter-spacing: .04em;
   color: #0f172a;
   white-space: nowrap;
@@ -148,18 +147,19 @@
 .tc-purchased {
   font-size: 11px;
   color: #b0bec5;
-  margin-top: 4px;
-  letter-spacing: 0.2px;
+  margin-top: 3px;
+  letter-spacing: .2px;
 }
 
+/* Right */
 .tc-right {
-  padding: 14px 18px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
   gap: 6px;
-  min-width: 120px;
+  min-width: 116px;
   border-left: 1px solid #f1f5f9;
 }
 
@@ -184,7 +184,7 @@
 
 .tc-qr-icon {
   font-size: 11px;
-  color: #7c3aed;
+  color: #a78bfa;
   font-weight: 600;
   letter-spacing: .03em;
   margin-top: 2px;
@@ -197,8 +197,8 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -212,7 +212,7 @@
   overflow: hidden;
   background: #ffffff;
   position: relative;
-  box-shadow: 0 32px 80px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06);
+  box-shadow: 0 32px 80px rgba(0,0,0,.22), 0 0 0 1px rgba(0,0,0,.06);
   animation: modalIn .28s cubic-bezier(.34,1.56,.64,1) both;
 }
 
@@ -221,7 +221,7 @@
   to   { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-/* BANNER */
+/* Banner */
 .ticket-modal-banner {
   position: relative;
   height: 200px;
@@ -230,56 +230,47 @@
 }
 
 .ticket-modal-banner-img {
-  width: 100%;
-  height: 100%;
+  width: 100%; height: 100%;
   object-fit: cover;
   object-position: center top;
   display: block;
 }
 
 .ticket-modal-banner-overlay {
-  position: absolute;
-  inset: 0;
+  position: absolute; inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(255,255,255,.0) 0%,
-    rgba(255,255,255,.3) 60%,
+    transparent 0%,
+    rgba(255,255,255,.4) 60%,
     rgba(255,255,255,1) 100%
   );
 }
 
 .ticket-modal-banner-fallback {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
-  font-size: 64px;
-  opacity: .5;
+  font-size: 64px; opacity: .5;
 }
 
 .ticket-modal-event-title {
   position: absolute;
-  bottom: 16px;
-  left: 24px;
-  right: 80px;
-  font-family: 'Bebas Neue', sans-serif;
+  bottom: 16px; left: 24px; right: 80px;
+  font-family: 'Be Vietnam Pro', sans-serif;
   font-size: clamp(22px, 3vw, 34px);
   letter-spacing: .06em;
   color: #1e0a3c;
   line-height: 1.1;
-  text-shadow: 0 1px 8px rgba(255,255,255,.6);
+  text-shadow: 0 1px 8px rgba(255,255,255,.7);
 }
 
-/* BODY */
+/* Body */
 .ticket-modal-body {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0;
 }
 
-/* LEFT BODY */
+/* Left */
 .ticket-modal-left {
   padding: 20px 24px 24px;
   display: flex;
@@ -288,7 +279,6 @@
   border-right: 1px dashed #e2e8f0;
 }
 
-/* Order code */
 .ticket-order-code {
   display: inline-flex;
   align-items: center;
@@ -300,19 +290,15 @@
 }
 
 .ticket-order-code-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 11px; font-weight: 600;
   color: #7c3aed;
-  text-transform: uppercase;
-  letter-spacing: .1em;
+  text-transform: uppercase; letter-spacing: .1em;
   white-space: nowrap;
 }
 
 .ticket-order-code-value {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
-  color: #5b21b6;
-  letter-spacing: .12em;
+  font-size: 20px; color: #5b21b6; letter-spacing: .12em;
 }
 
 /* Meta grid */
@@ -332,26 +318,21 @@
 .ticket-meta-item.full { grid-column: 1 / -1; }
 
 .ticket-meta-label {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 10px; font-weight: 600;
   color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: .08em;
+  text-transform: uppercase; letter-spacing: .08em;
   margin-bottom: 4px;
 }
 
 .ticket-meta-value {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1e293b;
-  line-height: 1.4;
+  font-size: 14px; font-weight: 500;
+  color: #1e293b; line-height: 1.4;
 }
 
 .ticket-meta-value.highlight {
   color: #16a34a;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: .04em;
+  font-size: 18px; letter-spacing: .04em;
 }
 
 /* Price row */
@@ -367,21 +348,17 @@
 }
 
 .ticket-price-label {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12px; font-weight: 600;
   color: #7c3aed;
-  text-transform: uppercase;
-  letter-spacing: .08em;
+  text-transform: uppercase; letter-spacing: .08em;
 }
 
 .ticket-price-amount {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 26px;
-  color: #5b21b6;
-  letter-spacing: .05em;
+  font-size: 26px; color: #5b21b6; letter-spacing: .05em;
 }
 
-/* RIGHT BODY */
+/* Right */
 .ticket-modal-right {
   width: 200px;
   padding: 20px 20px 24px;
@@ -389,191 +366,137 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  background: #fafafa;
+  background: #f8fafc;
 }
 
-/* QR block */
 .ticket-qr-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
 }
 
 .ticket-qr-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 11px; font-weight: 600;
   color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: .1em;
+  text-transform: uppercase; letter-spacing: .1em;
 }
 
 .qr-placeholder {
-  width: 140px;
-  height: 140px;
+  width: 140px; height: 140px;
   background: #f1f5f9;
   border: 1px dashed #cbd5e1;
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  color: #94a3b8;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #94a3b8;
 }
 
-/* Status block */
 .ticket-status-block {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
 }
 
 .ticket-status-title {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 10px; font-weight: 600;
   color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: .1em;
+  text-transform: uppercase; letter-spacing: .1em;
 }
 
 .ticket-status-badges {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
+  display: flex; flex-direction: column;
+  gap: 6px; width: 100%;
 }
 
 .ticket-status-badge {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 7px 12px;
-  border-radius: 8px;
-  text-align: center;
-  width: 100%;
+  font-size: 12px; font-weight: 600;
+  padding: 7px 12px; border-radius: 8px;
+  text-align: center; width: 100%;
 }
 
-/* Zone badge */
 .ticket-zone-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 6px;
+  font-size: 11px; font-weight: 600;
+  padding: 4px 10px; border-radius: 6px;
   background: #f1f5f9;
   color: #64748b;
-  text-align: center;
-  width: 100%;
+  text-align: center; width: 100%;
 }
 
-/* CLOSE BTN */
+/* Close */
 .modal-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.85);
+  position: absolute; top: 14px; right: 14px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.9);
   border: 1px solid rgba(0,0,0,.1);
   color: #64748b;
-  cursor: pointer;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  transition: all .15s;
+  cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10; transition: all .15s;
 }
-
-.modal-close:hover {
-  background: #ef4444;
-  border-color: #ef4444;
-  color: #fff;
-}
+.modal-close:hover { background: #ef4444; border-color: #ef4444; color: #fff; }
 
 /* ── State ── */
 .mtp-state {
-  text-align: center;
-  padding: 60px 0;
-  color: #94a3b8;
-  font-size: 14px;
+  text-align: center; padding: 60px 0;
+  color: #52525b; font-size: 14px;
 }
-
-.mtp-state.error { color: #ef4444; }
+.mtp-state.error { color: #f87171; }
 
 .mtp-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(124,58,237,.15);
-  border-top-color: #7c3aed;
+  width: 32px; height: 32px;
+  border: 3px solid rgba(167,139,250,.15);
+  border-top-color: #a78bfa;
   border-radius: 50%;
   animation: spin .7s linear infinite;
   margin: 0 auto 12px;
 }
-
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ── Date Separator ── */
 .date-separator {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 24px 0 10px;
-  padding: 0 2px;
+  display: flex; align-items: center;
+  gap: 12px; margin: 22px 0 8px; padding: 0 2px;
 }
 
 .date-separator-line {
-  flex: 1;
-  height: 1px;
-  background: #e2e8f0;
+  flex: 1; height: 1px;
+  background: rgba(255,255,255,.07);
 }
 
 .date-separator-pill {
-  display: flex;
-  align-items: center;
-  padding: 5px 16px;
-  border-radius: 20px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  font-size: 12px;
-  color: #94a3b8;
-  white-space: nowrap;
-  letter-spacing: 0.4px;
+  display: flex; align-items: center;
+  padding: 5px 16px; border-radius: 20px;
+  background: #3a3a3e;
+  border: 1px solid rgba(255,255,255,.08);
+  font-size: 12px; color: #71717a;
+  white-space: nowrap; letter-spacing: .4px;
   user-select: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,.05);
 }
 
 .date-sep-highlight {
-  color: #7c3aed;
-  font-weight: 600;
+  color: #a78bfa; font-weight: 600;
 }
 
 /* ── Mobile ── */
 @media (max-width: 600px) {
-  .mtp-root { padding: 24px 16px 48px; }
+  .mtp-root { padding: 20px 14px 48px; }
 
-  .tc-card { grid-template-columns: 72px 1fr auto; }
-  .tc-right { min-width: 90px; padding: 12px; }
+  .tc-card { grid-template-columns: 70px 1fr auto; }
+  .tc-right { min-width: 88px; padding: 12px 10px; }
 
   .ticket-modal-main { width: 96vw; }
   .ticket-modal-banner { height: 150px; }
-  .ticket-modal-event-title { font-size: 22px; }
+  .ticket-modal-event-title { font-size: 20px; }
 
   .ticket-modal-body { grid-template-columns: 1fr; }
 
   .ticket-modal-left {
     border-right: none;
-    border-bottom: 1px dashed #e2e8f0;
+    border-bottom: 1px dashed rgba(255,255,255,.08);
   }
 
   .ticket-modal-right {
     width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    padding: 16px;
+    flex-direction: row; flex-wrap: wrap;
+    justify-content: center; gap: 12px; padding: 16px;
   }
 
   .ticket-meta-grid { grid-template-columns: 1fr; }

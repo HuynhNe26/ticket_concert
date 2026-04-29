@@ -1,253 +1,278 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar } from 'lucide-react';
+import { Clock, Image, Plus, X, ChevronRight } from 'lucide-react';
 import FormField from './FormField';
 import FormSelect from './FormSelect';
+import './EventInfoForm.css';
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
 const EventInfoForm = ({ eventInfo, onChange, onBannerChange }) => {
   const [categories, setCategories] = useState([]);
-  const [error, setError] = useState("");
+  const [error, setError]           = useState('');
+  const [dragOver, setDragOver]     = useState(false);
 
   useEffect(() => {
     const getAllCategories = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/admin/categories`, {
+        const res  = await fetch(`${API_BASE}/api/admin/categories`, {
           method: 'GET',
-          headers: { 'content-type': 'application/json' }
+          headers: { 'content-type': 'application/json' },
         });
-
-        const data = await response.json();
+        const data = await res.json();
         if (data.success) {
-          setCategories(
-            data.data.map(cat => ({
-              value: cat.category_id,
-              label: cat.category_name
-            }))
-          );
+          setCategories(data.data.map((cat) => ({
+            value: cat.category_id,
+            label: cat.category_name,
+          })));
         }
       } catch (err) {
         setError(err.message);
       }
     };
-
     getAllCategories();
   }, []);
 
-  const handleChange = (field, value) => {
+  const handleChange = (field, value) =>
     onChange({ ...eventInfo, [field]: value });
-  };
 
-  // ===== ARTIST HANDLERS =====
   const handleArtistChange = (index, value) => {
-    const updatedArtists = [...(eventInfo.artist || [])];
-    updatedArtists[index] = { ...updatedArtists[index], name: value };
-    onChange({ ...eventInfo, artist: updatedArtists });
+    const updated = [...(eventInfo.artist || [])];
+    updated[index] = { ...updated[index], name: value };
+    onChange({ ...eventInfo, artist: updated });
   };
 
-  const addArtist = () => {
-    const updatedArtists = [...(eventInfo.artist || [])];
-    updatedArtists.push({ name: "" });
-    onChange({ ...eventInfo, artist: updatedArtists });
+  const addArtist = () =>
+    onChange({ ...eventInfo, artist: [...(eventInfo.artist || []), { name: '' }] });
+
+  const removeArtist = (index) =>
+    onChange({ ...eventInfo, artist: eventInfo.artist.filter((_, i) => i !== index) });
+
+  const handleFileChange = (file) => {
+    if (!file) return;
+    onBannerChange(file);
+    onChange({ ...eventInfo, image: URL.createObjectURL(file) });
   };
 
-  const removeArtist = (index) => {
-    const updatedArtists = eventInfo.artist.filter((_, i) => i !== index);
-    onChange({ ...eventInfo, artist: updatedArtists });
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleFileChange(file);
   };
 
   return (
-    <div style={{
-      marginBottom: '30px',
-      padding: '25px',
-      background: '#f8f9fa',
-      borderRadius: '8px',
-      border: '1px solid #e0e0e0'
-    }}>
-      <h2 style={{
-        margin: '0 0 20px 0',
-        fontSize: '20px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px'
-      }}>
-        <Calendar size={24} />
-        Thông tin sự kiện
-      </h2>
+    <div className="eif-root">
+      {error && <div className="eif-error">⚠ {error}</div>}
 
-      {error && <div style={{ color: 'red' }}>Lỗi: {error}</div>}
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '20px'
-      }}>
-        <div style={{ gridColumn: 'span 2' }}>
-          <FormField
-            label="Tên sự kiện *"
-            value={eventInfo.name}
-            onChange={(v) => handleChange('name', v)}
-          />
+      {/* ══ 01 — Thông tin cơ bản ══ */}
+      <div className="eif-card">
+        <div className="eif-card-header">
+          <span className="eif-card-num">01</span>
+          <div>
+            <div className="eif-card-title">Thông tin cơ bản</div>
+            <div className="eif-card-desc">Tên, thể loại và mô tả sự kiện</div>
+          </div>
         </div>
 
-        <FormSelect
-          label="Thể loại *"
-          value={eventInfo.category}
-          options={categories}
-          onChange={(v) => handleChange('category', v)}
-        />
+        <div className="eif-grid">
+          <div className="eif-col-full">
+            <FormField
+              label="Tên sự kiện *"
+              value={eventInfo.name}
+              onChange={(v) => handleChange('name', v)}
+              placeholder="VD: Anh Trai Say Hi Concert 2025"
+            />
+          </div>
 
-        <FormField
-          label="Ngày diễn ra *"
-          type="date"
-          value={eventInfo.date}
-          onChange={(v) => handleChange('date', v)}
-        />
-
-        <FormField
-          label="Thời gian *"
-          type="time"
-          value={eventInfo.time}
-          onChange={(v) => handleChange('time', v)}
-        />
-
-        <FormField
-          label="Ngày kết thúc *"
-          type="date"
-          value={eventInfo.endDate}
-          onChange={(v) => handleChange('endDate', v)}
-        />
-
-        <FormField
-          label="Thời gian kết thúc *"
-          type="time"
-          value={eventInfo.endTime}
-          onChange={(v) => handleChange('endTime', v)}
-        />
-
-        <div style={{ gridColumn: 'span 2' }}>
-          <FormField
-            label="Địa chỉ chi tiết *"
-            value={eventInfo.address}
-            onChange={(v) => handleChange('address', v)}
+          <FormSelect
+            label="Thể loại *"
+            value={eventInfo.category}
+            options={categories}
+            onChange={(v) => handleChange('category', v)}
           />
-        </div>
 
-        <div style={{ gridColumn: 'span 2' }}>
           <FormField
-            label="Độ tuổi *"
+            label="Độ tuổi tối thiểu *"
             type="number"
             value={eventInfo.age}
             onChange={(v) => handleChange('age', v)}
+            placeholder="0"
           />
+
+          <div className="eif-col-full">
+            <FormField
+              label="Mô tả sự kiện"
+              multiline
+              value={eventInfo.description}
+              onChange={(v) => handleChange('description', v)}
+              placeholder="Mô tả chi tiết về sự kiện..."
+            />
+          </div>
+
+          <div className="eif-col-full">
+            <FormField
+              label="Đơn vị tổ chức"
+              multiline
+              value={eventInfo.actor}
+              onChange={(v) => handleChange('actor', v)}
+              placeholder="Tên công ty / đơn vị tổ chức..."
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ══ 02 — Thời gian & địa điểm ══ */}
+      <div className="eif-card">
+        <div className="eif-card-header">
+          <span className="eif-card-num">02</span>
+          <div>
+            <div className="eif-card-title">Thời gian & Địa điểm</div>
+            <div className="eif-card-desc">Lịch trình và vị trí diễn ra sự kiện</div>
+          </div>
         </div>
 
-        <div style={{ gridColumn: 'span 2' }}>
-          <FormField
-            label="Mô tả sự kiện"
-            multiline
-            value={eventInfo.description}
-            onChange={(v) => handleChange('description', v)}
-          />
+        <div className="eif-grid">
+          {/* Bắt đầu */}
+          <div className="eif-col-full">
+            <div className="eif-dt-group">
+              <div className="eif-dt-group-label">
+                <Clock size={12} /> Bắt đầu
+              </div>
+              <div className="eif-dt-row">
+                <FormField
+                  label="Ngày *"
+                  type="date"
+                  value={eventInfo.date}
+                  onChange={(v) => handleChange('date', v)}
+                />
+                <FormField
+                  label="Giờ *"
+                  type="time"
+                  value={eventInfo.time}
+                  onChange={(v) => handleChange('time', v)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Kết thúc */}
+          <div className="eif-col-full">
+            <div className="eif-dt-group">
+              <div className="eif-dt-group-label">
+                <Clock size={12} /> Kết thúc
+              </div>
+              <div className="eif-dt-row">
+                <FormField
+                  label="Ngày *"
+                  type="date"
+                  value={eventInfo.endDate}
+                  onChange={(v) => handleChange('endDate', v)}
+                />
+                <FormField
+                  label="Giờ *"
+                  type="time"
+                  value={eventInfo.endTime}
+                  onChange={(v) => handleChange('endTime', v)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="eif-col-full">
+            <FormField
+              label="Địa chỉ chi tiết *"
+              value={eventInfo.address}
+              onChange={(v) => handleChange('address', v)}
+              placeholder="VD: Sân vận động Mỹ Đình, Hà Nội"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ══ 03 — Banner ══ */}
+      <div className="eif-card">
+        <div className="eif-card-header">
+          <span className="eif-card-num">03</span>
+          <div>
+            <div className="eif-card-title">Hình ảnh banner</div>
+            <div className="eif-card-desc">Ảnh đại diện hiển thị trên trang sự kiện</div>
+          </div>
         </div>
 
-        <div style={{ gridColumn: 'span 2' }}>
-          <FormField
-            label="Đơn vị tổ chức"
-            multiline
-            value={eventInfo.actor}
-            onChange={(v) => handleChange('actor', v)}
-          />
-        </div>
-                {/* ===== BANNER UPLOAD ===== */}
-        <div style={{ gridColumn: 'span 2' }}>
-          <label style={{ fontWeight: 600, display: 'block', marginBottom: '8px' }}>
-            🖼 Banner sự kiện *
-          </label>
-
+        <label
+          className={`eif-upload${dragOver ? ' eif-upload--over' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+        >
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (!file) return;
-
-              // gửi file lên component cha
-              onBannerChange(file);
-
-              // preview tạm thời
-              onChange({
-                ...eventInfo,
-                image: URL.createObjectURL(file)
-              });
-            }}
+            className="eif-upload-input"
+            onChange={(e) => handleFileChange(e.target.files[0])}
           />
 
-          {eventInfo.image && (
-            <img
-              src={eventInfo.image}
-              alt="Banner preview"
-              style={{
-                marginTop: '12px',
-                maxWidth: '100%',
-                maxHeight: '300px',
-                objectFit: 'cover',
-                borderRadius: '8px',
-                border: '1px solid #ddd'
-              }}
-            />
+          {eventInfo.image ? (
+            <div className="eif-upload-preview">
+              <img src={eventInfo.image} alt="Banner" className="eif-upload-img" />
+              <div className="eif-upload-change-overlay">
+                <Image size={18} />
+                <span>Đổi ảnh</span>
+              </div>
+            </div>
+          ) : (
+            <div className="eif-upload-empty">
+              <div className="eif-upload-icon-wrap">
+                <Image size={30} strokeWidth={1.4} />
+              </div>
+              <div className="eif-upload-cta">Kéo thả hoặc nhấn để chọn ảnh</div>
+              <div className="eif-upload-hint">PNG · JPG · WEBP &nbsp;·&nbsp; Khuyến nghị 1920×1080</div>
+            </div>
           )}
+        </label>
+      </div>
+
+      {/* ══ 04 — Nghệ sĩ ══ */}
+      <div className="eif-card">
+        <div className="eif-card-header">
+          <span className="eif-card-num">04</span>
+          <div>
+            <div className="eif-card-title">Nghệ sĩ tham gia</div>
+            <div className="eif-card-desc">Danh sách nghệ sĩ / diễn giả biểu diễn</div>
+          </div>
         </div>
 
-        {/* ===== ARTIST SECTION ===== */}
-        <div style={{ gridColumn: 'span 2' }}>
-          <label style={{ fontWeight: 600 }}>🎤 Nghệ sĩ tham gia</label>
-
-          {(eventInfo.artist || []).map((artist, index) => (
-            <div
-              key={index}
-              style={{ display: 'flex', gap: '10px', marginTop: '10px' }}
-            >
-              <FormField
-                value={artist.name}
-                placeholder={`Nghệ sĩ ${index + 1}`}
-                onChange={(v) => handleArtistChange(index, v)}
-              />
-              
-
+        <div className="eif-artist-list">
+          {(eventInfo.artist || []).length === 0 && (
+            <div className="eif-artist-empty">Chưa có nghệ sĩ — nhấn nút bên dưới để thêm</div>
+          )}
+          {(eventInfo.artist || []).map((artist, i) => (
+            <div key={i} className="eif-artist-row">
+              <span className="eif-artist-idx">{i + 1}</span>
+              <div className="eif-artist-field">
+                <FormField
+                  value={artist.name}
+                  placeholder={`Tên nghệ sĩ ${i + 1}`}
+                  onChange={(v) => handleArtistChange(i, v)}
+                />
+              </div>
               <button
                 type="button"
-                onClick={() => removeArtist(index)}
-                style={{
-                  background: '#ff4d4f',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '0 12px',
-                  cursor: 'pointer'
-                }}
+                className="eif-artist-del"
+                onClick={() => removeArtist(i)}
+                title="Xóa"
               >
-                ✕
+                <X size={13} />
               </button>
             </div>
           ))}
-
-          <button
-            type="button"
-            onClick={addArtist}
-            style={{
-              marginTop: '10px',
-              padding: '8px 14px',
-              border: '1px dashed #667eea',
-              borderRadius: '6px',
-              background: '#f0f3ff',
-              cursor: 'pointer'
-            }}
-          >
-            + Thêm nghệ sĩ
-          </button>
         </div>
+
+        <button type="button" className="eif-artist-add" onClick={addArtist}>
+          <Plus size={14} /> Thêm nghệ sĩ
+        </button>
       </div>
+
     </div>
   );
 };
