@@ -181,9 +181,10 @@ export default function ManageEvent() {
         const now = new Date();
         const startDate = eventStart ? new Date(eventStart) : null;
         const endDate = eventEnd ? new Date(eventEnd) : null;
+        console.log(endDate)
 
-        const isEnded = endDate && endDate < now;
-        const isUpcoming = !isEnded && startDate && startDate > now;
+        const isEnded = endDate < now;
+        const isUpcoming = startDate > now;
 
         const cfg = isEnded
             ? { label: 'Đã kết thúc', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' }
