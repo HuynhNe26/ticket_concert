@@ -177,12 +177,12 @@ export default function ManageEvent() {
         }
     };
 
-    const getStatusBadge = (status, eventStart, eventEnd) => {
+    const getStatusBadge = (eventStart, eventEnd) => {
         const now = new Date();
         const startDate = eventStart ? new Date(eventStart) : null;
         const endDate = eventEnd ? new Date(eventEnd) : null;
 
-        const isEnded = (endDate && endDate < now) || !status;
+        const isEnded = endDate && endDate < now;
         const isUpcoming = !isEnded && startDate && startDate > now;
 
         const cfg = isEnded
@@ -408,7 +408,7 @@ export default function ManageEvent() {
                                                         <MapPin size={14} /> {event.event_location || 'Chưa có'}
                                                     </span>
                                                 </div>
-                                                {getStatusBadge(event.event_status, event.event_start, event.event_end)}
+                                                {getStatusBadge(event.event_start, event.event_end)}
                                             </div>
                                             <EventToggle
                                                 initialStatus={event.event_status}
