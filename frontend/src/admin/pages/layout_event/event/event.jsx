@@ -177,16 +177,20 @@ export default function ManageEvent() {
         }
     };
 
-    const getStatusBadge = (status, eventStart) => {
+    const getStatusBadge = (eventStart, eventEnd) => {
         const now = new Date();
         const startDate = eventStart ? new Date(eventStart) : null;
-        const isUpcoming = !status && startDate && startDate > now;
+        const endDate = eventEnd ? new Date(eventEnd) : null;
+        console.log(endDate)
 
-        const cfg = isUpcoming
-            ? { label: 'Sắp mở bán', bg: '#eff6ff', color: '#1d4ed8', dot: '#3b82f6' }
-            : status
-                ? { label: 'Đang bán',    bg: '#f0fdf4', color: '#15803d', dot: '#22c55e' }
-                : { label: 'Đã kết thúc', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' };
+        const isEnded = endDate < now;
+        const isUpcoming = startDate > now;
+
+        const cfg = isEnded
+            ? { label: 'Đã kết thúc', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' }
+            : isUpcoming
+                ? { label: 'Sắp mở bán', bg: '#eff6ff', color: '#1d4ed8', dot: '#3b82f6' }
+                : { label: 'Đang bán',    bg: '#f0fdf4', color: '#15803d', dot: '#22c55e' };
 
         return (
             <span style={{
@@ -198,7 +202,7 @@ export default function ManageEvent() {
                 <span style={{
                     width: '6px', height: '6px', borderRadius: '50%',
                     background: cfg.dot,
-                    ...(cfg.dot === '#22c55e' ? { animation: 'pulseDot 1.5s ease-in-out infinite' } : {})
+                    ...(!isEnded && !isUpcoming ? { animation: 'pulseDot 1.5s ease-in-out infinite' } : {})
                 }} />
                 {cfg.label}
                 {isUpcoming && startDate && (
@@ -405,7 +409,7 @@ export default function ManageEvent() {
                                                         <MapPin size={14} /> {event.event_location || 'Chưa có'}
                                                     </span>
                                                 </div>
-                                                {getStatusBadge(event.event_status, event.event_start)}
+                                                {getStatusBadge(event.event_start, event.event_end)}
                                             </div>
                                             <EventToggle
                                                 initialStatus={event.event_status}

@@ -35,7 +35,6 @@ export const EventSocket = (io) => {
                             AND e.event_status = true
                     GROUP BY e.event_id, c.category_name
                     ORDER BY ticketsSold DESC
-                    LIMIT 5
                 `);
 
                 io.to("admin_dashboard").emit("hotEvents", rows);
@@ -53,6 +52,7 @@ export const EventSocket = (io) => {
                         e.event_name,
                         e.event_status,
                         e.event_start,
+                        e.event_end,
                         e.event_location,
                         SUM(z.zone_quantity) AS totalTickets,
                         SUM(z.sold_quantity) AS ticketsSold,
