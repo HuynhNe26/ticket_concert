@@ -8,16 +8,12 @@ const API_BASE = process.env.REACT_APP_API_URL;
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 const mapStatus = (s) => {
   if (s === "Thành công") return "success";
-  if (s === "Đang xử lý") return "processing";
-  if (s === "Đã hủy")     return "cancelled";
   return "unknown";
 };
 
 const statusMeta = {
-  success:    { label: "Đã thanh toán", color: "#4ade80", bg: "rgba(74,222,128,.12)", border: "rgba(74,222,128,.25)" },
-  processing: { label: "Đang xử lý",   color: "#fbbf24", bg: "rgba(251,191,36,.12)", border: "rgba(251,191,36,.25)" },
-  cancelled:  { label: "Đã hủy",       color: "#f87171", bg: "rgba(248,113,113,.12)", border: "rgba(248,113,113,.25)" },
-  unknown:    { label: "Không rõ",      color: "#94a3b8", bg: "rgba(148,163,184,.1)", border: "rgba(148,163,184,.2)" },
+  success: { label: "Đã thanh toán", color: "#4ade80", bg: "rgba(74,222,128,.12)", border: "rgba(74,222,128,.25)" },
+  unknown: { label: "Không rõ",      color: "#94a3b8", bg: "rgba(148,163,184,.1)",  border: "rgba(148,163,184,.2)"  },
 };
 
 const usageLabel = (ticket) => {
@@ -46,6 +42,56 @@ function formatVND(n) {
   return Number(n).toLocaleString("vi-VN") + " đ";
 }
 
+// ─── Group tickets by purchase date ────────────────────────────────────────────
+function groupByPurchaseDate(tickets) {
+  const sorted = [...tickets].sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+  );
+
+  const groups = [];
+  let lastDateKey = null;
+
+  sorted.forEach((t) => {
+    const dateKey = t.created_at
+      ? new Date(t.created_at).toLocaleDateString("vi-VN", {
+          day: "2-digit", month: "2-digit", year: "numeric",
+        })
+      : "Không rõ ngày";
+
+    if (dateKey !== lastDateKey) {
+      groups.push({ type: "separator", date: dateKey, raw: t.created_at });
+      lastDateKey = dateKey;
+    }
+    groups.push({ type: "ticket", data: t });
+  });
+
+  return groups;
+}
+
+// ─── Date Separator ─────────────────────────────────────────────────────────────
+function DateSeparator({ date, raw }) {
+  const now       = new Date();
+  const yesterday = new Date(Date.now() - 86400000);
+  const rawDate   = raw ? new Date(raw) : null;
+
+  const isToday     = rawDate && rawDate.toDateString() === now.toDateString();
+  const isYesterday = rawDate && rawDate.toDateString() === yesterday.toDateString();
+
+  const label = isToday ? "Hôm nay" : isYesterday ? "Hôm qua" : null;
+
+  return (
+    <div className="date-separator">
+      <div className="date-separator-line" />
+      <div className="date-separator-pill">
+        {label && <span className="date-sep-highlight">{label}&nbsp;·&nbsp;</span>}
+        <span>{date}</span>
+      </div>
+      <div className="date-separator-line" />
+    </div>
+  );
+}
+
+// ─── QR Canvas ──────────────────────────────────────────────────────────────────
 function QRCanvas({ value, size = 140 }) {
   const canvasRef = useRef(null);
   useEffect(() => {
@@ -61,9 +107,9 @@ function QRCanvas({ value, size = 140 }) {
 
 // ─── Ticket Modal ───────────────────────────────────────────────────────────────
 function TicketModal({ ticket, onClose }) {
-  const status  = mapStatus(ticket.payment_status);
-  const meta    = statusMeta[status];
-  const usage   = usageLabel(ticket);
+  const status = mapStatus(ticket.payment_status);
+  const meta   = statusMeta[status];
+  const usage  = usageLabel(ticket);
 
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && onClose();
@@ -220,6 +266,9 @@ function TicketCardItem({ ticket, onClick }) {
         <div className="tc-loc">
           📍 {ticket.event_location?.split(",").slice(-2).join(",").trim() || "—"}
         </div>
+        {/* <div className="tc-purchased">
+          🕐 Mua lúc: {fmt(ticket.created_at)}
+        </div> */}
       </div>
 
       <div className="tc-right">
@@ -248,10 +297,7 @@ function TicketCardItem({ ticket, onClick }) {
 
 // ─── Filter config ──────────────────────────────────────────────────────────────
 const TAB_FILTERS = [
-  { label: "Tất cả",      value: "all" },
-  { label: "Thành công",  value: "success" },
-  { label: "Đang xử lý", value: "processing" },
-  { label: "Đã hủy",     value: "cancelled" },
+  { label: "Tất cả", value: "all" },
 ];
 
 const TIME_FILTERS = [
@@ -299,11 +345,13 @@ export default function MyTicket() {
     return matchTab && matchTime;
   });
 
+  const grouped = groupByPurchaseDate(filtered);
+
   return (
     <div className="mtp-root">
 
       <div className="mtp-header">
-        <h1 className="mtp-title">Vé của tôi</h1>
+        <h1 className="mtp-title">VÉ CỦA TÔI</h1>
       </div>
 
       <div className="mtp-filters">
@@ -339,19 +387,27 @@ export default function MyTicket() {
           </div>
         ) : error ? (
           <div className="mtp-state error">{error}</div>
-        ) : filtered.length === 0 ? (
+        ) : grouped.length === 0 ? (
           <div className="mtp-state">
             <p style={{ fontSize: 32 }}>🎫</p>
             <p>Không có vé nào</p>
           </div>
         ) : (
-          filtered.map((t) => (
-            <TicketCardItem
-              key={t.payment_detail_id}
-              ticket={t}
-              onClick={setSelected}
-            />
-          ))
+          grouped.map((item, i) =>
+            item.type === "separator" ? (
+              <DateSeparator
+                key={`sep-${item.date}-${i}`}
+                date={item.date}
+                raw={item.raw}
+              />
+            ) : (
+              <TicketCardItem
+                key={item.data.payment_detail_id}
+                ticket={item.data}
+                onClick={setSelected}
+              />
+            )
+          )
         )}
       </div>
 

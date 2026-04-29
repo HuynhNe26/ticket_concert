@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 /* ── Reset & Root ── */
 *, *::before, *::after { box-sizing: border-box; }
@@ -7,7 +7,8 @@
   font-family: 'DM Sans', sans-serif;
   min-height: 100vh;
   padding: 36px 24px 60px;
-  color: #e2e8f0;
+  background: #f4f6fb;
+  color: #1e293b;
 }
 
 /* ── Header ── */
@@ -16,17 +17,17 @@
 }
 
 .mtp-title {
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Be Vietnam Pro', sans-serif;
   font-size: 42px;
   letter-spacing: .08em;
   margin: 0 0 4px;
-  color: #f8fafc;
+  color: #0f172a;
   line-height: 1;
 }
 
 .mtp-sub {
   font-size: 13px;
-  color: #475569;
+  color: #94a3b8;
   letter-spacing: .02em;
 }
 
@@ -41,10 +42,11 @@
 .filter-group {
   display: flex;
   gap: 4px;
-  background: #0d1526;
-  border: 1px solid rgba(255,255,255,.06);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 4px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
 }
 
 .filter-btn {
@@ -52,7 +54,7 @@
   border-radius: 9px;
   border: none;
   background: transparent;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 13px;
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
@@ -61,7 +63,7 @@
   white-space: nowrap;
 }
 
-.filter-btn:hover { color: #cbd5e1; }
+.filter-btn:hover { color: #334155; }
 .filter-btn.active { background: #7c3aed; color: #fff; }
 .filter-btn.time.active { background: #4f46e5; color: #fff; }
 
@@ -76,35 +78,36 @@
 .tc-card {
   display: grid;
   grid-template-columns: 90px 1fr auto;
-  background: #0d1526;
-  border: 1px solid rgba(255,255,255,.06);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
   transition: transform .2s, box-shadow .2s, border-color .2s;
+  box-shadow: 0 1px 6px rgba(0,0,0,.05);
 }
 
 .tc-card:hover {
   transform: translateY(-2px);
   border-color: rgba(124,58,237,.3);
-  box-shadow: 0 8px 32px rgba(0,0,0,.4), 0 0 0 1px rgba(124,58,237,.15);
+  box-shadow: 0 8px 32px rgba(124,58,237,.12), 0 0 0 1px rgba(124,58,237,.15);
 }
 
 .tc-left {
-  background: linear-gradient(160deg, #4c1d95 0%, #1e1b4b 100%);
+  background: linear-gradient(160deg, #7c3aed 0%, #4f46e5 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border-right: 1px dashed rgba(255,255,255,.1);
+  border-right: 1px dashed rgba(255,255,255,.25);
   padding: 16px 8px;
 }
 
 .tc-left-icon { font-size: 26px; line-height: 1; }
 
 .tc-qty {
-  color: #a78bfa;
+  color: #ede9fe;
   font-weight: 700;
   font-size: 13px;
   letter-spacing: .04em;
@@ -122,7 +125,7 @@
   font-family: 'Bebas Neue', sans-serif;
   font-size: 19px;
   letter-spacing: .04em;
-  color: #f1f5f9;
+  color: #0f172a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -130,7 +133,7 @@
 
 .tc-artist {
   font-size: 12px;
-  color: #a78bfa;
+  color: #7c3aed;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -139,7 +142,14 @@
 
 .tc-date, .tc-loc {
   font-size: 12px;
-  color: #64748b;
+  color: #94a3b8;
+}
+
+.tc-purchased {
+  font-size: 11px;
+  color: #b0bec5;
+  margin-top: 4px;
+  letter-spacing: 0.2px;
 }
 
 .tc-right {
@@ -150,12 +160,13 @@
   justify-content: center;
   gap: 6px;
   min-width: 120px;
+  border-left: 1px solid #f1f5f9;
 }
 
 .tc-price {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 20px;
-  color: #f1f5f9;
+  color: #0f172a;
   letter-spacing: .03em;
   white-space: nowrap;
 }
@@ -180,13 +191,13 @@
 }
 
 /* ══════════════════════════════════════════
-   MODAL REDESIGN — Event card style
+   MODAL
    ══════════════════════════════════════════ */
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(2, 6, 23, 0.75);
+  background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
@@ -195,14 +206,13 @@
   padding: 16px;
 }
 
-/* MAIN WRAPPER */
 .ticket-modal-main {
   width: min(880px, 94vw);
   border-radius: 20px;
   overflow: hidden;
-  background: #0d1526;
+  background: #ffffff;
   position: relative;
-  box-shadow: 0 32px 80px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.07);
+  box-shadow: 0 32px 80px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.06);
   animation: modalIn .28s cubic-bezier(.34,1.56,.64,1) both;
 }
 
@@ -211,11 +221,11 @@
   to   { transform: scale(1) translateY(0); opacity: 1; }
 }
 
-/* BANNER SECTION (top) */
+/* BANNER */
 .ticket-modal-banner {
   position: relative;
   height: 200px;
-  background: #1e1b4b;
+  background: linear-gradient(135deg, #ede9fe, #e0e7ff);
   overflow: hidden;
 }
 
@@ -232,25 +242,23 @@
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(13,21,38,.0) 0%,
-    rgba(13,21,38,.55) 60%,
-    rgba(13,21,38,1) 100%
+    rgba(255,255,255,.0) 0%,
+    rgba(255,255,255,.3) 60%,
+    rgba(255,255,255,1) 100%
   );
 }
 
-/* Banner fallback (no image) */
 .ticket-modal-banner-fallback {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #4c1d95 0%, #1e1b4b 50%, #0d1526 100%);
+  background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%);
   font-size: 64px;
   opacity: .5;
 }
 
-/* EVENT TITLE over banner */
 .ticket-modal-event-title {
   position: absolute;
   bottom: 16px;
@@ -259,12 +267,12 @@
   font-family: 'Bebas Neue', sans-serif;
   font-size: clamp(22px, 3vw, 34px);
   letter-spacing: .06em;
-  color: #fff;
+  color: #1e0a3c;
   line-height: 1.1;
-  text-shadow: 0 2px 16px rgba(0,0,0,.6);
+  text-shadow: 0 1px 8px rgba(255,255,255,.6);
 }
 
-/* BODY (below banner) */
+/* BODY */
 .ticket-modal-body {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -277,7 +285,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  border-right: 1px dashed rgba(255,255,255,.08);
+  border-right: 1px dashed #e2e8f0;
 }
 
 /* Order code */
@@ -285,8 +293,8 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: rgba(124,58,237,.12);
-  border: 1px solid rgba(124,58,237,.3);
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
   border-radius: 10px;
   padding: 10px 16px;
 }
@@ -303,7 +311,7 @@
 .ticket-order-code-value {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 20px;
-  color: #c4b5fd;
+  color: #5b21b6;
   letter-spacing: .12em;
 }
 
@@ -315,8 +323,8 @@
 }
 
 .ticket-meta-item {
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.05);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 10px 12px;
 }
@@ -326,7 +334,7 @@
 .ticket-meta-label {
   font-size: 10px;
   font-weight: 600;
-  color: #475569;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: .08em;
   margin-bottom: 4px;
@@ -335,12 +343,12 @@
 .ticket-meta-value {
   font-size: 14px;
   font-weight: 500;
-  color: #e2e8f0;
+  color: #1e293b;
   line-height: 1.4;
 }
 
 .ticket-meta-value.highlight {
-  color: #4ade80;
+  color: #16a34a;
   font-family: 'Bebas Neue', sans-serif;
   font-size: 18px;
   letter-spacing: .04em;
@@ -351,8 +359,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(124,58,237,.08);
-  border: 1px solid rgba(124,58,237,.2);
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
   border-radius: 10px;
   padding: 12px 16px;
   margin-top: 2px;
@@ -369,32 +377,11 @@
 .ticket-price-amount {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 26px;
-  color: #a78bfa;
+  color: #5b21b6;
   letter-spacing: .05em;
 }
 
-/* DIVIDER dots */
-.ticket-modal-divider {
-  position: relative;
-  width: 0;
-}
-
-.ticket-modal-divider::before,
-.ticket-modal-divider::after {
-  content: '';
-  position: absolute;
-  left: -12px;
-  width: 24px;
-  height: 24px;
-  background: #060a14;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,.07);
-}
-
-.ticket-modal-divider::before { top: -12px; }
-.ticket-modal-divider::after  { bottom: -12px; }
-
-/* RIGHT BODY (QR + status) */
+/* RIGHT BODY */
 .ticket-modal-right {
   width: 200px;
   padding: 20px 20px 24px;
@@ -402,6 +389,7 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  background: #fafafa;
 }
 
 /* QR block */
@@ -415,7 +403,7 @@
 .ticket-qr-label {
   font-size: 11px;
   font-weight: 600;
-  color: #64748b;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: .1em;
 }
@@ -423,14 +411,14 @@
 .qr-placeholder {
   width: 140px;
   height: 140px;
-  background: rgba(255,255,255,.04);
-  border: 1px dashed rgba(255,255,255,.1);
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  color: #475569;
+  color: #94a3b8;
 }
 
 /* Status block */
@@ -445,7 +433,7 @@
 .ticket-status-title {
   font-size: 10px;
   font-weight: 600;
-  color: #475569;
+  color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: .1em;
 }
@@ -472,8 +460,8 @@
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 6px;
-  background: rgba(255,255,255,.05);
-  color: #94a3b8;
+  background: #f1f5f9;
+  color: #64748b;
   text-align: center;
   width: 100%;
 }
@@ -486,9 +474,9 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(0,0,0,.5);
-  border: 1px solid rgba(255,255,255,.12);
-  color: #94a3b8;
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.1);
+  color: #64748b;
   cursor: pointer;
   font-size: 13px;
   display: flex;
@@ -508,7 +496,7 @@
 .mtp-state {
   text-align: center;
   padding: 60px 0;
-  color: #475569;
+  color: #94a3b8;
   font-size: 14px;
 }
 
@@ -526,6 +514,41 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Date Separator ── */
+.date-separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 10px;
+  padding: 0 2px;
+}
+
+.date-separator-line {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.date-separator-pill {
+  display: flex;
+  align-items: center;
+  padding: 5px 16px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+  letter-spacing: 0.4px;
+  user-select: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+
+.date-sep-highlight {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
 /* ── Mobile ── */
 @media (max-width: 600px) {
   .mtp-root { padding: 24px 16px 48px; }
@@ -534,17 +557,14 @@
   .tc-right { min-width: 90px; padding: 12px; }
 
   .ticket-modal-main { width: 96vw; }
-
   .ticket-modal-banner { height: 150px; }
   .ticket-modal-event-title { font-size: 22px; }
 
-  .ticket-modal-body {
-    grid-template-columns: 1fr;
-  }
+  .ticket-modal-body { grid-template-columns: 1fr; }
 
   .ticket-modal-left {
     border-right: none;
-    border-bottom: 1px dashed rgba(255,255,255,.08);
+    border-bottom: 1px dashed #e2e8f0;
   }
 
   .ticket-modal-right {
@@ -557,6 +577,5 @@
   }
 
   .ticket-meta-grid { grid-template-columns: 1fr; }
-
   .ticket-modal-divider { display: none; }
 }

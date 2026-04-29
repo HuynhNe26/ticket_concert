@@ -1,22 +1,22 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* ─── Root ── */
 .tqr-root {
   min-height: 100dvh;
-  background: #02060e;
-  font-family: "DM Sans", sans-serif;
+  background: #f0f4ff;
+  font-family: "Be Vietnam Pro", sans-serif;
   display: flex;
   flex-direction: column;
 }
 
 /* ─── Header ── */
 .tqr-header {
-  padding: 14px 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  background: rgba(15,23,42,0.95);
-  backdrop-filter: blur(12px);
+  padding: 12px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -26,24 +26,20 @@
 }
 
 .tqr-header-left { display: flex; flex-direction: column; gap: 2px; }
-.tqr-header-title { font-size: 17px; font-weight: 800; color: #f1f5f9; letter-spacing: -0.5px; }
-.tqr-header-sub   { font-size: 11px; color: #475569; }
+.tqr-header-title { font-size: 16px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; }
+.tqr-header-sub   { font-size: 11px; color: #94a3b8; }
 
-.tqr-stats { display: flex; gap: 20px; }
+.tqr-stats { display: flex; gap: 16px; }
 .tqr-stat  { text-align: center; }
 .tqr-stat-value { font-size: 20px; font-weight: 800; line-height: 1; }
-.tqr-stat-label { font-size: 9px; color: #475569; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+.tqr-stat-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
 
-/* ─── Body: split layout ── */
+/* ─── Body: desktop split / mobile stack ── */
 .tqr-body {
   flex: 1;
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 0;
-}
-
-@media (max-width: 768px) {
-  .tqr-body { grid-template-columns: 1fr; }
 }
 
 /* ─── Left: camera panel ── */
@@ -52,27 +48,28 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 24px;
-  border-right: 1px solid rgba(255,255,255,0.05);
+  padding: 28px 20px;
+  border-right: 1px solid #e2e8f0;
+  background: #fff;
 }
 
 .tqr-viewport {
   position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 360px;
   aspect-ratio: 1;
   border-radius: 20px;
   overflow: hidden;
-  background: #0a0f1a;
-  margin-bottom: 20px;
+  background: #f1f5f9;
+  margin-bottom: 16px;
   transition: box-shadow 0.4s ease;
 }
 
 .tqr-viewport.scanning {
-  box-shadow: 0 0 0 1px rgba(96,165,250,0.4), 0 20px 60px rgba(0,0,0,0.6);
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.4), 0 12px 40px rgba(99,102,241,0.15);
 }
 .tqr-viewport.idle {
-  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
 #qr-reader {
@@ -99,15 +96,15 @@
   align-items: center; justify-content: center;
   gap: 8px;
 }
-.tqr-placeholder-icon { font-size: 56px; opacity: 0.15; color: #60a5fa; }
-.tqr-placeholder-text { font-size: 13px; color: #334155; }
+.tqr-placeholder-icon { font-size: 56px; opacity: 0.12; color: #6366f1; }
+.tqr-placeholder-text { font-size: 13px; color: #94a3b8; }
 
 /* ─── Overlay ── */
 .tqr-overlay { position: absolute; inset: 0; pointer-events: none; }
 
 .tqr-vignette {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 65% 65% at 50% 50%, transparent 38%, rgba(2,6,14,0.7) 100%);
+  background: radial-gradient(ellipse 65% 65% at 50% 50%, transparent 38%, rgba(240,244,255,0.55) 100%);
 }
 
 .tqr-finder {
@@ -118,50 +115,50 @@
 }
 
 .tqr-corner { position: absolute; width: 24px; height: 24px; border-radius: 3px; }
-.tqr-corner.tl { top: 0; left: 0;     border-top: 3px solid #60a5fa; border-left: 3px solid #60a5fa; }
-.tqr-corner.tr { top: 0; right: 0;    border-top: 3px solid #60a5fa; border-right: 3px solid #60a5fa; }
-.tqr-corner.bl { bottom: 0; left: 0;  border-bottom: 3px solid #60a5fa; border-left: 3px solid #60a5fa; }
-.tqr-corner.br { bottom: 0; right: 0; border-bottom: 3px solid #60a5fa; border-right: 3px solid #60a5fa; }
+.tqr-corner.tl { top: 0; left: 0;     border-top: 3px solid #6366f1; border-left: 3px solid #6366f1; }
+.tqr-corner.tr { top: 0; right: 0;    border-top: 3px solid #6366f1; border-right: 3px solid #6366f1; }
+.tqr-corner.bl { bottom: 0; left: 0;  border-bottom: 3px solid #6366f1; border-left: 3px solid #6366f1; }
+.tqr-corner.br { bottom: 0; right: 0; border-bottom: 3px solid #6366f1; border-right: 3px solid #6366f1; }
 
 .tqr-scanline {
   position: absolute;
   left: 6px; right: 6px; height: 2px;
-  background: linear-gradient(90deg, transparent, #60a5fa, transparent);
-  box-shadow: 0 0 10px #60a5fa;
+  background: linear-gradient(90deg, transparent, #6366f1, transparent);
+  box-shadow: 0 0 10px #6366f1;
   animation: tqr-scanline 2s ease-in-out infinite;
 }
 
 /* ─── Camera status ── */
 .tqr-cam-status {
   display: flex; align-items: center; gap: 8px;
-  font-size: 13px; color: #60a5fa;
+  font-size: 13px; color: #6366f1; font-weight: 500;
 }
 
 .tqr-pulse-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
-  background: #4ade80;
-  box-shadow: 0 0 8px #4ade80;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
   animation: tqr-pulse 1.5s ease infinite;
 }
 
 .tqr-btn-start {
   padding: 14px 40px;
   border-radius: 12px; border: none;
-  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  background: linear-gradient(135deg, #6366f1, #818cf8);
   color: #fff; font-size: 15px; font-weight: 700;
-  font-family: "DM Sans", sans-serif;
-  cursor: pointer; letter-spacing: -0.3px;
-  box-shadow: 0 4px 20px rgba(59,130,246,0.35);
+  font-family: "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.3);
   transition: transform 0.15s;
 }
 .tqr-btn-start:active { transform: scale(0.97); }
 
 .tqr-error {
-  background: rgba(248,113,113,0.08);
-  border: 1px solid rgba(248,113,113,0.25);
+  background: #fef2f2;
+  border: 1px solid #fecaca;
   border-radius: 10px; padding: 10px 14px;
-  color: #f87171; font-size: 12px; text-align: center;
+  color: #ef4444; font-size: 12px; text-align: center;
   margin-top: 12px; max-width: 340px;
 }
 
@@ -170,8 +167,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;   /* căn giữa dọc */
-  padding: 24px 28px;
+  justify-content: center;
+  padding: 24px 20px;
+  background: #f8faff;
 }
 
 /* Empty state */
@@ -182,73 +180,101 @@
   gap: 10px;
 }
 .tqr-empty-icon { font-size: 40px; opacity: 0.2; }
-.tqr-empty-text { font-size: 12px; color: #334155; text-align: center; line-height: 1.6; }
+.tqr-empty-text { font-size: 12px; color: #94a3b8; text-align: center; line-height: 1.6; }
 
-/* ─── Result card — compact, không full height ── */
+/* ─── Result card ── */
 .tqr-result-card {
   width: 100%;
-  max-width: 400px;          /* giới hạn chiều ngang */
-  border-radius: 12px;
-  padding: 20px 28px;
+  max-width: 420px;
+  border-radius: 16px;
+  padding: 18px 20px;
   animation: tqr-slideIn 0.25s ease;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  /* KHÔNG có flex:1 → card chỉ cao vừa nội dung */
+  gap: 12px;
+  background: #fff;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  border: 1px solid #e2e8f0;
 }
 
 .tqr-result-header {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .tqr-result-icon-small {
-  width: 32px; height: 32px;
+  width: 34px; height: 34px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 800;
   flex-shrink: 0;
 }
 
-.tqr-result-title    { font-size: 13px; font-weight: 700; }
-.tqr-result-subtitle { font-size: 11px; color: #64748b; margin-top: 2px; }
+.tqr-result-title    { font-size: 14px; font-weight: 700; }
+.tqr-result-subtitle { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
-/* ─── Field grid ── */
+/* ─── Field grid — event name gets priority ── */
 .tqr-field-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px 12px;
+  gap: 10px 12px;
+}
+
+/* Ô sự kiện chiếm full width, to hơn */
+.tqr-field-grid > div:first-child {
+  grid-column: 1 / -1;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.tqr-field-grid > div:first-child .tqr-field-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #3730a3;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+/* Ô mã đơn — nhỏ hơn, truncate */
+.tqr-field-grid > div:nth-child(2) .tqr-field-value {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  display: block;
+}
+
+/* Các ô còn lại */
+.tqr-field-grid > div:not(:first-child) {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
 }
 
 .tqr-field-label {
   font-size: 9px;
-  color: #475569;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  margin-bottom: 2px;
+  letter-spacing: 0.08em;
+  margin-bottom: 3px;
+  font-weight: 600;
 }
 
 .tqr-field-value {
-  font-size: 12px;
-  color: #cbd5e1;
-  font-weight: 500;
+  font-size: 13px;
+  color: #1e293b;
+  font-weight: 600;
   line-height: 1.35;
 }
-
-/* ─── Total row ── */
-.tqr-total-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-}
-
-.tqr-total-label { font-size: 11px; color: #64748b; }
-.tqr-total-value { font-size: 15px; font-weight: 800; }
 
 /* ─── Action buttons ── */
 .tqr-actions {
@@ -258,37 +284,81 @@
 
 .tqr-btn-confirm {
   flex: 1;
-  padding: 10px;
-  border-radius: 9px; border: none;
-  font-size: 12px; font-weight: 700;
-  font-family: "DM Sans", sans-serif;
-  cursor: pointer; letter-spacing: -0.2px;
+  padding: 12px;
+  border-radius: 10px; border: none;
+  font-size: 13px; font-weight: 700;
+  font-family: "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
   transition: transform 0.15s, opacity 0.15s;
 }
 .tqr-btn-confirm:active   { transform: scale(0.97); }
 .tqr-btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .tqr-btn-cancel {
-  padding: 10px 14px;
-  border-radius: 9px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: transparent;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
   color: #64748b;
-  font-size: 12px; font-weight: 600;
-  font-family: "DM Sans", sans-serif;
+  font-size: 13px; font-weight: 600;
+  font-family: "Be Vietnam Pro", sans-serif;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.15s, background 0.15s;
 }
-.tqr-btn-cancel:hover { border-color: rgba(255,255,255,0.2); color: #94a3b8; }
+.tqr-btn-cancel:hover { border-color: #cbd5e1; background: #f1f5f9; }
 
 /* ─── Banner ── */
 .tqr-banner {
-  border-radius: 7px;
-  padding: 8px 12px;
-  font-size: 11px;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
   font-weight: 600;
   text-align: center;
   animation: tqr-fadeIn 0.3s ease;
+}
+
+/* ─── MOBILE ── */
+@media (max-width: 768px) {
+  .tqr-body {
+    grid-template-columns: 1fr;
+  }
+
+  .tqr-camera-panel {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 20px 16px;
+  }
+
+  .tqr-viewport {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  .tqr-info-panel {
+    padding: 16px;
+    justify-content: flex-start;
+    background: #f0f4ff;
+  }
+
+  .tqr-result-card {
+    max-width: 100%;
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  /* Sự kiện to hơn trên mobile */
+  .tqr-field-grid > div:first-child .tqr-field-value {
+    font-size: 16px;
+  }
+
+  /* Mã đơn truncate ngắn hơn trên mobile */
+  .tqr-field-grid > div:nth-child(2) .tqr-field-value {
+    font-size: 10px;
+    max-width: 120px;
+  }
+
+  .tqr-btn-confirm { padding: 14px; font-size: 14px; }
+  .tqr-btn-cancel  { padding: 14px 16px; }
 }
 
 /* ─── Animations ── */
@@ -297,14 +367,13 @@
   50%  { top: 208px; opacity: 1; }
   100% { top: 6px;   opacity: 0.3; }
 }
-@keyframes tqr-spin { to { transform: rotate(360deg); } }
 @keyframes tqr-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.4; transform: scale(0.8); }
 }
 @keyframes tqr-slideIn {
-  from { transform: translateX(12px); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
+  from { transform: translateY(10px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 @keyframes tqr-fadeIn {
   from { opacity: 0; }
