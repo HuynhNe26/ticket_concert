@@ -295,11 +295,6 @@ function TicketCardItem({ ticket, onClick }) {
   );
 }
 
-// ─── Filter config ──────────────────────────────────────────────────────────────
-const TAB_FILTERS = [
-  { label: "Tất cả", value: "all" },
-];
-
 const TIME_FILTERS = [
   { label: "Sắp diễn ra", value: "upcoming" },
   { label: "Đã kết thúc", value: "ended" },
@@ -355,17 +350,6 @@ export default function MyTicket() {
       </div>
 
       <div className="mtp-filters">
-        <div className="filter-group">
-          {TAB_FILTERS.map((t) => (
-            <button
-              key={t.value}
-              className={`filter-btn${activeTab === t.value ? " active" : ""}`}
-              onClick={() => setActiveTab(t.value)}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
         <div className="filter-group">
           {TIME_FILTERS.map((t) => (
             <button

@@ -149,20 +149,8 @@ export default function EditEvent() {
 
       <div className="ee-wrapper">
         <div className="ee-container">
-          {/* ── Page header ── */}
-          <div className="ee-page-header">
-            <div className="ee-breadcrumb">
-              <span>Sự kiện</span>
-              <ChevronRight size={13} />
-              <span className="ee-breadcrumb-active">Chỉnh sửa</span>
-            </div>
-            <h1 className="ee-page-title">Chỉnh Sửa Sự Kiện</h1>
-            <p className="ee-page-sub">Cập nhật thông tin sự kiện. Các thay đổi sẽ được lưu ngay lập tức.</p>
-          </div>
-
           {/* ── Card chính ── */}
           <div className="ee-card">
-            
               <EventInfoForm eventInfo={eventInfo} onChange={setEventInfo} />
 
               {/* Warning note */}

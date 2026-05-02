@@ -58,19 +58,6 @@ export default function AddEvent() {
 
   return (
     <div className="ae-root">
-
-      {/* ── Top bar ── */}
-      <div className="ae-topbar">
-        <button className="ae-back-btn" onClick={handleCancel}>
-          <ArrowLeft size={16} />
-          Quay lại
-        </button>
-
-        <div className="ae-topbar-right">
-          <div className="ae-step-pill">Bước 1 / 2</div>
-        </div>
-      </div>
-
       {/* ── Content wrapper ── */}
       <div className="ae-content">
 

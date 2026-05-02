@@ -1,28 +1,33 @@
 /* ═══════════════════════════════════════════
-   EditEvent.css
+   event_edit.css
    Theme: Light · Clean · Professional
-   Đồng bộ palette với EventInfoForm.css
+   Mirrors: add_event.css
 ═══════════════════════════════════════════ */
 
-/* ── Wrapper ngoài ── */
+/* ── Root ── */
 .ee-wrapper {
-  margin-top: 50px;
   min-height: 100vh;
-  background: #f8fafc;
-  padding: 24px 20px 64px;
+  background: #f4f6fb;
   font-family: 'Be Vietnam Pro', sans-serif;
-  color: #1e293b;
 }
 
-/* ── Container chính ── */
+/* ── Inner container ── */
 .ee-container {
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
+  padding: 100px 10px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-/* ── Page header ── */
+/* ══════════════════════════
+   Page header
+══════════════════════════ */
 .ee-page-header {
-  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .ee-breadcrumb {
@@ -30,109 +35,89 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ee-breadcrumb svg {
   color: #94a3b8;
-  margin-bottom: 10px;
 }
 
 .ee-breadcrumb-active {
   color: #7c3aed;
-  font-weight: 600;
 }
 
 .ee-page-title {
-  font-size: 28px;
-  font-weight: 800;
+  font-size: 26px;
+  font-weight: 700;
   color: #0f172a;
-  letter-spacing: -0.5px;
-  margin: 0 0 6px;
+  letter-spacing: -0.3px;
   line-height: 1.2;
 }
 
 .ee-page-sub {
-  font-size: 14px;
+  font-size: 13px;
   color: #64748b;
+  line-height: 1.5;
+}
+
+/* ══════════════════════════
+   Main card
+   — chỉ bọc warning + footer,
+     EventInfoForm tự render cards riêng
+══════════════════════════ */
+.ee-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Override eif-root khi nằm trong ee-card ──
+   Bỏ max-width, padding, margin riêng của form
+   để nó full-width và không double spacing      */
+.ee-card .eif-root {
+  max-width: 100%;
+  padding: 0;
   margin: 0;
 }
 
-/* ── Card bao quanh form ── */
-.ee-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+/* Các eif-card bên trong giữ nguyên style gốc */
+.ee-card .eif-card {
+  margin-bottom: 20px;
 }
 
-/* ── Card header ── */
-.ee-card-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 24px 28px;
-  border-bottom: 1px solid #f1f5f9;
-  background: #faf5ff;
-}
-
-.ee-card-num {
-  font-size: 11px;
-  font-weight: 800;
-  color: #7c3aed;
-  background: #ede9fe;
-  border: 1px solid #ddd6fe;
-  border-radius: 8px;
-  padding: 4px 10px;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.ee-card-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 3px;
-  letter-spacing: -0.2px;
-}
-
-.ee-card-desc {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-/* ── Nội dung form bên trong card ── */
-.ee-card-body {
-  padding: 28px;
-}
-
-/* ── Warning box ── */
+/* ══════════════════════════
+   Warning note
+══════════════════════════ */
 .ee-warning-box {
-  margin-top: 20px;
-  padding: 14px 18px;
   background: #fffbeb;
   border: 1px solid #fde68a;
-  border-radius: 12px;
+  border-left: 4px solid #f59e0b;
+  border-radius: 10px;
+  padding: 13px 16px;
   font-size: 13px;
   color: #92400e;
   line-height: 1.6;
+  margin-bottom: 4px;
 }
 
 .ee-warning-box strong {
   font-weight: 700;
+  color: #78350f;
 }
 
-/* ── Footer actions ── */
+/* ══════════════════════════
+   Footer actions
+══════════════════════════ */
 .ee-footer {
   display: flex;
   align-items: center;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
+  gap: 10px;
+  padding: 20px 0 0;
 }
 
-/* Layout button ở bên trái */
 .ee-footer-left {
   margin-right: auto;
 }
@@ -141,67 +126,87 @@
 .ee-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 28px;
-  font-size: 14px;
-  font-weight: 600;
+  justify-content: center;
+  gap: 7px;
+  padding: 11px 20px;
   border-radius: 10px;
-  border: none;
-  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
   font-family: 'Be Vietnam Pro', sans-serif;
-  transition: transform 0.2s, box-shadow 0.2s, background 0.2s, opacity 0.2s;
+  cursor: pointer;
+  transition: all 0.15s;
   white-space: nowrap;
+  line-height: 1;
 }
 
 .ee-btn:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
-  opacity: 0.55;
   transform: none !important;
   box-shadow: none !important;
 }
 
-/* Variant: primary (lưu / layout) */
-.ee-btn--primary {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
-}
-
-.ee-btn--primary:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.45);
-}
-
-/* Variant: ghost (hủy) */
+/* Ghost / Hủy — mirrors ae-btn-cancel */
 .ee-btn--ghost {
-  background: #fff;
+  background: #ffffff;
   color: #64748b;
-  border: 1.5px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
 }
 
-.ee-btn--ghost:not(:disabled):hover {
+.ee-btn--ghost:hover:not(:disabled) {
   background: #f8fafc;
-  border-color: #cbd5e1;
-  color: #334155;
+  color: #ef4444;
+  border-color: #fca5a5;
 }
 
-/* ── Mobile ── */
-@media (max-width: 600px) {
-  .ee-wrapper {
-    padding: 16px 12px 48px;
-  }
+/* Primary / Lưu + Layout — mirrors ae-btn-submit */
+.ee-btn--primary {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+  padding: 12px 20px;
+}
 
-  .ee-card-header,
-  .ee-card-body {
-    padding: 18px 16px;
+.ee-btn--primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+}
+
+.ee-btn--primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ee-btn--primary:disabled {
+  background: #cbd5e1;
+  box-shadow: none;
+}
+
+/* Spinner */
+.ee-spin {
+  animation: ee-spin 0.8s linear infinite;
+}
+
+@keyframes ee-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════
+   Responsive
+══════════════════════════ */
+@media (max-width: 768px) {
+  .ee-container {
+    padding: 20px 16px 80px;
   }
 
   .ee-page-title {
-    font-size: 22px;
+    font-size: 21px;
   }
 
   .ee-footer {
     flex-wrap: wrap;
+    gap: 8px;
   }
 
   .ee-footer-left {
