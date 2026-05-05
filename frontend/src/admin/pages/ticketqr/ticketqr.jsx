@@ -98,13 +98,6 @@ function InfoPanel({ scan, stats, onConfirm, onDiscard, confirming }) {
         {scan.status === "pending" && (
           <div className="tqr-actions">
             <button
-              className="tqr-btn-cancel"
-              onClick={onDiscard}
-              disabled={confirming}
-            >
-              Bỏ qua
-            </button>
-            <button
               className="tqr-btn-confirm"
               style={{
                 background: "#4ade80",
