@@ -156,17 +156,12 @@ export default function TicketQR() {
       const cameras = await Html5Qrcode.getCameras();
       if (!cameras?.length) throw new Error("Không tìm thấy camera");
 
-      // Ưu tiên camera sau (mobile), fallback camera trước (desktop)
-      const backCamera = cameras.find(c =>
-        /back|rear|environment/i.test(c.label)
-      );
-
-      // fallback mạnh hơn
-      const cameraId = backCamera?.id || cameras[cameras.length - 0].id;
+       const backCamera = cameras.find(c => /back|rear|environment/i.test(c.label));
+      const cameraId   = backCamera ? backCamera.id : cameras[0].id;
 
       await html5QrCode.start(
-        cameraId,
-        config,
+        { facingMode: { exact: "environment" } }, // ← camera sau, báo lỗi nếu không có
+        { fps: 15, qrbox: { width: 220, height: 220 } },
         (qrValue) => handleScanRef.current(qrValue),
         () => {}
       );
