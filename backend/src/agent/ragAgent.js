@@ -191,17 +191,23 @@ export const getEventsTool = tool(
         SELECT e.event_id, e.event_name, e.event_location,
                e.event_start, e.event_end, e.event_artist,
                e.event_status, c.category_name,
-               MIN(z.zone_price) AS min_price
+               MIN(z.zone_price) AS min_price,
+               COUNT(z.zone_id) > 0                                     AS has_zones,
+               COUNT(z.zone_id) FILTER (WHERE z.status = true) > 0      AS has_open_zones
         FROM events e
         JOIN categories c ON e.category_id = c.category_id
         LEFT JOIN zones z ON z.event_id = e.event_id
-        WHERE e.event_status = true
+        WHERE 1=1
       `;
       const params = [];
 
       if (filter?.category) {
         params.push(`%${filter.category}%`);
         query += ` AND c.category_name ILIKE $${params.length}`;
+      }
+      if (filter?.eventName) {
+        params.push(`%${filter.eventName}%`);
+        query += ` AND e.event_name ILIKE $${params.length}`;
       }
       if (filter?.location) {
         params.push(`%${filter.location}%`);
@@ -270,16 +276,28 @@ export const getEventsTool = tool(
           let statusIcon;
           const startDate = new Date(start); startDate.setHours(0, 0, 0, 0);
 
-          if (now >= start && now <= end) {
+          if (now > end) {
+            statusIcon = "✅ Đã kết thúc";
+          } else if (now >= start && now <= end) {
             statusIcon = "🔴 ĐANG DIỄN RA";
           } else if (startDate.getTime() === todayDate.getTime()) {
             statusIcon = "📌 HÔM NAY";
           } else if (startDate.getTime() === tomorrowDate.getTime()) {
             statusIcon = "📅 NGÀY MAI";
-          } else if (now < start) {
-            statusIcon = "📅 Sắp diễn ra";
           } else {
-            statusIcon = "✅ Đã kết thúc";
+            statusIcon = "📅 Sắp diễn ra";
+          }
+
+          // ── Trạng thái mở bán dựa trên has_open_zones / has_zones từ SQL
+          let saleStatusStr;
+          if (now > end) {
+            saleStatusStr = "🔒 Đã đóng bán";
+          } else if (ev.has_open_zones) {
+            saleStatusStr = "🟢 Đang mở bán";
+          } else if (ev.has_zones) {
+            saleStatusStr = "⏳ Chưa mở bán vé";
+          } else {
+            saleStatusStr = "⏳ Chưa công bố vé";
           }
 
           const timeStr = (filter?.today || filter?.tomorrow || filter?.specificDate)
@@ -290,8 +308,8 @@ export const getEventsTool = tool(
             `🎵 **${ev.event_name}** [ID:${ev.event_id}]\n` +
             `   📍 ${ev.event_location}\n` +
             `   🕐 ${timeStr} — ${statusIcon}\n` +
-            `   🎤 ${artists}\n` +
-            `   💰 Từ ${minPrice}`
+            `   🎟️ ${saleStatusStr} | 💰 Từ ${minPrice}\n` +
+            `   🎤 ${artists}`
           );
         })
         .join("\n\n");
@@ -311,6 +329,7 @@ export const getEventsTool = tool(
       filter: z
         .object({
           category:     z.string().optional().describe("Tên thể loại"),
+          eventName:     z.string().optional().describe("Tên sự kiện"),
           location:     z.string().optional().describe("Địa điểm tổ chức"),
           artistName:   z.string().optional().describe("Tên nghệ sĩ biểu diễn"),
           today:        z.boolean().optional().describe("true → sự kiện diễn ra NGAY HÔM NAY"),
@@ -333,56 +352,134 @@ export const getEventsTool = tool(
 export const checkTicketsTool = tool(
   async ({ eventName, eventId, zoneCode }) => {
     try {
-      let query = `
+      // ── Bước 1: Tìm sự kiện khớp tên (KHÔNG lọc theo event_status/event_end)
+      // để có thể trả lời "chưa mở bán", "đã kết thúc", v.v.
+      let eventQuery = `
+        SELECT e.event_id, e.event_name, e.event_start, e.event_end, e.event_status
+        FROM events e
+        WHERE 1=1
+      `;
+      const eventParams = [];
+
+      if (eventId) {
+        eventParams.push(eventId);
+        eventQuery += ` AND e.event_id = $${eventParams.length}`;
+      } else if (eventName) {
+        eventParams.push(`%${eventName}%`);
+        eventQuery += ` AND e.event_name ILIKE $${eventParams.length}`;
+      }
+      eventQuery += ` ORDER BY e.event_start DESC LIMIT 5`;
+
+      const eventResult = await pool.query(eventQuery, eventParams);
+
+      if (eventResult.rows.length === 0)
+        return "⚠️ Không tìm thấy sự kiện. Vui lòng kiểm tra lại tên sự kiện.";
+
+      // ── Bước 2: Xác định trạng thái mở bán dựa trên event_start / event_end
+      const now = new Date();
+      const ev  = eventResult.rows[0];
+      const start = new Date(ev.event_start);
+      const end   = new Date(ev.event_end);
+
+      const startStr = start.toLocaleDateString("vi-VN") +
+        " lúc " + start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+      const endStr = end.toLocaleDateString("vi-VN") +
+        " lúc " + end.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+
+      // Sự kiện đã kết thúc
+      if (now > end) {
+        return (
+          `🎵 **${ev.event_name}**\n` +
+          `   🕐 Diễn ra: ${startStr} → ${endStr}\n` +
+          `   ✅ Sự kiện đã **kết thúc** — không còn vé để bán.`
+        );
+      }
+
+      // Sự kiện chưa bắt đầu → đang trong giai đoạn bán vé hoặc chưa mở bán
+      // Kiểm tra zones xem có vé nào chưa
+      let zoneQuery = `
         SELECT z.zone_id, z.zone_name, z.zone_code,
                z.zone_price, z.zone_quantity, z.sold_quantity,
                (z.zone_quantity - z.sold_quantity) AS available,
-               z.status,
-               e.event_id, e.event_name, e.event_start, e.event_end
+               z.status
         FROM zones z
-        JOIN events e ON z.event_id = e.event_id
-        WHERE e.event_status = true
-          AND e.event_end >= NOW()
-          AND z.status = true
+        WHERE z.event_id = $1
       `;
-      const params = [];
+      const zoneParams = [ev.event_id];
 
-      if (eventId) {
-        params.push(eventId);
-        query += ` AND e.event_id = $${params.length}`;
-      } else if (eventName) {
-        params.push(`%${eventName}%`);
-        query += ` AND e.event_name ILIKE $${params.length}`;
-      }
       if (zoneCode) {
-        params.push(zoneCode.toUpperCase());
-        query += ` AND UPPER(z.zone_code) = $${params.length}`;
+        zoneParams.push(zoneCode.toUpperCase());
+        zoneQuery += ` AND UPPER(z.zone_code) = $${zoneParams.length}`;
+      }
+      zoneQuery += ` ORDER BY z.zone_price ASC`;
+
+      const zoneResult = await pool.query(zoneQuery, zoneParams);
+
+      // Xác định nhãn trạng thái sự kiện
+      let saleStatusLine;
+      if (now >= start && now <= end) {
+        saleStatusLine = `🔴 **Đang diễn ra** (${startStr} → ${endStr})`;
+      } else {
+        // now < start → sắp diễn ra
+        const diffMs   = start - now;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const diffHrs  = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const countdown =
+          diffDays > 0 ? `còn **${diffDays} ngày ${diffHrs} giờ** nữa` : `còn **${diffHrs} giờ** nữa`;
+        saleStatusLine = `📅 **Sắp diễn ra** — ${startStr} (${countdown})`;
       }
 
-      query += ` ORDER BY z.zone_price ASC`;
+      const header =
+        `🎫 **Thông tin vé: ${ev.event_name}**\n` +
+        `   🕐 ${saleStatusLine}\n\n`;
 
-      const result = await pool.query(query, params);
-      if (result.rows.length === 0)
-        return "⚠️ Không tìm thấy thông tin vé. Vui lòng kiểm tra lại tên sự kiện.";
+      // Không có zone nào → chưa mở bán
+      if (zoneResult.rows.length === 0) {
+        return (
+          header +
+          `⚠️ **Chưa mở bán vé** — Sự kiện này chưa có thông tin vé được công bố.\n` +
+          `   Bạn hãy theo dõi trang sự kiện để cập nhật khi vé mở bán nhé!`
+        );
+      }
 
-      const eventName_ = result.rows[0].event_name;
-      const eventStart = new Date(result.rows[0].event_start).toLocaleDateString("vi-VN");
+      // Có zone → kiểm tra từng zone có đang bán không (z.status)
+      const activeZones   = zoneResult.rows.filter((z) => z.status === true);
+      const inactiveZones = zoneResult.rows.filter((z) => z.status !== true);
 
-      const header = `🎫 **Thông tin vé: ${eventName_}** (${eventStart})\n`;
-      const rows = result.rows
-        .map((z) => {
-          const statusIcon =
-            z.available <= 0  ? "❌ Hết vé" :
-            z.available <= 20 ? `⚠️  Sắp hết (còn ${z.available})` :
-                                `✅ Còn vé (${z.available} vé)`;
-          return (
-            `• **${z.zone_name}** (${z.zone_code})\n` +
-            `  💰 ${formatCurrency(z.zone_price)} — ${statusIcon}`
-          );
-        })
-        .join("\n");
+      let body = "";
 
-      return header + rows;
+      if (activeZones.length === 0 && inactiveZones.length > 0) {
+        // Tất cả zone đều đóng → chưa mở bán
+        body =
+          `⚠️ **Chưa mở bán vé** — Vé sự kiện này chưa được kích hoạt bán.\n` +
+          `   Các khu vực sẽ có khi mở bán:\n` +
+          inactiveZones
+            .map((z) => `   • **${z.zone_name}** (${z.zone_code}) — ${formatCurrency(z.zone_price)}`)
+            .join("\n");
+      } else {
+        // Có ít nhất 1 zone đang mở bán
+        const zoneLines = zoneResult.rows
+          .map((z) => {
+            if (!z.status) {
+              return (
+                `• **${z.zone_name}** (${z.zone_code})\n` +
+                `  💰 ${formatCurrency(z.zone_price)} — 🔒 Chưa mở bán`
+              );
+            }
+            const statusIcon =
+              z.available <= 0  ? "❌ Hết vé" :
+              z.available <= 20 ? `⚠️  Sắp hết (còn ${z.available})` :
+                                  `✅ Còn vé (${z.available} vé)`;
+            return (
+              `• **${z.zone_name}** (${z.zone_code})\n` +
+              `  💰 ${formatCurrency(z.zone_price)} — ${statusIcon}`
+            );
+          })
+          .join("\n");
+        body = `✅ **Vé đang được bán:**\n${zoneLines}`;
+      }
+
+      return header + body;
     } catch (err) {
       console.error("Ticket check error:", err.message);
       return "❌ Lỗi khi kiểm tra vé.";
@@ -391,7 +488,9 @@ export const checkTicketsTool = tool(
   {
     name: "check_tickets",
     description:
-      "Kiểm tra tình trạng vé real-time: còn bao nhiêu, giá bao nhiêu, khu vực nào còn/hết.",
+      "Kiểm tra tình trạng vé của sự kiện: đã mở bán chưa, còn vé không, giá bao nhiêu, " +
+      "khu vực nào còn/hết/chưa mở bán. Dùng cho CẢ sự kiện chưa diễn ra, đang diễn ra, " +
+      "và câu hỏi 'sự kiện X mở bán chưa', 'vé X còn không', 'giá vé X'.",
     schema: z.object({
       eventName: z.string().optional().describe("Tên sự kiện (tìm gần đúng)"),
       eventId:   z.number().optional().describe("ID sự kiện (chính xác hơn eventName)"),
@@ -797,7 +896,7 @@ Hôm nay: **${today}**
 | **event_list** | "sự kiện tháng này", "có những show nào", "sự kiện ở HCM" |
 | **event_date** | "hôm nay", "tối nay", "ngày mai", "tối mai", "ngày 25/12", "thứ Bảy này" |
 | **event_detail** | tên sự kiện cụ thể, hỏi chi tiết về 1 show |
-| **ticket_check** | "còn vé không", "giá vé", "vé VIP", "vé GA" |
+| **ticket_check** | "còn vé không", "giá vé", "vé VIP", "vé GA", "mở bán chưa", "đã mở bán chưa", "bao giờ mở bán", "khi nào bán vé" |
 | **artist_info** | hỏi về nghệ sĩ, ca sĩ, ban nhạc |
 | **recommend_guest** | "gợi ý sự kiện" + [AUTH:guest], "nên xem gì", "sự kiện hot", "sự kiện nổi bật" |
 | **personalized** | "gợi ý cho mình", "theo sở thích", "phù hợp với tôi" + [AUTH:userId=X] |
@@ -818,7 +917,7 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 | "tuần tới", "Chủ Nhật tới" | Tính ngày cụ thể → \`specificDate: "YYYY-MM-DD"\` |
 
 ### ❓ BƯỚC 3 — KIỂM TRA THÔNG TIN ĐỦ CHƯA
-- **ticket_check** mà THIẾU tên sự kiện → Hỏi: "Bạn muốn kiểm tra vé sự kiện nào?"
+- **ticket_check** (gồm cả 'mở bán chưa', 'còn vé không') mà THIẾU tên sự kiện → Hỏi: "Bạn muốn kiểm tra vé sự kiện nào?"
 - **event_detail** mà tên mơ hồ → Hỏi xác nhận tên
 - **event_date** → LUÔN ĐỦ thông tin, gọi tool ngay
 - **event_list** → LUÔN ĐỦ thông tin, gọi tool ngay
@@ -830,7 +929,7 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 | **recommend_guest** | **get_events(filter={ hot:true, active:true })** | Chỉ khi [AUTH:guest] |
 | **event_date** | **get_events(filter.today / tomorrow / specificDate)** | Ưu tiên filter ngày |
 | event_detail | rag_search → get_events | |
-| ticket_check | check_tickets | |
+| ticket_check | check_tickets | Dùng cho CẢ 'mở bán chưa', 'còn vé không', 'giá vé' |
 | artist_info | rag_search → web_search | |
 | personalized | get_personalized_events | Chỉ khi đã đăng nhập |
 | history | get_orders    | Chỉ khi đã đăng nhập  |
@@ -856,6 +955,16 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 → Gọi: get_personalized_events(userId: X)
 → Hiển thị đầy đủ danh sách (tối đa 8), phân biệt sự kiện theo sở thích vs bổ sung hot
 → KHÔNG gợi ý đăng nhập vì đã đăng nhập rồi
+
+### 🎟️ Hỏi "mở bán chưa" / "khi nào bán vé" / "đã có vé chưa"
+→ LUÔN gọi check_tickets(eventName: "<tên sự kiện>")
+→ check_tickets sẽ tự động tìm sự kiện dù chưa diễn ra và trả về:
+  - "🟢 Đang mở bán" → nếu zones đang active
+  - "⏳ Chưa mở bán vé" → nếu có zones nhưng chưa active (z.status = false)
+  - "⏳ Chưa công bố vé" → nếu chưa có zone nào
+  - "✅ Đã kết thúc" → nếu sự kiện đã qua
+→ KHÔNG trả lời true/false — diễn giải ngữ nghĩa từ kết quả tool
+→ Nếu user hỏi tên mơ hồ không rõ sự kiện nào → hỏi: "Bạn muốn kiểm tra vé sự kiện nào?"
 
 ### 🛒 Muốn mua / đặt vé — HƯỚNG DẪN CHI TIẾT
 **[AUTH:guest]**:
@@ -910,6 +1019,15 @@ Khi nhóm là **event_date**, tự chuyển đổi trước khi gọi tool:
 
 ✅ [AUTH:userId=5] "xem đơn #42"
 → get_orders(userId:5, paymentId:42)
+
+✅ [AUTH:guest] "concert X mở bán chưa"
+→ check_tickets(eventName:"X") → diễn giải trạng thái mở bán, KHÔNG nói true/false
+
+✅ [AUTH:guest] "khi nào bán vé show Y"
+→ check_tickets(eventName:"Y") → nếu chưa mở bán → thông báo + khuyến khích theo dõi
+
+✅ [AUTH:guest] "sự kiện Z đã có vé chưa"
+→ check_tickets(eventName:"Z") → đọc saleStatusStr và trả lời ngữ nghĩa
 `;
 }
 
