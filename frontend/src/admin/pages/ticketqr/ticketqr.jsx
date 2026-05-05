@@ -160,19 +160,20 @@ export default function TicketQR() {
       const backCamera = cameras.find(c =>
         /back|rear|environment/i.test(c.label)
       );
+      const cameraId = backCamera?.id || cameras[cameras.length - 1].id;
 
       const config = { fps: 15, qrbox: { width: 220, height: 220 } };
 
       if (backCamera) {
-        // Mobile: dùng camera sau bằng ID cụ thể (tránh lỗi exact facingMode trên một số Android)
+        // Mobile
         await html5QrCode.start(
-          { facingMode: "environment" },
+          cameraId,
           config,
           (qrValue) => handleScanRef.current(qrValue),
           () => {}
         );
       } else {
-        // Desktop: dùng camera đầu tiên (thường là webcam)
+        // Desktop
         await html5QrCode.start(
           cameras[0].id,
           config,
