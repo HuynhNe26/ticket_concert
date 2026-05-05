@@ -162,7 +162,7 @@ export default function TicketQR() {
       );
 
       // fallback mạnh hơn
-      const cameraId = backCamera?.id || cameras[cameras.length - 1].id;
+      const cameraId = backCamera?.id || cameras[cameras.length - 0].id;
 
       await html5QrCode.start(
         cameraId,
