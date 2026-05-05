@@ -160,27 +160,16 @@ export default function TicketQR() {
       const backCamera = cameras.find(c =>
         /back|rear|environment/i.test(c.label)
       );
+
+      // fallback mạnh hơn
       const cameraId = backCamera?.id || cameras[cameras.length - 1].id;
 
-      const config = { fps: 15, qrbox: { width: 220, height: 220 } };
-
-      if (backCamera) {
-        // Mobile
-        await html5QrCode.start(
-          cameraId,
-          config,
-          (qrValue) => handleScanRef.current(qrValue),
-          () => {}
-        );
-      } else {
-        // Desktop
-        await html5QrCode.start(
-          cameras[0].id,
-          config,
-          (qrValue) => handleScanRef.current(qrValue),
-          () => {}
-        );
-      }
+      await html5QrCode.start(
+        cameraId,
+        config,
+        (qrValue) => handleScanRef.current(qrValue),
+        () => {}
+      );
 
       setScanning(true);
     } catch (err) {
