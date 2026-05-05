@@ -120,7 +120,7 @@ async getInfo(req, res) {
                 pd.payment_detail_id, pd.ticket_quantity,
                 pd.ticket_status, pd.price, pd.total_price,
                 e.event_name, e.event_end, e.event_location,
-                z.zone_name, u.email
+                z.zone_name, u.email, u.fullname, u.phonenumber
             FROM payments p
             JOIN payment_detail pd ON pd.payment_id = p.payment_id
             JOIN events         e  ON pd.event_id   = e.event_id
@@ -164,5 +164,6 @@ function formatTicket(row) {
         ticket_quantity: row.ticket_quantity,
         fullname:        row.fullname,
         email:           row.email,
+        phone:           row.phonenumber
     };
 }

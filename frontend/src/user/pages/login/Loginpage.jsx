@@ -199,6 +199,7 @@ export default function LoginPage({ isModal = false, onClose = null }) {
           <RegisterForm 
             onSuccess={handleRegisterSuccess}
             onError={handleRegisterError}
+            onGoogleLogin={handleGoogleLogin}
           />
         )}
 

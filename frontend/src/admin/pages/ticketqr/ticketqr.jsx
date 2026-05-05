@@ -83,7 +83,10 @@ function InfoPanel({ scan, stats, onConfirm, onDiscard, confirming }) {
                 ["Sự kiện",      ticket.event_name],
                 ["Mã đơn",       `#${ticket.payment_ref}`],
                 ["Khu vực",      ticket.zone_name || "—"],
-                ["Số lượng",     `${ticket.ticket_quantity} vé`]
+                ["Số lượng",     `${ticket.ticket_quantity} vé`],
+                ["Họ tên",     ticket.fullname || "—"],      
+                ["Email",      ticket.email || "—"],          
+                ["SĐT",        ticket.phone || "—"]
               ].map(([label, val]) => (
                 <div key={label}>
                   <div className="tqr-field-label">{label}</div>
@@ -107,7 +110,7 @@ function InfoPanel({ scan, stats, onConfirm, onDiscard, confirming }) {
               onClick={onConfirm}
               disabled={confirming}
             >
-              {confirming ? "Đang xử lý…" : "✓ Xác nhận check-in"}
+              {confirming ? "Đang xử lý…" : "Xác nhận thông tin"}
             </button>
           </div>
         )}
@@ -160,17 +163,33 @@ export default function TicketQR() {
       const cameras = await Html5Qrcode.getCameras();
       if (!cameras?.length) throw new Error("Không tìm thấy camera");
 
-      const backCamera = cameras.find(c => /back|rear|environment/i.test(c.label));
-      const cameraId   = backCamera ? backCamera.id : cameras[0].id;
-
-      await html5QrCode.start(
-        { facingMode: { exact: "environment" } }, // ← camera sau, báo lỗi nếu không có
-        { fps: 15, qrbox: { width: 220, height: 220 } },
-        (qrValue) => handleScanRef.current(qrValue),
-        () => {}
+      // Ưu tiên camera sau (mobile), fallback camera trước (desktop)
+      const backCamera = cameras.find(c =>
+        /back|rear|environment/i.test(c.label)
       );
+
+      const config = { fps: 15, qrbox: { width: 220, height: 220 } };
+
+      if (backCamera) {
+        // Mobile: dùng camera sau bằng ID cụ thể (tránh lỗi exact facingMode trên một số Android)
+        await html5QrCode.start(
+          backCamera.id,
+          config,
+          (qrValue) => handleScanRef.current(qrValue),
+          () => {}
+        );
+      } else {
+        // Desktop: dùng camera đầu tiên (thường là webcam)
+        await html5QrCode.start(
+          cameras[0].id,
+          config,
+          (qrValue) => handleScanRef.current(qrValue),
+          () => {}
+        );
+      }
+
       setScanning(true);
-    } catch {
+    } catch (err) {
       setCameraError("Không thể truy cập camera. Vui lòng cấp quyền và thử lại.");
       scannerRef.current = null;
     }

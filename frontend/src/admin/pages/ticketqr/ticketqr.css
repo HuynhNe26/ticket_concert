@@ -216,14 +216,14 @@
 .tqr-result-title    { font-size: 14px; font-weight: 700; }
 .tqr-result-subtitle { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
-/* ─── Field grid — event name gets priority ── */
+/* ─── Field grid ── */
 .tqr-field-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px 12px;
 }
 
-/* Ô sự kiện chiếm full width, to hơn */
+/* Sự kiện — full width */
 .tqr-field-grid > div:first-child {
   grid-column: 1 / -1;
   background: #f5f3ff;
@@ -231,7 +231,6 @@
   border-radius: 10px;
   padding: 10px 14px;
 }
-
 .tqr-field-grid > div:first-child .tqr-field-value {
   font-size: 15px;
   font-weight: 700;
@@ -240,15 +239,27 @@
   white-space: normal;
 }
 
-/* Ô mã đơn — nhỏ hơn, truncate */
+/* Mã đơn — hiện full, xuống dòng nếu quá dài */
 .tqr-field-grid > div:nth-child(2) .tqr-field-value {
   font-size: 11px;
   color: #64748b;
   font-weight: 500;
+  word-break: break-all;
+}
+
+/* Họ tên — full width */
+.tqr-field-grid > div:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+/* Email — full width + truncate */
+.tqr-field-grid > div:nth-child(6) {
+  grid-column: 1 / -1;
+}
+.tqr-field-grid > div:nth-child(6) .tqr-field-value {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 100%;
   display: block;
 }
 
@@ -346,15 +357,40 @@
     padding: 16px;
   }
 
+  /* Mobile: tất cả field stack 1 cột */
+  /* Mobile: giữ 2 cột */
+.tqr-field-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Mã đơn full width trên mobile */
+.tqr-field-grid > div:nth-child(2) {
+  grid-column: 1 / -1;
+}
+
+/* Họ tên, Email vẫn full width */
+.tqr-field-grid > div:nth-child(5),
+.tqr-field-grid > div:nth-child(6) {
+  grid-column: 1 / -1;
+}
+
+  /* Email vẫn truncate */
+  .tqr-field-grid > div:nth-child(6) .tqr-field-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+  }
+
   /* Sự kiện to hơn trên mobile */
   .tqr-field-grid > div:first-child .tqr-field-value {
     font-size: 16px;
   }
 
-  /* Mã đơn truncate ngắn hơn trên mobile */
+  /* Mã đơn mobile */
   .tqr-field-grid > div:nth-child(2) .tqr-field-value {
-    font-size: 10px;
-    max-width: 120px;
+    font-size: 11px;
+    max-width: 100%;
   }
 
   .tqr-btn-confirm { padding: 14px; font-size: 14px; }
