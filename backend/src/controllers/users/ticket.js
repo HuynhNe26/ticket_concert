@@ -8,12 +8,32 @@ export const TicketControllers = {
         try {
             const query = `
                 SELECT 
-                    u.*,
-                    p.*,
-                    pd.*,
-                    e.*,
-                    z.*,
-                    v.voucher_code        AS voucher_code
+                u.user_id,
+                u.fullname,
+                u.created_at_users AS user_created_at,
+
+                p.payment_id,
+                p.payment_ref,
+                p.created_at AS payment_created_at,
+                p.method,
+                p.ticket_qr,
+                p.payment_status,
+                
+                pd.payment_detail_id,
+                pd.price,
+                pd.total_price,
+                pd.ticket_quantity,
+                pd.ticket_status,
+
+                e.event_name,
+                e.event_end,
+                e.event_location,
+                e.banner_url,
+
+                z.zone_code,
+                z.zone_name,
+
+                v.voucher_code
                 FROM users u
                 LEFT JOIN payments p ON p.user_id = u.user_id
                 LEFT JOIN payment_detail pd ON pd.payment_id = p.payment_id

@@ -351,7 +351,7 @@ export default function ManageEvent() {
                             style={{ padding: '10px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none', cursor: 'pointer' }}>
                             <option value="all">Tất cả</option>
                             <option value="true">Đang bán</option>
-                            <option value="false">Đã kết thúc</option>
+                            <option value="false">Sắp mở bán</option>
                         </select>
                         <input
                             type="number" placeholder="Năm (vd: 2025)" value={yearFilter}
@@ -454,15 +454,6 @@ export default function ManageEvent() {
 
                                             {/* Action buttons */}
                                             <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button
-                                                    onClick={() => navigate(`/admin/events/${event.event_id}`)}
-                                                    title="Xem chi tiết"
-                                                    style={{ padding: '8px 12px', background: '#f1f5f9', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'background 0.2s' }}
-                                                    onMouseEnter={(e) => e.currentTarget.style.background = '#e2e8f0'}
-                                                    onMouseLeave={(e) => e.currentTarget.style.background = '#f1f5f9'}
-                                                >
-                                                    <Eye size={17} color="#64748b" />
-                                                </button>
                                                 <button
                                                     onClick={() => handleEditEvent(event.event_id)}
                                                     title="Chỉnh sửa"

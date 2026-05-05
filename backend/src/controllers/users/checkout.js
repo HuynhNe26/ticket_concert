@@ -11,7 +11,7 @@ const MOMO_CONFIG = {
   secretKey: "K951B6PE1waDMi640xX08PD3vg6EkVlz",
   endpoint: "https://test-payment.momo.vn/v2/gateway/api/create",
   redirectUrl: `${CORS}/result`,
-  ipnUrl: "https://uninclined-overhonestly-jone.ngrok-free.dev/api/checkout/momo/notify",
+  ipnUrl: "https://mae-blastoporic-zetta.ngrok-free.dev/api/checkout/momo/notify",
 };
 console.log(MOMO_CONFIG.ipnUrl)
 const VNP_CONFIG = {
@@ -294,7 +294,7 @@ async function handlePaymentSuccess(parsed, paymentRef, method) {
           item.zone_id,
           price,
           total_price,
-          true,
+          false,
           item._use_at,
           voucher_id,
         ]
@@ -309,10 +309,18 @@ async function handlePaymentSuccess(parsed, paymentRef, method) {
     }
 
     await client.query(`DELETE FROM cart_items WHERE user_id=$1`, [userId]);
-
+    const earnedPoints = Math.floor(Number(total_price || 0) / 10000);
+    if (earnedPoints > 0) {
+      await client.query(
+        `UPDATE users
+        SET point = COALESCE(point, 0) + $1
+        WHERE user_id = $2`,
+        [earnedPoints, userId]
+      );
+    }
     await client.query("COMMIT");
     const { rows: userRows } = await pool.query(
-      `SELECT email, full_name FROM users WHERE user_id = $1`,
+      `SELECT email, fullname FROM users WHERE user_id = $1`,
       [userId]
     );
 
@@ -335,7 +343,7 @@ async function handlePaymentSuccess(parsed, paymentRef, method) {
 
       emailPayload = {
         toEmail:  userRows[0].email,
-        userName: userRows[0].full_name,
+        userName: userRows[0].fullname,
         payment: { payment_id, method, ticket_qr },
         items: detailRows.map((r) => ({
           event_name:      r.event_name,

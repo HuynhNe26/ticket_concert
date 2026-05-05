@@ -45,21 +45,21 @@ function formatVND(n) {
 // ─── Group tickets by purchase date ────────────────────────────────────────────
 function groupByPurchaseDate(tickets) {
   const sorted = [...tickets].sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    (a, b) => new Date(b.payment_created_at) - new Date(a.payment_created_at)
   );
 
   const groups = [];
   let lastDateKey = null;
 
   sorted.forEach((t) => {
-    const dateKey = t.created_at
-      ? new Date(t.created_at).toLocaleDateString("vi-VN", {
+    const dateKey = t.payment_created_at
+      ? new Date(t.payment_created_at).toLocaleDateString("vi-VN", {
           day: "2-digit", month: "2-digit", year: "numeric",
         })
       : "Không rõ ngày";
 
     if (dateKey !== lastDateKey) {
-      groups.push({ type: "separator", date: dateKey, raw: t.created_at });
+      groups.push({ type: "separator", date: dateKey, raw: t.payment_created_at });
       lastDateKey = dateKey;
     }
     groups.push({ type: "ticket", data: t });
@@ -159,7 +159,7 @@ function TicketModal({ ticket, onClose }) {
             <div className="ticket-meta-grid">
               <div className="ticket-meta-item full">
                 <div className="ticket-meta-label">Ngày thanh toán</div>
-                <div className="ticket-meta-value">{fmt(ticket.created_at)}</div>
+                <div className="ticket-meta-value">{fmt(ticket.payment_created_at)}</div>
               </div>
 
               <div className="ticket-meta-item full">
@@ -174,7 +174,7 @@ function TicketModal({ ticket, onClose }) {
 
               <div className="ticket-meta-item">
                 <div className="ticket-meta-label">Khu vực</div>
-                <div className="ticket-meta-value">{ticket.zone_name || "—"}</div>
+                <div className="ticket-meta-value">{ticket.zone_code || "—"}</div>
               </div>
 
               <div className="ticket-meta-item">
@@ -206,7 +206,6 @@ function TicketModal({ ticket, onClose }) {
 
             {/* QR */}
             <div className="ticket-qr-wrap">
-              <span className="ticket-qr-label">Quét để check-in</span>
               {ticket.ticket_qr ? (
                 <QRCanvas value={ticket.ticket_qr} size={140} />
               ) : (
@@ -232,13 +231,6 @@ function TicketModal({ ticket, onClose }) {
                 </span>
               </div>
             </div>
-
-            {ticket.zone_name && (
-              <div className="ticket-zone-badge">
-                Khu vực: {ticket.zone_name}
-              </div>
-            )}
-
           </div>
         </div>
       </div>

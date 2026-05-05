@@ -19,17 +19,17 @@ export async function sendTicketEmail({ toEmail, userName, payment, items }) {
   await resend.emails.send({
     from: "no-reply@ticketconcert.online",
     to: toEmail,
-    subject: `🎫 Xác nhận vé #${payment.payment_id}`,
+    subject: `Xác nhận thông tin mua vé #${payment.payment_id}`,
     html: `
       <div style="font-family:sans-serif;max-width:600px;margin:auto">
-        <h2 style="color:#6d28d9">Đặt vé thành công! 🎉</h2>
+        <h2 style="color:#6d28d9">Đặt vé thành công!</h2>
         <p>Xin chào <strong>${userName}</strong>,</p>
         <p>Cảm ơn bạn đã đặt vé. Dưới đây là thông tin đơn hàng của bạn:</p>
 
         <div style="background:#f9f9f9;border-radius:8px;padding:16px;margin:16px 0">
-          <p style="margin:4px 0">🧾 <strong>Mã đơn:</strong> #${payment.payment_id}</p>
-          <p style="margin:4px 0">💳 <strong>Phương thức:</strong> ${payment.method}</p>
-          <p style="margin:4px 0">🔑 <strong>Mã QR:</strong> <code>${payment.ticket_qr}</code></p>
+          <p style="margin:4px 0"><strong>Mã đơn:</strong> #${payment.payment_id}</p>
+          <p style="margin:4px 0"><strong>Phương thức:</strong> ${payment.method}</p>
+          <p style="margin:4px 0"><strong>Mã QR:</strong> <code>${payment.ticket_qr}</code></p>
         </div>
 
         <table style="width:100%;border-collapse:collapse;font-size:14px">
@@ -47,7 +47,7 @@ export async function sendTicketEmail({ toEmail, userName, payment, items }) {
 
         <p style="margin-top:24px;font-size:13px;color:#888">
           Vui lòng xuất trình mã QR khi vào cổng sự kiện.<br/>
-          Nếu cần hỗ trợ, liên hệ chúng mình qua email support@yourdomain.com.
+          Nếu cần hỗ trợ, liên hệ chúng mình qua email kiettran3307@gmail.com.
         </p>
       </div>
     `,
