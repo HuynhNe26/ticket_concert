@@ -18,13 +18,6 @@ function formatVND(n) {
   return Number(n).toLocaleString("vi-VN") + " ₫";
 }
 
-// ─── Trạng thái panel phải ───────────────────────────────────────────────────
-// pending  = vừa quét, chờ staff xác nhận
-// confirmed = đã xác nhận check-in thành công
-// used     = vé đã dùng rồi
-// notfound = không tìm thấy
-// error    = lỗi server
-
 const STATUS_CFG = {
   pending:   { color: "#fbbf24", bg: "rgba(251,191,36,0.08)",   border: "rgba(251,191,36,0.25)",   icon: "?", label: "Chờ xác nhận" },
   confirmed: { color: "#4ade80", bg: "rgba(74,222,128,0.08)",   border: "rgba(74,222,128,0.25)",   icon: "✓", label: "Check-in thành công!" },
@@ -173,7 +166,7 @@ export default function TicketQR() {
       if (backCamera) {
         // Mobile: dùng camera sau bằng ID cụ thể (tránh lỗi exact facingMode trên một số Android)
         await html5QrCode.start(
-          backCamera.id,
+          { facingMode: "environment" },
           config,
           (qrValue) => handleScanRef.current(qrValue),
           () => {}

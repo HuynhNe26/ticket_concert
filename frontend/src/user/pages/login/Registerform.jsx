@@ -71,7 +71,7 @@ export default function RegisterForm({ onSuccess, onGoogleLogin }) {
         <p style={styles.verifyText}>
           Vui lòng nhấn vào nút trong email để kích hoạt tài khoản.
           <br />
-          <span style={styles.expireNote}>⏱ Liên kết có hiệu lực trong <strong>5 phút</strong>.</span>
+          <span style={styles.expireNote}>Liên kết có hiệu lực trong <strong>5 phút</strong>.</span>
         </p>
         <p style={styles.verifyHint}>
           Không nhận được mail? Hãy kiểm tra thư mục <em>Spam / Junk</em>.
