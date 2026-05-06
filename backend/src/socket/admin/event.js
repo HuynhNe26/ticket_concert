@@ -26,7 +26,7 @@ export const EventSocket = (io) => {
                         e.event_status,
                         SUM(z.zone_quantity) AS totalTickets,
                         SUM(z.sold_quantity) AS ticketsSold,
-                        SUM(z.sold_quantity * z.zone_price) AS revenue,
+                        SUM(z.sold_quantity::bigint * z.zone_price::bigint) AS revenue,
                         c.category_name
                     FROM events e
                     JOIN zones z ON e.event_id = z.event_id
@@ -56,7 +56,7 @@ export const EventSocket = (io) => {
                         e.event_location,
                         SUM(z.zone_quantity) AS totalTickets,
                         SUM(z.sold_quantity) AS ticketsSold,
-                        SUM(z.sold_quantity * z.zone_price) AS revenue,
+                        SUM(z.sold_quantity::bigint * z.zone_price::bigint) AS revenue,
                         c.category_name,
                         COUNT(*) OVER() AS total_count   -- tổng số để biết còn hay không
                     FROM events e
