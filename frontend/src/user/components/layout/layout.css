@@ -84,15 +84,15 @@ footer > * {
 }
 
 /* ── Mobile (≤ 640px) ── */
-@media (max-width: 640px) {
+@media (max-width: 780px) {
   header,
   main,
   footer {
     grid-template-columns: 12px 1fr 12px;
   }
 
-  header > * {
-    padding: 0.75rem 0;
+  header {
+    padding: 50px;
   }
 
   main > * {
