@@ -35,12 +35,10 @@ function HomePageSkeleton() {
 
   return (
     <div className="hw-page">
-      {/* Banner */}
       <div className="hw-section">
         <div className="hw-sk hw-sk-banner" />
       </div>
 
-      {/* Trending — chỉ cần rect đơn giản */}
       <section className="hw-section">
         <div className="hw-sk" style={{ height: 18, width: 180, marginBottom: 16 }} />
         <div className="hw-skeleton-row">
@@ -54,7 +52,6 @@ function HomePageSkeleton() {
         </div>
       </section>
 
-      {/* 2 sections event card */}
       {[...Array(2)].map((_, s) => (
         <section key={s} className="hw-section">
           <div className="hw-sk" style={{ height: 18, width: 220, marginBottom: 16 }} />
@@ -68,22 +65,41 @@ function HomePageSkeleton() {
 }
 
 // ─── HSlider ──────────────────────────────────────────────────────────────────
-function HSlider({ children, itemsVisible, className = "" }) {
-  const [page, setPage] = useState(0);
-  const total = children.length || 0;
-  const maxPage = Math.max(0, Math.ceil(total / itemsVisible) - 1);
-  const prev = () => setPage((p) => Math.max(0, p - 1));
-  const next = () => setPage((p) => Math.min(maxPage, p + 1));
+function HSlider({ children, className = "" }) {
+  const viewportRef = useRef();
+
+  const scroll = (dir) => {
+    if (!viewportRef.current) return;
+
+    const width = viewportRef.current.offsetWidth;
+
+    viewportRef.current.scrollBy({
+      left: dir * width,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <div className={`hslider ${className}`}>
-      <button className={`hslider-arrow hslider-prev ${page === 0 ? "disabled" : ""}`} onClick={prev} aria-label="Trước">‹</button>
-      <div className="hslider-viewport">
-        <div className="hslider-track" style={{ transform: `translateX(calc(-${page * 100}%))` }}>
+      <button
+        className="hslider-arrow hslider-prev"
+        onClick={() => scroll(-1)}
+      >
+        ‹
+      </button>
+
+      <div ref={viewportRef} className="hslider-viewport scrollable">
+        <div className="hslider-track scroll">
           {children}
         </div>
       </div>
-      <button className={`hslider-arrow hslider-next ${page === maxPage ? "disabled" : ""}`} onClick={next} aria-label="Tiếp">›</button>
+
+      <button
+        className="hslider-arrow hslider-next"
+        onClick={() => scroll(1)}
+      >
+        ›
+      </button>
     </div>
   );
 }
@@ -132,7 +148,7 @@ function BannerCarousel({ items }) {
 
 function RecommendBadge({ type }) {
   if (type === "personalized") {
-    return <span className="hw-rec-badge hw-rec-badge--personal">✦ Dành riêng cho bạn</span>;
+    return <span className="hw-rec-badge hw-rec-badge--personal">✦</span>;
   }
   return null;
 }
