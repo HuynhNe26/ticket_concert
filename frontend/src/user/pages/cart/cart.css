@@ -44,7 +44,7 @@
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    rgba(14,17,23,0.6) 60%,
+    transparent 60%,
     rgba(14,17,23,1) 100%
   );
 }

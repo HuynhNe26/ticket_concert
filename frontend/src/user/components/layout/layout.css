@@ -41,7 +41,9 @@ header > * {
 
 main {
   grid-row: 2;
-  background-color: rgba(39, 39, 42, 1);
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.2), transparent 28%),
+    linear-gradient(155deg, #494a4a 0%, #6e8794 48%, #788e9d 100%);
 }
 
 main > * {

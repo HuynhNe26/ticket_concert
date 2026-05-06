@@ -210,7 +210,7 @@ export default function EventDetail() {
                                                         <span className="ticket-name">{zone.zone_name}</span>
                                                     </div>
 
-                                                    <div style={{display: 'flex', flexDirection: 'column', marginLeft: '180px'}}>
+                                                    <div className="ticket-header-right" style={{display: 'flex', flexDirection: 'column', marginLeft: '180px'}}>
                                                         <span className="ticket-price">
                                                             {formatCurrency(zone.zone_price)}
                                                         </span>

@@ -107,7 +107,7 @@
 .sp-chip.active { background: #e63946; border-color: #e63946; color: #fff; }
 
 /* ── Result label ── */
-.sp-result-label { font-size: 14px; color: #666; margin-bottom: 16px; }
+.sp-result-label { font-size: 14px; color: #ffffff; margin-bottom: 16px; }
 
 /* ── Grid ── */
 .sp-body {}

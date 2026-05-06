@@ -121,14 +121,17 @@
     position: absolute;
     width: 40px;
     height: 40px;
-    background-color: rgba(39, 39, 42, 1);
+    background: linear-gradient(155deg, #556267 0%, #556267 48%, #556267 100%);
     border-radius: 50%;
     left: 0;
     z-index: 100;
 }
 
 .event-detail-page .event-stub-dot.top { top: -20px; }
-.event-detail-page .event-stub-dot.bottom { bottom: -470px; }
+.event-detail-page .event-stub-dot.bottom { 
+    bottom: -470px; 
+    background: linear-gradient(155deg, #6b8793 0%, #6b8793 48%, #6b8793 100%);
+}
 
 /* Ảnh banner bên phải */
 .event-detail-page .event-ticket-right {
@@ -480,7 +483,7 @@
 
     /* Giảm padding tổng thể để vừa màn hình */
     .event-detail-page {
-        padding: 40px 15px;
+        padding: 20px 0px;
     }
 
     /* Giảm kích thước tiêu đề vé */
@@ -492,20 +495,19 @@
     .event-detail-page .event-ticket-main {
         height: auto; /* tự động chiều cao theo nội dung */
         flex-direction: column;
-        padding: 20px;
     }
 
     /* Phần răng cưa và dot ẩn trên mobile */
     .event-detail-page .event-ticket-divider,
     .event-detail-page .event-stub-line,
-    .event-detail-page .event-stub-dot {
+    .event-detail-page .event-stub-dot   {
         display: none;
     }
 
     /* Ảnh banner bên phải thu nhỏ */
     .event-detail-page .event-ticket-right {
         width: 100%;
-        height: 200px;
+        height: auto;
         margin-top: 15px;
     }
 
@@ -547,7 +549,6 @@
 
     /* Button mua vé full width nhỏ hơn */
     .event-btn-buy {
-        padding: 8px 12px;
         font-size: 14px;
     }
 
@@ -557,3 +558,4 @@
         font-size: 13px;
     }
 }
+

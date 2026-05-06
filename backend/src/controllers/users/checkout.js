@@ -11,7 +11,7 @@ const MOMO_CONFIG = {
   secretKey: "K951B6PE1waDMi640xX08PD3vg6EkVlz",
   endpoint: "https://test-payment.momo.vn/v2/gateway/api/create",
   redirectUrl: `${CORS}/result`,
-  ipnUrl: "https://mae-blastoporic-zetta.ngrok-free.dev/api/checkout/momo/notify",
+  ipnUrl: "https://uninclined-overhonestly-jone.ngrok-free.dev/api/checkout/momo/notify",
 };
 console.log(MOMO_CONFIG.ipnUrl)
 const VNP_CONFIG = {
@@ -309,7 +309,7 @@ async function handlePaymentSuccess(parsed, paymentRef, method) {
     }
 
     await client.query(`DELETE FROM cart_items WHERE user_id=$1`, [userId]);
-    const earnedPoints = Math.floor(Number(total_price || 0) / 10000);
+    const earnedPoints = Math.floor(Number(total_price || 0) / 100000);
     if (earnedPoints > 0) {
       await client.query(
         `UPDATE users
@@ -350,7 +350,6 @@ async function handlePaymentSuccess(parsed, paymentRef, method) {
           event_location:  r.event_location,
           event_date:      new Date(r.event_start).toLocaleDateString("vi-VN"),
           zone_name:       r.zone_name,
-          zone_code:       r.zone_code,
           ticket_quantity: r.ticket_quantity,
         })),
       };
