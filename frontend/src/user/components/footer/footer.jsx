@@ -45,20 +45,6 @@ const feedbackGuide = [
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const supportEmail = "ticketconcert-cskh@gmail.com";
-  const feedbackSubject = "Đánh giá chi tiết trải nghiệm Ticket Concert";
-  const feedbackBody = [
-    "Xin chào Ticket Concert Team,",
-    "",
-    "Mình muốn gửi đánh giá chi tiết về trải nghiệm sử dụng:",
-    "- Sự kiện / tính năng đã dùng:",
-    "- Thiết bị / trình duyệt:",
-    "- Điều mình thấy hài lòng:",
-    "- Vấn đề gặp phải:",
-    "- Đề xuất cải thiện:",
-    "",
-    "Cảm ơn team!",
-  ].join("\n");
-  const feedbackHref = `mailto:${supportEmail}?subject=${encodeURIComponent(feedbackSubject)}&body=${encodeURIComponent(feedbackBody)}`;
 
   return (
     <div className="tc-footer">
@@ -84,21 +70,6 @@ export default function Footer() {
             </div>
           </div>
         </div>
-
-        <a className="tc-feedback-card" href={feedbackHref}>
-          <div className="tc-feedback-icon">
-            <Mail size={18} />
-          </div>
-          <div className="tc-feedback-copy">
-            <p className="tc-feedback-eyebrow">Phản hồi chi tiết</p>
-            <h3>Gửi email đánh giá cho team</h3>
-            <p>
-              Mở sẵn mẫu email với chủ đề và gợi ý nội dung để team đọc, tổng hợp và cải
-              thiện nhanh hơn.
-            </p>
-          </div>
-          <ArrowUpRight size={18} className="tc-feedback-arrow" />
-        </a>
       </div>
 
       <div className="tc-footer-grid">
