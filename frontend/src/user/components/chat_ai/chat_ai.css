@@ -563,3 +563,39 @@
   border-color: rgba(239,68,68,0.25);
   color: #f87171;
 }
+
+@media (max-width: 640px) {
+  .chat-root {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: none;
+  }
+
+  .chat-fab,
+  .chat-window {
+    pointer-events: auto;
+  }
+
+  .chat-window {
+    width: min(100vw - 32px, 360px);
+    height: min(72vh, 520px);
+    bottom: 68px;
+  }
+}
+
+@media (max-width: 420px) {
+  .chat-root {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .chat-window {
+    width: calc(100vw - 24px);
+    height: min(74vh, 500px);
+    border-radius: 18px;
+  }
+}
