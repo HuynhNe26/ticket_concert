@@ -35,6 +35,7 @@ export default function StatisticPage() {
   const [reportType, setReportType] = useState("Báo cáo theo ngày");
   const [startDate, setStartDate] = useState(() => {
     const now = new Date();
+    // Mặc định từ ngày 1 của tháng hiện tại
     return new Date(now.getFullYear(), now.getMonth(), 2).toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(() => {
@@ -47,6 +48,7 @@ export default function StatisticPage() {
   const [chartData, setChartData] = useState([]);
   const [summary, setSummary] = useState({
     revenue: 0,
+    tickets: 0, // Thêm state lưu tổng số vé
   });
 
   useEffect(() => {
@@ -54,6 +56,7 @@ export default function StatisticPage() {
       try {
         const res = await fetch(`${API_BASE}/api/admin/statistic/orders`);
         const result = await res.json();
+        // Result.data lúc này sẽ chứa cả total_price và total_tickets từ backend
         if (result.success) setAllOrders(result.data);
       } catch (err) {
         console.error("Lỗi tải dữ liệu:", err);
@@ -67,6 +70,9 @@ export default function StatisticPage() {
 
     const start = new Date(startDate);
     const end = new Date(endDate);
+    // Chuẩn hóa thời gian để so sánh chính xác ngày
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
 
     const filtered = allOrders.filter((o) => {
       if (!o.created_at) return false;
@@ -89,10 +95,13 @@ export default function StatisticPage() {
         key = `${d.getMonth() + 1}/${d.getFullYear()}`;
       }
 
-      const prev = map.get(key) || { revenue: 0 };
+      const prev = map.get(key) || { revenue: 0, tickets: 0 };
       const price = Number(o.total_price || 0);
+      const ticketCount = Number(o.total_tickets || 0); // Lấy từ trường SUM(ticket_quantity) ở backend
+
       map.set(key, {
         revenue: prev.revenue + price,
+        tickets: prev.tickets + ticketCount,
       });
     });
 
@@ -110,12 +119,13 @@ export default function StatisticPage() {
 
     setChartData(sorted);
 
-    const totalRevenue = filtered.reduce(
-      (s, o) => s + Number(o.total_price || 0),
-      0
-    );
+    // Tính toán tổng cộng cho các ô Summary
+    const totalRevenue = filtered.reduce((s, o) => s + Number(o.total_price || 0), 0);
+    const totalTickets = filtered.reduce((s, o) => s + Number(o.total_tickets || 0), 0);
+    
     setSummary({
       revenue: totalRevenue,
+      tickets: totalTickets,
     });
   }, [allOrders, reportType, startDate, endDate]);
 
@@ -126,7 +136,7 @@ export default function StatisticPage() {
 
   return (
     <div className="statics-wrapper">
-      <div className="statics-pageTitle">Báo cáo doanh thu</div>
+      <div className="statics-pageTitle">Báo cáo doanh thu & Vé bán ra</div>
       
       <div className="statics-headerCombined">
         <div className="statics-filterRow">
@@ -166,12 +176,21 @@ export default function StatisticPage() {
           <button className="statics-searchBtn">Tìm kiếm</button>
         </div>
 
-        <div className="statics-summaryRight">
+        {/* Ô SUMMARY HIỂN THỊ KẾ BÊN NHAU */}
+        <div className="statics-summaryRight" style={{ display: 'flex', gap: '12px' }}>
           <SummaryCard
             color="#3b82f6"
             label="Tổng doanh thu"
             value={summary.revenue}
+            unit="đ"
             icon="💰"
+          />
+          <SummaryCard
+            color="#10b981"
+            label="Tổng số vé"
+            value={summary.tickets}
+            unit=" vé"
+            icon="🎟️"
           />
         </div>
       </div>
@@ -193,16 +212,19 @@ export default function StatisticPage() {
           <BarChart
             data={chartData}
             margin={{ top: 10, right: 20, left: 20, bottom: 5 }}
-            barCategoryGap="40%"
+            barCategoryGap="30%"
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
             <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
             <YAxis tickFormatter={formatShort} tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
             <Tooltip
-              formatter={(value) => [formatCurrency(value), "Doanh thu"]}
+              formatter={(value, name) => {
+                if (name === "revenue") return [formatCurrency(value), "Doanh thu"];
+                return [value, name];
+              }}
               contentStyle={{ fontSize: 12, borderRadius: 6, border: "1px solid #e5e7eb" }}
             />
-            <Bar dataKey="revenue" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+            <Bar dataKey="revenue" name="revenue" fill="#3b82f6" radius={[2, 2, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -210,7 +232,7 @@ export default function StatisticPage() {
   );
 }
 
-function SummaryCard({ color, label, value, icon }) {
+function SummaryCard({ color, label, value, icon, unit = "" }) {
   return (
     <div className="statics-card">
       <div className="statics-summaryIcon" style={{ background: color }}>
@@ -218,7 +240,7 @@ function SummaryCard({ color, label, value, icon }) {
       </div>
       <div className="statics-summaryContent">
         <div className="statics-summaryValue">
-          {new Intl.NumberFormat("vi-VN").format(value)}
+          {new Intl.NumberFormat("vi-VN").format(value)}{unit}
         </div>
         <div className="statics-summaryLabel">{label}</div>
       </div>
