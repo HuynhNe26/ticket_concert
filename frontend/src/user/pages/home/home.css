@@ -715,7 +715,7 @@
 /* mobile */
 @media (max-width: 768px) {
   .hslider-track.scroll > * {
-    flex: 0 0 70%; /* mỗi card chiếm 70% màn → vuốt đẹp */
+    flex: 0 0 70%; 
   }
 
   .hslider-arrow {
@@ -724,5 +724,20 @@
 
   .trend-num {
     font-size: 250px;
+  }
+
+  .ev-card .ev-card-date {
+    font-size: 20px;
+  }
+
+  .ev-card .ev-card-price {
+    font-size: 20px;
+  }
+  .ev-card .ev-card-title {
+    font-size: 20px;
+  }
+
+  .hw-sec-title {
+    font-size: 30px;
   }
 }
