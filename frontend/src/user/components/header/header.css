@@ -187,7 +187,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px 8px;
-  height: 100px;
   border-bottom: 1px solid #f0f0f0;
 }
 
@@ -195,7 +194,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 24px;
+  font-size: 12px;
   font-weight: 600;
   color: #888;
   text-transform: uppercase;
@@ -204,8 +203,8 @@
 }
 
 .tb-history-title svg {
-  width: 40px;
-  height: 40px;
+  width: 14px;
+  height: 14px;
   color: #aaa;
 }
 
@@ -237,7 +236,6 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  height: 80px;
   padding: 9px 16px;
   cursor: pointer;
   transition: background 0.12s;
@@ -252,8 +250,8 @@
 }
 
 .tb-history-icon {
-  width: 40px;
-  height: 40px;
+  width: 16px;
+  height: 16px;
   color: #bbb;
   flex-shrink: 0;
 }
@@ -261,7 +259,7 @@
 .tb-history-text {
   flex: 1;
   font-family: var(--tb-font);
-  font-size: 24px;
+  font-size: 14px;
   color: #333;
   white-space: nowrap;
   overflow: hidden;
@@ -527,7 +525,6 @@
 
 .tb-mobile-search-bar {
   display: flex;
-  height:100px;
   align-items: center;
   width: 100%;
   background: linear-gradient(135deg, #3d8dbc 0%, #00b872 100%);
@@ -538,8 +535,6 @@
 
 .tb-mobile-search-bar .tb-search-icon {
   color: rgba(255,255,255,0.7);
-  width: 50px;
-  height: 50px;
 }
 
 .tb-mobile-search-input {
@@ -548,7 +543,7 @@
   outline: none;
   background: transparent;
   font-family: var(--tb-font);
-  font-size: 24px;
+  font-size: 15px;
   color: var(--tb-white);
   min-width: 0;
 }
@@ -561,7 +556,7 @@
   background: none;
   border: none;
   color: var(--tb-white);
-  font-size: 24px;
+  font-size: 18px;
   cursor: pointer;
   padding: 4px;
   opacity: 0.8;
@@ -582,7 +577,6 @@
 
 .tb-mobile-history .tb-history-header {
   background: #fafafa;
-  height:50px;
 }
 
 .tb-mobile-history .tb-history-item:hover {
@@ -607,7 +601,7 @@
   border-radius: 16px;
   max-width: 380px;
   width: 90%;
-  max-height: 90px;
+  max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 24px 64px rgba(0,0,0,0.25);
   animation: tbModalIn 0.2s ease;
