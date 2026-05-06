@@ -130,18 +130,6 @@ cron.schedule("* * * * *", async () => {
   }
 });
 
-cron.schedule("0 1 * * *", async () => {
-  console.log("Chạy embedding lúc 1h sáng:", new Date());
-
-  try {
-    await embedAndStore();
-
-    console.log("Embedding done");
-  } catch (err) {
-    console.error("Lỗi embedding:", err);
-  }
-});
-
 const PORT = process.env.PORT ;
 httpServer.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
