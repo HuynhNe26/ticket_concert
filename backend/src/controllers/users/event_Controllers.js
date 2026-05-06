@@ -59,7 +59,7 @@ async searchEvents(req, res) {
         paramCount++;
       }
 
-      query += ` ORDER BY e.event_start ASC`;
+      query += ` ORDER BY e.event_start DESC`;
 
       const { rows } = await pool.query(query, params);
 

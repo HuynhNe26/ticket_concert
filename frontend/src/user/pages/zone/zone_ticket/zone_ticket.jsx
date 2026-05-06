@@ -49,8 +49,7 @@ export default function Ticket({ zones  = [], eventId, layout = {}, event={}}) {
             </div>
             <div style={{width: '100%', backgroundColor: 'white', height: '1px', marginTop: '20px'}}></div>
 
-            <div className="layout-legend" style={{marginTop: '20px'}}>
-
+            <div className="layout-legend">
                 <div className="legend-item">
                     <span className="legend-dot" style={{ background: '#4CAF50' }}></span>
                     Còn vé
@@ -65,7 +64,6 @@ export default function Ticket({ zones  = [], eventId, layout = {}, event={}}) {
                     <span className="legend-dot" style={{ background: '#666666' }}></span>
                     Hết vé
                 </div>
-
             </div>
 
             {mergedZones.map((z) => {
