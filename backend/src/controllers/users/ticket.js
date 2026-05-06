@@ -10,7 +10,7 @@ export const TicketControllers = {
                 SELECT 
                 u.user_id,
                 u.fullname,
-                u.created_at_users AS user_created_at,
+                u.created_at AS user_created_at,
 
                 p.payment_id,
                 p.payment_ref,
