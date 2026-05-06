@@ -135,7 +135,6 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
 
   const queries = new Set();
 
-  // ✅ FIX: mỗi keyword là 1 query riêng (KHÔNG gộp)
   favorite.forEach((f) => {
     if (f?.search) queries.add(f.search);
   });
@@ -163,7 +162,7 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
   if (!queries.size) return new Map();
 
   const scoreAccum = new Map();
-  const THRESHOLD = 0.35; // 🔥 tăng threshold để giảm noise
+  const THRESHOLD = 0.35; 
 
   await Promise.all(
     [...queries].map(async (q) => {
@@ -208,28 +207,6 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
   return scoreMap;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Scoring & ranking
-//
-// Trọng số:
-//   favorite  0.60 — ưu tiên tuyệt đối sở thích người dùng
-//   artist    0.13 — nghệ sĩ yêu thích (lịch sử mua)
-//   semantic  0.15 — liên quan ngữ nghĩa (vector store)
-//   category  0.12 — cùng thể loại đã mua
-//
-// Quy tắc filter đã mua:
-//   Candidate pool đã lọc "còn bán" từ DB, nên ở đây chỉ cần quyết
-//   có hiển thị lại sự kiện đã mua hay không:
-//
-//   case A — đã mua + còn bán + là favorite/khớp keyword favorite
-//            → GIỮ LẠI, score bình thường, penalty nhỏ -0.05
-//            (ví dụ: concert nhiều đêm, user favorite nghệ sĩ đó)
-//
-//   case B — đã mua + còn bán + KHÔNG phải favorite
-//            → LOẠI BỎ (tránh trùng lặp với đơn đã có)
-//
-//   case C — chưa mua → luôn giữ, tính điểm bình thường
-// ─────────────────────────────────────────────────────────────────────────────
 function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
   const { purchasedEvents, purchasedIds, favorite } = userContext;
 
@@ -345,7 +322,7 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
     .sort((a, b) => b._scores.totalScore - a._scores.totalScore);
 }
 
-async function selectTopKWithAI(rankedCandidates, userContext, k = 10) {
+async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
   const { llm } = await import("./ragAgent.js");
   const { purchasedEvents, favorite } = userContext;
 

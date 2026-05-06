@@ -280,6 +280,19 @@ export default function HomeUser() {
     .map((order) => order.event)
     .filter(Boolean);
 
+  const colors = [
+    "#ef4444", 
+    "#f97316",
+    "#f59e0b", 
+    "#22c55e",
+    "#14b8a6",
+    "#3b82f6",
+    "#6366f1",
+    "#8b5cf6",
+    "#ec4899", 
+    "#e11d48", 
+  ];
+
   return (
     <div className="hw-page">
       <Warning show={warning.show} message={warning.message} onClose={() => setWarning({ show: false, message: "" })} />
@@ -299,10 +312,15 @@ export default function HomeUser() {
           <HSlider itemsVisible={4} className="trending-slider">
             {trending.map((ev, idx) => (
               <div key={ev.event_id} className="trend-item" onClick={() => navigate(`/event/${ev.event_id}`)}>
-                <span className="trend-num" style={{
-                  WebkitTextStroke: `2px ${idx === 0 ? "#22c55e" : idx === 1 ? "#3b82f6" : "#555"}`,
-                  color: "transparent",
-                }}>{idx + 1}</span>
+                <span
+                  className="trend-num"
+                  style={{
+                    WebkitTextStroke: `2px ${colors[idx] || "#555"}`,
+                    color: "transparent",
+                  }}
+                >
+                  {idx + 1}
+                </span>
                 <img src={ev.banner_url} alt={ev.event_name} className="trend-img" />
               </div>
             ))}
@@ -310,7 +328,6 @@ export default function HomeUser() {
         </section>
       )}
 
-      {/* Dành cho bạn */}
       <section className="hw-section">
         <div className="hw-sec-head">
           <h2 className="hw-sec-title">
@@ -335,7 +352,6 @@ export default function HomeUser() {
         )}
       </section>
 
-      {/* ✅ Sự kiện bạn đã quan tâm — chỉ hiển thị khi CHƯA đăng nhập & có dữ liệu */}
       {!token && recentEvents.length > 0 && (
         <section className="hw-section">
           <div className="hw-sec-head">
@@ -351,7 +367,6 @@ export default function HomeUser() {
         </section>
       )}
 
-      {/* Sự kiện đã mua */}
       {token && oldOrders.length > 0 && (
         <section className="hw-section">
           <div className="hw-sec-head">
@@ -367,7 +382,6 @@ export default function HomeUser() {
         </section>
       )}
 
-      {/* Tabs */}
       <section className="hw-section">
         <div className="hw-sec-head hw-tabs-head">
           <div className="hw-tabs">
