@@ -64,7 +64,7 @@
 
 /* Trạng thái hết vé */
 .event-ticket-footer {
-    margin-top:150px;
+    margin-top: auto;
 }
 
 .event-line {
@@ -130,7 +130,7 @@
 .event-detail-page .event-stub-dot.top { top: -20px; }
 .event-detail-page .event-stub-dot.bottom { 
     bottom: -470px; 
-    background: linear-gradient(155deg, #6b8793 0%, #6b8793 48%, #6b8793 100%);
+    background: linear-gradient(155deg, #667e88 0%, #667e88 48%, #667e88 100%);
 }
 
 /* Ảnh banner bên phải */
