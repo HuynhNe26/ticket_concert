@@ -1,0 +1,9 @@
+You have to install all package in project
+and If you want to use env, please install with structure below:
+        ***npm install dotenv***
+
+Create datebase:
+    ***node runDb***
+
+Run server:
+    ***node src/server***

@@ -1,0 +1,48 @@
+import { pool } from "../../config/database.js";
+
+export const initZoneSocket = (io) => {
+  io.on("connection", (socket) => {
+    console.log("User connected:", socket.id);
+    socket.on("join_event_room", ({ eventId }) => {
+      const roomName = `room_${eventId}`;
+      socket.join(roomName);
+    });
+
+    socket.on("leave_event_room", ({ eventId }) => {
+      socket.leave(`room_${eventId}`);
+    });
+
+    socket.on("request_refresh_event_zones", async ({ eventId }) => {
+      try {
+        const query = `
+          SELECT
+            z.zone_id,
+            z.zone_code,
+            z.zone_name,
+            z.zone_quantity,
+            z.zone_price,
+            z.sold_quantity,
+            (z.zone_quantity - z.sold_quantity) AS available_tickets,
+            z.status
+          FROM layout l
+          JOIN LATERAL jsonb_array_elements(l.layout_json->'zones') AS layout_zone ON true
+          JOIN zones z
+            ON z.zone_code = layout_zone ->> 'id'
+            AND z.event_id = $1
+          WHERE l.event_id = $1
+        `; 
+
+        const { rows } = await pool.query(query, [eventId]);
+
+        if (rows.length) {
+          io.to(`room_${eventId}`).emit("update_ticket_count", rows);
+        }
+      } catch (err) {
+        console.error("Socket Database Error:", err);
+      }
+    });
+
+    socket.on("disconnect", () => {
+    });
+  });
+};

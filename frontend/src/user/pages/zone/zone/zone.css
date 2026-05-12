@@ -1,0 +1,83 @@
+/* --- CONTAINER CHÍNH --- */
+.booking-page-wrapper {
+    grid-column: 1 / -1;
+    margin-left: calc(-50vw + 50%);
+}
+.zone-container {
+    display: flex;
+    width: 100%;        /* full màn hình */
+    max-width: none;    /* bỏ giới hạn */
+    margin: 0;
+    gap: 40px;
+    /* nếu muốn có khoảng cách 2 bên */
+}
+
+/* --- PHẦN BÊN TRÁI: LAYOUT (KHÔNG KHUNG) --- */
+.zone-layout {
+    flex: 1 0 65%;
+    /* Xóa bỏ các thuộc tính tạo khung */
+    background: transparent; 
+    border: none; 
+    padding: 0;
+    
+    /* Giữ lại vị trí cố định khi cuộn */
+    height: 700px;
+    position: sticky;
+    top: 120px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- PHẦN BÊN PHẢI: TICKET (CÓ KHUNG DANH SÁCH) --- */
+.zone-ticket {
+    flex: 3;
+    /* Tạo khung nổi bật cho danh sách vé */
+    background: #1a1a1a; 
+    border: 1px solid #333;
+    border-radius: 20px;
+    padding: 25px;
+    margin-top: 15px;
+    
+    /* Cấu hình cuộn riêng cho danh sách */
+    height: calc(100vh - 170px);
+    overflow-y: auto;
+}
+
+/* Tùy chỉnh thanh cuộn bên trong khung vé cho mượt */
+.zone-ticket::-webkit-scrollbar {
+    width: 5px;
+}
+.zone-ticket::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+.zone-ticket::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+}
+.zone-ticket::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1200px) {
+    .zone-layout { flex: 0 0 60%; }
+}
+
+@media (max-width: 1024px) {
+    .zone-container { 
+        flex-direction: column; 
+        gap: 20px;
+    }
+    .zone-layout { 
+        position: static; 
+        height: auto; 
+        flex: 1;
+        padding: 20px 0;
+    }
+    .zone-ticket { 
+        height: auto; 
+        flex: 1;
+        max-height: 600px; /* Giới hạn chiều cao trên mobile */
+    }
+}

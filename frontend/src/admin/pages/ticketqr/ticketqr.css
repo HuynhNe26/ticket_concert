@@ -1,0 +1,417 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap");
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Root ── */
+.tqr-root {
+  min-height: 100dvh;
+  background: #f0f4ff;
+  font-family: "Be Vietnam Pro", sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Header ── */
+.tqr-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tqr-header-left { display: flex; flex-direction: column; gap: 2px; }
+.tqr-header-title { font-size: 16px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; }
+.tqr-header-sub   { font-size: 11px; color: #94a3b8; }
+
+.tqr-stats { display: flex; gap: 16px; }
+.tqr-stat  { text-align: center; }
+.tqr-stat-value { font-size: 20px; font-weight: 800; line-height: 1; }
+.tqr-stat-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+/* ─── Body: desktop split / mobile stack ── */
+.tqr-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 0;
+}
+
+/* ─── Left: camera panel ── */
+.tqr-camera-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+  border-right: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.tqr-viewport {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #f1f5f9;
+  margin-bottom: 16px;
+  transition: box-shadow 0.4s ease;
+}
+
+.tqr-viewport.scanning {
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.4), 0 12px 40px rgba(99,102,241,0.15);
+}
+.tqr-viewport.idle {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+#qr-reader {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute;
+  inset: 0;
+}
+
+#qr-reader__header_message,
+#qr-reader__dashboard_section_swaplink,
+#qr-reader__dashboard,
+#qr-reader > img { display: none !important; }
+
+#qr-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.tqr-placeholder {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px;
+}
+.tqr-placeholder-icon { font-size: 56px; opacity: 0.12; color: #6366f1; }
+.tqr-placeholder-text { font-size: 13px; color: #94a3b8; }
+
+/* ─── Overlay ── */
+.tqr-overlay { position: absolute; inset: 0; pointer-events: none; }
+
+.tqr-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 65% 65% at 50% 50%, transparent 38%, rgba(240,244,255,0.55) 100%);
+}
+
+.tqr-finder {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 220px; height: 220px;
+}
+
+.tqr-corner { position: absolute; width: 24px; height: 24px; border-radius: 3px; }
+.tqr-corner.tl { top: 0; left: 0;     border-top: 3px solid #6366f1; border-left: 3px solid #6366f1; }
+.tqr-corner.tr { top: 0; right: 0;    border-top: 3px solid #6366f1; border-right: 3px solid #6366f1; }
+.tqr-corner.bl { bottom: 0; left: 0;  border-bottom: 3px solid #6366f1; border-left: 3px solid #6366f1; }
+.tqr-corner.br { bottom: 0; right: 0; border-bottom: 3px solid #6366f1; border-right: 3px solid #6366f1; }
+
+.tqr-scanline {
+  position: absolute;
+  left: 6px; right: 6px; height: 2px;
+  background: linear-gradient(90deg, transparent, #6366f1, transparent);
+  box-shadow: 0 0 10px #6366f1;
+  animation: tqr-scanline 2s ease-in-out infinite;
+}
+
+/* ─── Camera status ── */
+.tqr-cam-status {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: #6366f1; font-weight: 500;
+}
+
+.tqr-pulse-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+  animation: tqr-pulse 1.5s ease infinite;
+}
+
+.tqr-btn-start {
+  padding: 14px 40px;
+  border-radius: 12px; border: none;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff; font-size: 15px; font-weight: 700;
+  font-family: "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+  transition: transform 0.15s;
+}
+.tqr-btn-start:active { transform: scale(0.97); }
+
+.tqr-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px; padding: 10px 14px;
+  color: #ef4444; font-size: 12px; text-align: center;
+  margin-top: 12px; max-width: 340px;
+}
+
+/* ─── Right: info panel ── */
+.tqr-info-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 20px;
+  background: #f8faff;
+}
+
+/* Empty state */
+.tqr-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.tqr-empty-icon { font-size: 40px; opacity: 0.2; }
+.tqr-empty-text { font-size: 12px; color: #94a3b8; text-align: center; line-height: 1.6; }
+
+/* ─── Result card ── */
+.tqr-result-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  padding: 18px 20px;
+  animation: tqr-slideIn 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #fff;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+  border: 1px solid #e2e8f0;
+}
+
+.tqr-result-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tqr-result-icon-small {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800;
+  flex-shrink: 0;
+}
+
+.tqr-result-title    { font-size: 14px; font-weight: 700; }
+.tqr-result-subtitle { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+/* ─── Field grid ── */
+.tqr-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
+
+/* Sự kiện — full width */
+.tqr-field-grid > div:first-child {
+  grid-column: 1 / -1;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.tqr-field-grid > div:first-child .tqr-field-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #3730a3;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+/* Mã đơn — hiện full, xuống dòng nếu quá dài */
+.tqr-field-grid > div:nth-child(2) .tqr-field-value {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  word-break: break-all;
+}
+
+/* Họ tên — full width */
+.tqr-field-grid > div:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+/* Email — full width + truncate */
+.tqr-field-grid > div:nth-child(6) {
+  grid-column: 1 / -1;
+}
+.tqr-field-grid > div:nth-child(6) .tqr-field-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+/* Các ô còn lại */
+.tqr-field-grid > div:not(:first-child) {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.tqr-field-label {
+  font-size: 9px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+
+.tqr-field-value {
+  font-size: 13px;
+  color: #1e293b;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* ─── Action buttons ── */
+.tqr-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tqr-btn-confirm {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px; border: none;
+  font-size: 13px; font-weight: 700;
+  font-family: "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.tqr-btn-confirm:active   { transform: scale(0.97); }
+.tqr-btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.tqr-btn-cancel {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 13px; font-weight: 600;
+  font-family: "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.tqr-btn-cancel:hover { border-color: #cbd5e1; background: #f1f5f9; }
+
+/* ─── Banner ── */
+.tqr-banner {
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  animation: tqr-fadeIn 0.3s ease;
+}
+
+/* ─── MOBILE ── */
+@media (max-width: 768px) {
+  .tqr-body {
+    grid-template-columns: 1fr;
+  }
+
+  .tqr-camera-panel {
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 20px 16px;
+  }
+
+  .tqr-viewport {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  .tqr-info-panel {
+    padding: 16px;
+    justify-content: flex-start;
+    background: #f0f4ff;
+  }
+
+  .tqr-result-card {
+    max-width: 100%;
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  /* Mobile: tất cả field stack 1 cột */
+  /* Mobile: giữ 2 cột */
+.tqr-field-grid {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Mã đơn full width trên mobile */
+.tqr-field-grid > div:nth-child(2) {
+  grid-column: 1 / -1;
+}
+
+/* Họ tên, Email vẫn full width */
+.tqr-field-grid > div:nth-child(5),
+.tqr-field-grid > div:nth-child(6) {
+  grid-column: 1 / -1;
+}
+
+  /* Email vẫn truncate */
+  .tqr-field-grid > div:nth-child(6) .tqr-field-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+  }
+
+  /* Sự kiện to hơn trên mobile */
+  .tqr-field-grid > div:first-child .tqr-field-value {
+    font-size: 16px;
+  }
+
+  /* Mã đơn mobile */
+  .tqr-field-grid > div:nth-child(2) .tqr-field-value {
+    font-size: 11px;
+    max-width: 100%;
+  }
+
+  .tqr-btn-confirm { padding: 14px; font-size: 14px; }
+  .tqr-btn-cancel  { padding: 14px 16px; }
+}
+
+/* ─── Animations ── */
+@keyframes tqr-scanline {
+  0%   { top: 6px;   opacity: 1; }
+  50%  { top: 208px; opacity: 1; }
+  100% { top: 6px;   opacity: 0.3; }
+}
+@keyframes tqr-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+@keyframes tqr-slideIn {
+  from { transform: translateY(10px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+@keyframes tqr-fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

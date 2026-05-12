@@ -1,0 +1,370 @@
+/* ═══════════════════════════════════════════
+   EventInfoForm.css
+   Theme: Light · Clean · Professional
+   Palette đồng bộ zinc-800 project
+═══════════════════════════════════════════ */
+
+/* ── Root ── */
+.eif-root {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: #1e293b;
+}
+
+/* ── Page header ── */
+.eif-page-header {
+  margin-bottom: 36px;
+}
+
+.eif-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 10px;
+}
+
+.eif-breadcrumb-active {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.eif-page-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+  margin: 0 0 6px;
+  line-height: 1.2;
+}
+
+.eif-page-sub {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── Error ── */
+.eif-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #ef4444;
+  font-size: 13px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+/* ══ Card (mỗi section) ══ */
+.eif-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
+}
+
+.eif-card:focus-within {
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.08);
+  border-color: #ddd6fe;
+}
+
+/* Card header */
+.eif-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.eif-card-num {
+  font-size: 11px;
+  font-weight: 800;
+  color: #7c3aed;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 8px;
+  padding: 4px 10px;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.eif-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 3px;
+  letter-spacing: -0.2px;
+}
+
+.eif-card-desc {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* ── Grid inside card ── */
+.eif-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.eif-col-full {
+  grid-column: 1 / -1;
+}
+
+/* ── DateTime group ── */
+.eif-dt-group {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.eif-dt-group-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+}
+
+.eif-dt-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Banner upload ── */
+.eif-upload {
+  display: block;
+  cursor: pointer;
+  border: 2px dashed #cbd5e1;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+  background: #f8fafc;
+}
+
+.eif-upload:hover,
+.eif-upload--over {
+  border-color: #7c3aed;
+  background: #faf5ff;
+}
+
+.eif-upload-input {
+  display: none;
+}
+
+/* Empty state */
+.eif-upload-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 52px 24px;
+  gap: 8px;
+  text-align: center;
+}
+
+.eif-upload-icon-wrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: #ede9fe;
+  color: #7c3aed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.eif-upload-cta {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.eif-upload-hint {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Preview state */
+.eif-upload-preview {
+  position: relative;
+  width: 100%;
+}
+
+.eif-upload-img {
+  display: block;
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.eif-upload-change-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.eif-upload:hover .eif-upload-change-overlay {
+  opacity: 1;
+}
+
+/* ── Artist list ── */
+.eif-artist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.eif-artist-empty {
+  text-align: center;
+  padding: 20px;
+  font-size: 13px;
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+  border-radius: 10px;
+}
+
+.eif-artist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  transition: border-color 0.15s;
+}
+
+.eif-artist-row:focus-within {
+  border-color: #a78bfa;
+  background: #faf5ff;
+}
+
+.eif-artist-idx {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: #ede9fe;
+  color: #7c3aed;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.eif-artist-field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Xóa style của FormField bên trong artist row nếu cần */
+.eif-artist-field > * {
+  margin: 0 !important;
+}
+
+.eif-artist-del {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #f87171;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.eif-artist-del:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+/* Add artist button */
+.eif-artist-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border: 1.5px dashed #a78bfa;
+  border-radius: 10px;
+  background: transparent;
+  color: #7c3aed;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.eif-artist-add:hover {
+  background: #f5f3ff;
+  border-color: #7c3aed;
+}
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .eif-root {
+    padding: 20px 14px 48px;
+  }
+
+  .eif-card {
+    padding: 20px 16px;
+    border-radius: 16px;
+  }
+
+  .eif-page-title {
+    font-size: 22px;
+  }
+
+  .eif-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .eif-col-full {
+    grid-column: 1;
+  }
+
+  .eif-dt-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}

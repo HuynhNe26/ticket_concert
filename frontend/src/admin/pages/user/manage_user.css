@@ -1,0 +1,237 @@
+/* ROOT SCOPE */
+.manager-user-page-wrapper {
+    padding: 40px;
+    font-family: 'Inter', sans-serif;
+    margin-top: 50px;
+}
+
+/* CONTAINER CARD */
+.manager-user-page-wrapper .mu-user-card {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    margin: 0 auto;
+    overflow: hidden;
+    animation: muSlideIn 0.5s ease;
+}
+
+/* HEADER SECTION */
+.manager-user-page-wrapper .mu-user-header {
+    padding: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.manager-user-page-wrapper .mu-user-header-info h2 {
+    color: rgb(0, 0, 0); margin: 0; font-size: 24px;
+}
+
+.manager-user-page-wrapper .mu-user-header-info p {
+    color: rgba(0, 0, 0, 0.7); margin: 5px 0 0; font-size: 14px;
+}
+
+/* SEARCH */
+.manager-user-page-wrapper .mu-search-wrapper {
+    position: relative; width: 300px;
+}
+
+.manager-user-page-wrapper .mu-search-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    color: rgb(0, 0, 0);
+    padding: 10px 15px 10px 40px;
+    border-radius: 10px;
+    outline: none;
+}
+
+.manager-user-page-wrapper .mu-search-icon {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%); color: rgb(0, 0, 0);
+}
+
+/* TABLE STYLES */
+.manager-user-page-wrapper .mu-user-body { padding: 30px; }
+
+.manager-user-page-wrapper .mu-custom-table {
+    width: 100%; border-collapse: collapse;
+}
+
+.manager-user-page-wrapper .mu-custom-table th {
+    text-align: left; padding: 15px;
+    color: #718096; border-bottom: 2px solid #edf2f7;
+    font-size: 13px; text-transform: uppercase;
+    text-align: center;
+}
+
+.manager-user-page-wrapper .mu-custom-table td {
+    padding: 15px; border-bottom: 1px solid #edf2f7; font-size: 14px;
+    text-align: center;
+}
+
+/* BADGES */
+.manager-user-page-wrapper .mu-membership-badge {
+    padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 12px;
+}
+.manager-user-page-wrapper .mu-membership-badge.Đồng { background: #E6D0BC; color: #8B5A2B; }
+.manager-user-page-wrapper .mu-membership-badge.Bạc { background: #E2E8F0; color: #4A5568; }
+.manager-user-page-wrapper .mu-membership-badge.Vàng { background: #FEFCBF; color: #B7791F; }
+
+.manager-user-page-wrapper .mu-status-badge { display: flex; align-items: center; gap: 6px; }
+.manager-user-page-wrapper .mu-status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.manager-user-page-wrapper .mu-active-status .mu-status-dot { background: #48BB78; }
+.manager-user-page-wrapper .mu-inactive-status .mu-status-dot { background: #F56565; }
+
+/* ACTION BUTTON */
+.manager-user-page-wrapper .mu-btn-view {
+    background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff;
+    padding: 6px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s;
+}
+.manager-user-page-wrapper .mu-btn-view:hover { background: #1890ff; color: white; }
+
+/* MODAL SECTION */
+.manager-user-page-wrapper .mu-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex; justify-content: center;
+    align-items: center; z-index: 2000; animation: muFadeIn 0.3s ease;
+}
+
+.manager-user-page-wrapper .mu-modal-content {
+    background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 600px;
+}
+
+.manager-user-page-wrapper .mu-user-detail-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0;
+}
+
+.manager-user-page-wrapper .mu-detail-item {
+    border-bottom: 1px solid #eee; padding-bottom: 8px; font-size: 14px;
+}
+
+.manager-user-page-wrapper .mu-btn-cancel {
+    background: #f5f5f5; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer;
+}
+
+/* ANIMATIONS */
+@keyframes muSlideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes muFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Overlay */
+.mu-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+/* Modal container */
+.mu-detail-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  animation: mu-modal-in 0.2s ease;
+}
+
+@keyframes mu-modal-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Header */
+.mu-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  background: #f8f8f6;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+
+.mu-modal-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.mu-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: #888;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.mu-close-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Body */
+.mu-modal-body {
+  padding: 1.25rem 1.5rem;
+}
+
+/* Grid 2 cột */
+.mu-user-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.mu-detail-item {
+  background: #f8f8f6;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.mu-detail-item strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+
+.mu-detail-item span,
+.mu-detail-item > *:not(strong) {
+  font-size: 13px;
+  color: #1a1a1a;
+  word-break: break-all;
+}
+
+/* Actions */
+.mu-modal-actions {
+  padding: 0 1.5rem 1.25rem;
+}
+
+.mu-btn-cancel {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 0.5px solid rgba(0, 0, 0, 0.15);
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  transition: background 0.15s; 
+}
+
+.mu-btn-cancel:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
