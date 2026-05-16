@@ -125,10 +125,6 @@ export default function Footer() {
               <MapPin size={16} />
               <span>TP. Hồ Chí Minh, Việt Nam</span>
             </div>
-
-            <p className="tc-team-copy">
-              Xây dựng bởi Nguyễn Hoàng Huynh, Trần Diệp Anh Kiệt và Phùng Minh Vũ.
-            </p>
           </div>
         </section>
       </div>
