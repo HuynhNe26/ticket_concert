@@ -1,24 +1,33 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import LoadingAdmin from "../../../components/loading/loading";
 import io from 'socket.io-client';
 import "./order_event.css";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
-const STATUS_MAP = {
-    pending:    { label: "Chờ xác nhận", class: "status--pending" },
-    confirmed:  { label: "Đã xác nhận",  class: "status--confirmed" },
-    paid:       { label: "Đã thanh toán", class: "status--paid" },
-    cancelled:  { label: "Đã huỷ",        class: "status--cancelled" },
-    completed:  { label: "Hoàn thành",    class: "status--completed" },
+const STATUS_CONFIG = {
+    "Thành công":     { label: "Thành công",     cls: "status--paid" },
+    "completed":      { label: "Hoàn thành",     cls: "status--paid" },
+    "paid":           { label: "Đã thanh toán",  cls: "status--paid" },
+    "Đã thanh toán":  { label: "Đã thanh toán",  cls: "status--paid" },
+    "Chờ thanh toán": { label: "Chờ thanh toán", cls: "status--pending" },
+    "pending":        { label: "Chờ xác nhận",   cls: "status--pending" },
+    "confirmed":      { label: "Đã xác nhận",    cls: "status--confirmed" },
+    "Huỷ":            { label: "Đã huỷ",         cls: "status--cancelled" },
+    "cancelled":      { label: "Đã huỷ",         cls: "status--cancelled" },
 };
+
+function getStatusBadge(status) {
+    if (!status) return { label: "—", cls: "status--pending" };
+    return STATUS_CONFIG[status] || { label: status, cls: "status--confirmed" };
+}
 
 function formatCurrency(amount) {
     return new Intl.NumberFormat("vi-VN", {
         style: "currency",
         currency: "VND",
-    }).format(amount);
+    }).format(amount || 0);
 }
 
 function formatDate(dateStr) {
@@ -37,14 +46,14 @@ export default function OrderEvent() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
-    const [sortConfig, setSortConfig] = useState({ key: "createdAt", dir: "desc" });
+    const [sortConfig, setSortConfig] = useState({ key: "created_at", dir: "desc" });
     const [currentPage, setCurrentPage] = useState(1);
     const PAGE_SIZE = 10;
-    const [searchParams] = useSearchParams()
+    const [searchParams] = useSearchParams();
 
     const navigate = useNavigate();
-    const id = searchParams.get("id")
-    const name = searchParams.get("name")
+    const id = searchParams.get("id");
+    const name = searchParams.get("name");
 
     useEffect(() => {
         const socket = io(API_BASE);
@@ -56,11 +65,9 @@ export default function OrderEvent() {
         socket.emit("join_event", { eventId: id });
 
         socket.on('orderEvent', (data) => {
-            setOrders(data);
-            console.log(data)
+            setOrders(data || []);
             setLoading(false);
         });
-
 
         const timer = setInterval(() => {
             socket.emit("requestOrderEvents", { eventId: id });
@@ -71,7 +78,7 @@ export default function OrderEvent() {
             socket.off("orderEvent");
             socket.disconnect();
         };
-    },[]);
+    }, [id]);
 
     const handleSort = (key) => {
         setSortConfig((prev) =>
@@ -83,23 +90,31 @@ export default function OrderEvent() {
     };
 
     const filtered = orders
-    .filter((o) => {
-        const q = search.toLowerCase();
+        .filter((o) => {
+            const q = search.trim().toLowerCase();
 
-        const matchSearch =
-        !q ||
-        o.payment_ref?.toLowerCase().includes(q) ||
-        o.event_name?.toLowerCase().includes(q);
+            const matchSearch =
+                !q ||
+                o.payment_ref?.toLowerCase().includes(q) ||
+                o.fullname?.toLowerCase().includes(q) ||
+                o.email?.toLowerCase().includes(q) ||
+                o.phone_number?.toLowerCase().includes(q) ||
+                o.event_name?.toLowerCase().includes(q);
 
-        const matchStatus =
-        filterStatus === "all" || o.payment_status === filterStatus;
+            const status = o.payment_status;
+            const matchStatus =
+                filterStatus === "all" ||
+                status === filterStatus ||
+                (filterStatus === "Thành công" && (status === "paid" || status === "completed" || status === "Đã thanh toán")) ||
+                (filterStatus === "Chờ thanh toán" && (status === "pending" || status === "Chờ xác nhận")) ||
+                (filterStatus === "Huỷ" && (status === "cancelled" || status === "Đã huỷ"));
 
-        return matchSearch && matchStatus;
-    })
+            return matchSearch && matchStatus;
+        })
         .sort((a, b) => {
             let va = a[sortConfig.key];
             let vb = b[sortConfig.key];
-            if (sortConfig.key === "totalAmount") {
+            if (sortConfig.key === "total_price") {
                 va = Number(va) || 0;
                 vb = Number(vb) || 0;
             } else {
@@ -115,8 +130,16 @@ export default function OrderEvent() {
     const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
     const totalRevenue = orders
-        .filter((o) => o.payment_status !== "cancelled")
+        .filter((o) => o.payment_status !== "cancelled" && o.payment_status !== "Huỷ")
         .reduce((sum, o) => sum + (Number(o.total_price) || 0), 0);
+
+    const paidCount = orders.filter(
+        (o) => o.payment_status === "Thành công" || o.payment_status === "completed" || o.payment_status === "paid" || o.payment_status === "Đã thanh toán"
+    ).length;
+
+    const cancelledCount = orders.filter(
+        (o) => o.payment_status === "cancelled" || o.payment_status === "Huỷ" || o.payment_status === "Đã huỷ"
+    ).length;
 
     const SortIcon = ({ col }) => {
         if (sortConfig.key !== col) return <span className="sort-icon sort-icon--idle">⇅</span>;
@@ -138,26 +161,26 @@ export default function OrderEvent() {
                 </button>
                 <div className="oe-title-block">
                     <h1 className="oe-title">Đơn hàng sự kiện</h1>
-                    <span className="oe-event-id">{name}</span>
+                    {name && <span className="oe-event-id">{name}</span>}
                 </div>
             </div>
 
             {/* Stats */}
             <div className="oe-stats">
                 <div className="oe-stat-card">
-                    <span className="oe-stat-label">Tổng đơn</span>
+                    <span className="oe-stat-label">Tổng đơn hàng</span>
                     <span className="oe-stat-value">{orders.length}</span>
                 </div>
                 <div className="oe-stat-card">
                     <span className="oe-stat-label">Đã thanh toán</span>
                     <span className="oe-stat-value oe-stat-value--green">
-                        {orders.filter((o) => o.payment_status === "Thành công" || o.payment_status === "completed").length}
+                        {paidCount}
                     </span>
                 </div>
                 <div className="oe-stat-card">
                     <span className="oe-stat-label">Đã huỷ</span>
                     <span className="oe-stat-value oe-stat-value--red">
-                        {orders.filter((o) => o.payment_status === "cancelled").length}
+                        {cancelledCount}
                     </span>
                 </div>
                 <div className="oe-stat-card oe-stat-card--accent">
@@ -173,7 +196,7 @@ export default function OrderEvent() {
                     <input
                         className="oe-search"
                         type="text"
-                        placeholder="Tìm theo mã đơn, tên, email, SĐT..."
+                        placeholder="Tìm theo mã đơn, tên khách, email, SĐT..."
                         value={search}
                         onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                     />
@@ -187,9 +210,9 @@ export default function OrderEvent() {
                     onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
                 >
                     <option value="all">Tất cả trạng thái</option>
-                    {Object.entries(STATUS_MAP).map(([k, v]) => (
-                        <option key={k} value={k}>{v.label}</option>
-                    ))}
+                    <option value="Thành công">Thành công / Đã thanh toán</option>
+                    <option value="Chờ thanh toán">Chờ thanh toán</option>
+                    <option value="Huỷ">Đã huỷ</option>
                 </select>
                 <span className="oe-result-count">
                     {filtered.length} kết quả
@@ -200,7 +223,7 @@ export default function OrderEvent() {
             {filtered.length === 0 ? (
                 <div className="oe-empty">
                     <div className="oe-empty-icon">📭</div>
-                    <p>Không tìm thấy đơn hàng nào.</p>
+                    <p>Không tìm thấy đơn hàng nào phù hợp.</p>
                 </div>
             ) : (
                 <>
@@ -208,36 +231,32 @@ export default function OrderEvent() {
                         <table className="oe-table">
                             <thead>
                                 <tr>
-                                    <th className="oe-th" onClick={() => handleSort("_id")}>
+                                    <th className="oe-th" onClick={() => handleSort("payment_ref")}>
                                         Mã đơn <SortIcon col="payment_ref" />
                                     </th>
-                                    <th className="oe-th" onClick={() => handleSort("customerName")}>
-                                        Khách hàng <SortIcon col="customerName" />
+                                    <th className="oe-th" onClick={() => handleSort("fullname")}>
+                                        Khách hàng <SortIcon col="fullname" />
                                     </th>
                                     <th className="oe-th">Liên hệ</th>
-                                    <th className="oe-th" onClick={() => handleSort("totalAmount")}>
-                                        Tổng tiền <SortIcon col="totalAmount" />
+                                    <th className="oe-th" onClick={() => handleSort("total_price")}>
+                                        Tổng tiền <SortIcon col="total_price" />
                                     </th>
-                                    <th className="oe-th" onClick={() => handleSort("status")}>
-                                        Trạng thái <SortIcon col="status" />
+                                    <th className="oe-th" onClick={() => handleSort("payment_status")}>
+                                        Trạng thái <SortIcon col="payment_status" />
                                     </th>
-                                    <th className="oe-th" onClick={() => handleSort("createdAt")}>
-                                        Ngày tạo <SortIcon col="createdAt" />
+                                    <th className="oe-th" onClick={() => handleSort("created_at")}>
+                                        Ngày tạo <SortIcon col="created_at" />
                                     </th>
                                     <th className="oe-th oe-th--center">Hành động</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {paginated.map((order, idx) => {
-                                    const STATUS_MAP = {
-                                        "paid": { label: "Đã thanh toán", class: "status--paid" },
-                                        "Chờ thanh toán": { label: "Chờ thanh toán", class: "status--pending" },
-                                        "Huỷ": { label: "Đã huỷ", class: "status--cancelled" }
-                                    };
+                                    const badge = getStatusBadge(order.payment_status);
                                     return (
-                                        <tr key={order.payment_id} className={`oe-tr ${idx % 2 === 0 ? "oe-tr--even" : ""}`}>
+                                        <tr key={order.payment_id || idx} className="oe-tr">
                                             <td className="oe-td oe-td--id">
-                                                <span className="oe-order-id" title={order._id}>
+                                                <span className="oe-order-id" title={order.payment_ref}>
                                                     {order.payment_ref}
                                                 </span>
                                             </td>
@@ -245,14 +264,17 @@ export default function OrderEvent() {
                                                 <span className="oe-customer-name">{order.fullname || "—"}</span>
                                             </td>
                                             <td className="oe-td oe-td--contact">
-                                                <div>{order.email || "—"}</div>
+                                                <div className="oe-contact-email">{order.email || "—"}</div>
+                                                {order.phone_number && (
+                                                    <div className="oe-phone">{order.phone_number}</div>
+                                                )}
                                             </td>
                                             <td className="oe-td oe-td--amount">
                                                 {formatCurrency(order.total_price)}
                                             </td>
                                             <td className="oe-td">
-                                                <span className={`oe-status ${STATUS_MAP.class}`}>
-                                                    {order.payment_status || ""}
+                                                <span className={`oe-status ${badge.cls}`}>
+                                                    {badge.label}
                                                 </span>
                                             </td>
                                             <td className="oe-td oe-td--date">
@@ -280,11 +302,13 @@ export default function OrderEvent() {
                                 className="oe-page-btn"
                                 disabled={currentPage === 1}
                                 onClick={() => setCurrentPage(1)}
+                                title="Trang đầu"
                             >«</button>
                             <button
                                 className="oe-page-btn"
                                 disabled={currentPage === 1}
                                 onClick={() => setCurrentPage((p) => p - 1)}
+                                title="Trang trước"
                             >‹</button>
                             {Array.from({ length: totalPages }, (_, i) => i + 1)
                                 .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
@@ -308,11 +332,13 @@ export default function OrderEvent() {
                                 className="oe-page-btn"
                                 disabled={currentPage === totalPages}
                                 onClick={() => setCurrentPage((p) => p + 1)}
+                                title="Trang sau"
                             >›</button>
                             <button
                                 className="oe-page-btn"
                                 disabled={currentPage === totalPages}
                                 onClick={() => setCurrentPage(totalPages)}
+                                title="Trang cuối"
                             >»</button>
                         </div>
                     )}

@@ -1,4 +1,5 @@
 import { pool } from "../config/database.js";
+import { memoryCache } from "../utils/cache.js";
 
 export async function getCandidateEvents(limit = 50) {
   const { rows } = await pool.query(
@@ -42,6 +43,10 @@ export async function getCandidateEvents(limit = 50) {
 }
 
 export async function getGuestEvents(limit = 10) {
+  const cacheKey = `rec:guest_raw:${limit}`;
+  const cached = memoryCache.get(cacheKey);
+  if (cached) return cached;
+
   const { rows } = await pool.query(
     `SELECT e.event_id, e.event_name, e.event_location,
             e.event_start, e.event_end, e.event_artist,
@@ -72,10 +77,15 @@ export async function getGuestEvents(limit = 10) {
      LIMIT $1`,
     [limit]
   );
+  memoryCache.set(cacheKey, rows, 600); // 10 phút
   return rows;
 }
 
 export async function getHotEvents(limit = 10) {
+  const cacheKey = `rec:hot_raw:${limit}`;
+  const cached = memoryCache.get(cacheKey);
+  if (cached) return cached;
+
   const { rows } = await pool.query(
     `SELECT
        e.event_id, e.event_name, e.event_location,
@@ -104,6 +114,7 @@ export async function getHotEvents(limit = 10) {
      LIMIT $1`,
     [limit]
   );
+  memoryCache.set(cacheKey, rows, 600); // 10 phút
   return rows;
 }
 
@@ -135,15 +146,18 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
 
   const queries = new Set();
 
+  // Ưu tiên tối đa 2 từ khóa yêu thích
   favorite.forEach((f) => {
-    if (f?.search) queries.add(f.search);
+    if (f?.search && queries.size < 2) queries.add(f.search.trim());
   });
 
+  // Tối đa 1 thể loại đã mua
   const cats = [...new Set(
     purchasedEvents.map((e) => e.category_name).filter(Boolean)
   )];
-  cats.forEach((c) => queries.add(c));
+  if (cats.length && queries.size < 3) queries.add(cats[0]);
 
+  // Tối đa 1 nghệ sĩ đã mua
   const artists = [
     ...new Set(
       purchasedEvents.flatMap((e) => {
@@ -154,10 +168,7 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
       })
     ),
   ];
-  artists.forEach((a) => queries.add(a));
-
-  const names = purchasedEvents.slice(0, 5).map((e) => e.event_name).filter(Boolean);
-  names.forEach((n) => queries.add(n));
+  if (artists.length && queries.size < 4) queries.add(artists[0]);
 
   if (!queries.size) return new Map();
 
@@ -170,10 +181,18 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
         const isFavoriteQuery = favorite.some((f) => f?.search === q);
         const k = isFavoriteQuery ? topK * 2 : topK;
 
-        const results = await vectorStore.similaritySearchWithScore(q, k);
+        const cacheKey = `vec:${q.toLowerCase()}:${k}`;
+        let results = memoryCache.get(cacheKey);
+        if (!results) {
+          results = await vectorStore.similaritySearchWithScore(q, k);
+          memoryCache.set(cacheKey, results, 900); // Cache vector kết quả 15 phút
+        }
 
-        for (const [doc, score] of results) {
-          if (score < THRESHOLD) continue;
+        for (const [doc, distance] of results) {
+          // ✅ FIX: PGVector trả về cosine distance (<=>), nhỏ hơn là gần hơn
+          // Chuyển sang cosine similarity: similarity = 1 - distance
+          const similarity = Math.max(0, 1 - distance);
+          if (similarity < 0.60) continue; // Ngưỡng tương đồng tối thiểu 60%
 
           const eventId =
             doc.metadata?.event_id ??
@@ -184,24 +203,26 @@ async function buildSemanticScoreMap(userContext, vectorStore, topK = 5) {
 
           if (!eventId) continue;
 
-          // ✅ boost favorite query
-          const weightedScore = isFavoriteQuery ? score * 1.4 : score;
+          // ✅ boost điểm nếu từ khóa xuất phát từ favorite của user
+          const weightedScore = isFavoriteQuery ? similarity * 1.3 : similarity;
 
-          const prev = scoreAccum.get(eventId) ?? { total: 0, count: 0 };
+          const prev = scoreAccum.get(eventId) ?? { maxScore: 0, total: 0, count: 0 };
           scoreAccum.set(eventId, {
+            maxScore: Math.max(prev.maxScore, weightedScore),
             total: prev.total + weightedScore,
             count: prev.count + 1,
           });
         }
       } catch (err) {
-        console.error("Vector error:", err.message);
+        console.error("[Recommendation] Vector error for query:", q, err.message);
       }
     })
   );
 
   const scoreMap = new Map();
-  for (const [eventId, { total, count }] of scoreAccum) {
-    scoreMap.set(eventId, total / count);
+  for (const [eventId, { maxScore, total, count }] of scoreAccum) {
+    // Kết hợp điểm tương đồng cao nhất (70%) và điểm trung bình (30%)
+    scoreMap.set(eventId, (maxScore * 0.7) + ((total / count) * 0.3));
   }
 
   return scoreMap;
@@ -306,7 +327,8 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
         W.category * categoryMatch +
         W.artist * artistMatch;
 
-      if (favoriteSignal && (categoryMatch || artistMatch)) {
+      const hasOverlap = !!(favoriteSignal && (categoryMatch || artistMatch));
+      if (hasOverlap) {
         score += 0.1;
       }
 
@@ -316,6 +338,15 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
         ...ev,
         _scores: {
           totalScore: score,
+          semanticScore,
+          isFavorite: isFavorite === 1,
+          favoriteKeywordMatch: keywordMatch === 1,
+          isFavoriteSignal: favoriteSignal === 1,
+          categoryMatch: categoryMatch === 1,
+          artistMatch: artistMatch === 1,
+          overlapBonus: hasOverlap ? 0.1 : 0,
+          isPurchased,
+          isComingSoon: !!ev.is_coming_soon,
         },
       };
     })
@@ -323,10 +354,10 @@ function scoreAndRankCandidates(candidates, semanticScoreMap, userContext) {
 }
 
 async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
-  const { llm } = await import("./ragAgent.js");
+  const { callWithKeyFallback } = await import("./ragAgent.js");
   const { purchasedEvents, favorite } = userContext;
 
-  const topCandidates = rankedCandidates.slice(0, 15);
+  const topCandidates = rankedCandidates.slice(0, Math.min(rankedCandidates.length, 12));
   if (!topCandidates.length) return [];
 
   const eventList = topCandidates
@@ -334,23 +365,23 @@ async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
       const {
         isFavorite,
         favoriteKeywordMatch,
-        isFavoriteSignal,
         categoryMatch,
         artistMatch,
         overlapBonus,
         isPurchased,
         totalScore,
         semanticScore,
+        isComingSoon,
       } = ev._scores;
 
       const favLabel     = isFavorite                      ? " ⭐[YÊU THÍCH]"             : "";
       const favKwLabel   = !isFavorite && favoriteKeywordMatch ? " ⭐[KHỚP SỞ THÍCH]"     : "";
       const catLabel     = categoryMatch                   ? " 🎵[CÙNG THỂ LOẠI]"         : "";
       const artLabel     = artistMatch                     ? " 🎤[NGHỆ SĨ YÊU THÍCH]"     : "";
-      const semLabel     = semanticScore > 0.1             ? " 🔥[LIÊN QUAN CAO]"         : "";
+      const semLabel     = semanticScore > 0.6             ? " 🔥[LIÊN QUAN CAO]"         : "";
       const overlapLabel = overlapBonus > 0                ? " 💎[TRÙNG SỞ THÍCH]"        : "";
       const purchasedLabel = isPurchased                   ? " 🔁[ĐÃ MUA - CÒN VÉ]"       : "";
-      const comingSoonLabel = ev._scores?.isComingSoon     ? " 🔔[SẮP MỞ BÁN]"             : "";
+      const comingSoonLabel = isComingSoon                 ? " 🔔[SẮP MỞ BÁN]"             : "";
       const scoreStr     = (totalScore * 100).toFixed(0);
 
       return (
@@ -394,17 +425,24 @@ async function selectTopKWithAI(rankedCandidates, userContext, k = 5) {
     `CHỈ trả về dãy ID cách nhau bởi dấu phẩy, không giải thích.\n` +
     `Ví dụ: 3,7,1,5,2`;
 
-  const response = await llm.invoke([{ role: "user", content: prompt }]);
-  const text     = (response.content || "").trim();
+  try {
+    const response = await callWithKeyFallback((currentLLM) =>
+      currentLLM.invoke([{ role: "user", content: prompt }])
+    );
+    const text = (response.content || "").trim();
 
-  const selectedIds = text
-    .split(",")
-    .map((s) => parseInt(s.trim()))
-    .filter((id) => !isNaN(id))
-    .filter((id, i, arr) => arr.indexOf(id) === i)
-    .slice(0, k);
+    const candidateIdSet = new Set(topCandidates.map((c) => c.event_id));
+    const numberMatches = text.match(/\b\d+\b/g) || [];
+    const validIds = numberMatches
+      .map((s) => parseInt(s, 10))
+      .filter((id) => candidateIdSet.has(id));
+    const selectedIds = [...new Set(validIds)].slice(0, k);
 
-  return selectedIds;
+    return selectedIds;
+  } catch (err) {
+    console.warn("[Recommendation] selectTopKWithAI gặp sự cố:", err.message);
+    return [];
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -434,16 +472,28 @@ function buildCleanResult(selectedIds, rankedCandidates) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Main export
 // ─────────────────────────────────────────────────────────────────────────────
-export async function getHybridRecommendations(userId = null, limit = 20, topK = 10) {
-  const safeLimit = 20;
+export async function getHybridRecommendations(userId = null, limit = 5, topK = 10) {
+  const targetLimit = Math.max(1, Math.min(parseInt(limit) || 5, 20));
 
+  // ── Cache cho Guest ────────────────────────────────────────────────────────
   if (!userId) {
-    const events = await getGuestEvents(safeLimit);
-    return { type: "guest", events };
+    const cacheKey = `rec:guest:${targetLimit}`;
+    const cached = memoryCache.get(cacheKey);
+    if (cached) return cached;
+
+    const events = await getGuestEvents(targetLimit);
+    const result = { type: "guest", events };
+    memoryCache.set(cacheKey, result, 600); // 10 phút
+    return result;
   }
 
+  // ── Cache cho User ─────────────────────────────────────────────────────────
+  const userCacheKey = `rec:user:${userId}:${targetLimit}`;
+  const cachedUserRec = memoryCache.get(userCacheKey);
+  if (cachedUserRec) return cachedUserRec;
+
   const [candidates, userContext] = await Promise.all([
-    getCandidateEvents(50),   // chỉ sự kiện còn bán được
+    getCandidateEvents(35),   // Giới hạn 35 ứng viên để tăng tốc xử lý
     getUserContext(userId),
   ]);
 
@@ -455,47 +505,58 @@ export async function getHybridRecommendations(userId = null, limit = 20, topK =
   const hasContext = purchasedEvents.length > 0 || favorite.length > 0;
 
   if (!hasContext) {
-    const events = await getHotEvents(safeLimit);
-    return { type: "hot", events };
+    const events = await getHotEvents(targetLimit);
+    const result = { type: "hot", events };
+    memoryCache.set(userCacheKey, result, 600);
+    return result;
   }
 
   try {
     const { getVectorStore } = await import("./ragAgent.js");
     const vectorStore = await getVectorStore();
 
-    const semanticScoreMap = await buildSemanticScoreMap(userContext, vectorStore, 20);
+    const semanticScoreMap = await buildSemanticScoreMap(userContext, vectorStore, 10);
     const rankedCandidates = scoreAndRankCandidates(candidates, semanticScoreMap, userContext);
 
     if (!rankedCandidates.length) {
-      const events = await getHotEvents(safeLimit);
-      return { type: "hot", events };
+      const events = await getHotEvents(targetLimit);
+      const result = { type: "hot", events };
+      memoryCache.set(userCacheKey, result, 300);
+      return result;
     }
 
     const selectedIds = await selectTopKWithAI(
       rankedCandidates,
       userContext,
-      safeLimit
+      targetLimit
     );
 
+    let events;
+
     if (!selectedIds.length) {
-      console.warn("[Recommendation] AI returned no selections, falling back to hot.");
-      const events = await getHotEvents(safeLimit);
-      return { type: "hot", events };
+      console.warn("[Recommendation] AI không chọn được ID hoặc gặp lỗi, dùng fallback hybrid ranked candidates.");
+      events = buildCleanResult(
+        rankedCandidates.slice(0, targetLimit).map((c) => c.event_id),
+        rankedCandidates
+      );
+    } else {
+      events = buildCleanResult(selectedIds, rankedCandidates);
+      if (!events.length) {
+        console.warn("[Recommendation] Tất cả AI selected ID không hợp lệ, dùng fallback hybrid candidates.");
+        events = buildCleanResult(
+          rankedCandidates.slice(0, targetLimit).map((c) => c.event_id),
+          rankedCandidates
+        );
+      }
     }
 
-    const events = buildCleanResult(selectedIds, rankedCandidates);
-
-    if (!events.length) {
-      console.warn("[Recommendation] All AI-selected IDs were invalid, falling back to hot.");
-      const hotEvents = await getHotEvents(safeLimit);
-      return { type: "hot", events: hotEvents };
-    }
-
-    return { type: "personalized", events };
+    const result = { type: "personalized", events };
+    memoryCache.set(userCacheKey, result, 300); // 5 phút cache cho người dùng
+    return result;
 
   } catch (err) {
     console.error("[Recommendation] Pipeline error:", err.message);
-    const events = await getHotEvents(safeLimit);
+    const events = await getHotEvents(targetLimit);
     return { type: "hot", events };
   }
 }

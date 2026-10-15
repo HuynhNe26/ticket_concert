@@ -1,5 +1,6 @@
 import { pool } from "../config/database.js";
-import { getAgent } from "./ragAgent.js";
+import { getAgent, resetAgent, isKeyError } from "./ragAgent.js";
+import { keyManager } from "./geminiKeyManager.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INTENT PATTERNS — phân loại câu hỏi từ phía client
@@ -34,6 +35,25 @@ const INTENT_PATTERNS = [
       /xem gì.*hôm nay/,
       /event.*hot/i,
       /sự kiện.*đang hot/,
+    ],
+  },
+  {
+    intent: "ticket_recommendation",
+    patterns: [
+      /gợi ý.*vé/,
+      /vé.*gợi ý/,
+      /tư vấn.*vé/,
+      /vé.*tư vấn/,
+      /nên mua vé nào/,
+      /vé nào (hợp|phù hợp|tốt|ngon|rẻ)/,
+      /vé.*dưới \d+/,
+      /vé.*tầm \d+/,
+      /vé.*khoảng \d+/,
+      /vé (rẻ|giá rẻ|sinh viên|tiết kiệm)/,
+      /vé vip hay ga/,
+      /chọn vé nào/,
+      /mua vé gì/,
+      /khuyên.*mua vé/,
     ],
   },
   {
@@ -199,6 +219,8 @@ const INTENT_PATTERNS = [
 function classifyIntent(message, toolsUsed = []) {
   // Ưu tiên intent từ tool đã được agent dùng
   const toolIntentMap = {
+    recommend_tickets:       "ticket_recommendation",
+    get_personalized_events: "personalized",
     check_tickets:           "ticket_check",
     get_events:              "event_list",
     rag_search:              "event_detail",
@@ -276,13 +298,16 @@ function saveChatMessage({
   ticketQuantity = 0,
   metaJson = {},
 }) {
+  // Bỏ qua lưu lịch sử nếu là khách vãng lai (guest chưa đăng nhập) do cột user_id có ràng buộc NOT NULL
+  if (!userId) return;
+
   pool
     .query(
       `INSERT INTO chat_ai
          (user_id, session_id, message, sender, intent, ticket_quantity, meta_json)
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
-        userId || null,
+        userId,
         sessionId,
         message,
         sender,
@@ -337,77 +362,91 @@ export async function agentChat(
   const authPrefix    = userId ? `[AUTH:userId=${userId}]` : `[AUTH:guest]`;
   const agentInputMsg = `${authPrefix} ${userMessage}`;
 
-  const agent = await getAgent();
-  const config = {
-    configurable: { thread_id: sessionId },
-    recursionLimit: 12,
-  };
+  const MAX_CHAT_RETRIES = 3;
+  let lastError;
 
-  try {
-    const result   = await agent.invoke(
-      { messages: [{ role: "user", content: agentInputMsg }] },
-      config
-    );
-    const messages = result.messages;
+  for (let attempt = 1; attempt <= MAX_CHAT_RETRIES; attempt++) {
+    try {
+      const agent = await getAgent();
+      const config = {
+        configurable: { thread_id: sessionId },
+        recursionLimit: 12,
+      };
 
-    const lastAI = [...messages]
-      .reverse()
-      .find((m) => m._getType?.() === "ai" || m.role === "assistant");
+      const result = await agent.invoke(
+        { messages: [{ role: "user", content: agentInputMsg }] },
+        config
+      );
 
-    const toolsUsed    = extractToolsUsed(messages);
-    const finalIntent  = classifyIntent(userMessage, toolsUsed);
-    const answerStr    = extractAnswer(lastAI) ?? "Xin lỗi, mình không thể xử lý yêu cầu này.";
-    const isClarifying = isClarificationQuestion(answerStr);
+      // Ghi nhận request thành công cho key hiện tại
+      keyManager.reportSuccess();
 
-    saveChatMessage({
-      userId,
-      sessionId,
-      message:        answerStr,
-      sender:         "bot",
-      intent:         finalIntent,
-      ticketQuantity: 0,
-      metaJson: { toolsUsed, isClarifying, preIntent, finalIntent },
-    });
+      const messages = result.messages;
+      const lastAI = [...messages]
+        .reverse()
+        .find((m) => m._getType?.() === "ai" || m.role === "assistant");
 
-    return { answer: answerStr, toolsUsed, sessionId, isClarifying, intent: finalIntent };
+      const toolsUsed    = extractToolsUsed(messages);
+      const finalIntent  = classifyIntent(userMessage, toolsUsed);
+      const answerStr    = extractAnswer(lastAI) ?? "Xin lỗi, mình không thể xử lý yêu cầu này.";
+      const isClarifying = isClarificationQuestion(answerStr);
 
-  } catch (err) {
-    console.error("[Agent] Full error:", err);
-    console.error("[Agent] Message:", err.message);
-
-    // ── Rate limit ───────────────────────────────────────────────────────────
-    if (err.message?.includes("429") || err.message?.includes("rate_limit")) {
-      const busyMsg = "Hệ thống đang bận, bạn vui lòng thử lại sau 1 phút nhé!";
       saveChatMessage({
-        userId, sessionId, message: busyMsg, sender: "bot",
-        intent: "error", metaJson: { error: "rate_limit" },
+        userId,
+        sessionId,
+        message:        answerStr,
+        sender:         "bot",
+        intent:         finalIntent,
+        ticketQuantity: 0,
+        metaJson: { toolsUsed, isClarifying, preIntent, finalIntent },
       });
-      return { answer: busyMsg, toolsUsed: [], sessionId, intent: "error" };
-    }
 
-    // ── Quota hết ────────────────────────────────────────────────────────────
-    if (err.message?.includes("quota") || err.message?.includes("resource_exhausted")) {
-      const quotaMsg = "Dịch vụ AI đang tạm quá tải, bạn vui lòng thử lại sau ít phút nhé!";
-      saveChatMessage({
-        userId, sessionId, message: quotaMsg, sender: "bot",
-        intent: "error", metaJson: { error: "quota_exceeded" },
-      });
-      return { answer: quotaMsg, toolsUsed: [], sessionId, intent: "error" };
-    }
+      return { answer: answerStr, toolsUsed, sessionId, isClarifying, intent: finalIntent };
 
-    // ── Context / token overflow ─────────────────────────────────────────────
-    if (err.message?.includes("context") || err.message?.includes("token")) {
-      const overflowMsg =
-        "Cuộc trò chuyện quá dài rồi! Bạn thử bắt đầu cuộc hội thoại mới nhé (nhấn nút Làm mới).";
-      saveChatMessage({
-        userId, sessionId, message: overflowMsg, sender: "bot",
-        intent: "error", metaJson: { error: "context_overflow" },
-      });
-      return { answer: overflowMsg, toolsUsed: [], sessionId, intent: "error" };
-    }
+    } catch (err) {
+      lastError = err;
+      console.warn(`[Agent] ⚠️ Attempt ${attempt}/${MAX_CHAT_RETRIES} gặp lỗi:`, err.message?.slice(0, 120));
 
-    throw new Error("Không thể kết nối AI: " + err.message);
+      const isKeyErr = isKeyError(err);
+      if (isKeyErr && attempt < MAX_CHAT_RETRIES) {
+        const nextKey = keyManager.reportError(err);
+        resetAgent();
+        if (nextKey) {
+          console.log(`[Agent] 🔄 Đã xoay key thành công, thử lại request lần ${attempt + 1}...`);
+          continue;
+        }
+      }
+
+      // Nếu không phải lỗi key có thể retry, ngắt sớm
+      if (!isKeyErr) break;
+    }
   }
+
+  // Nếu tất cả các lượt thử với các API key đều thất bại
+  console.error("[Agent] ❌ Tất cả attempt đều thất bại. Full error:", lastError);
+  const errMsg = lastError?.message || "";
+
+  if (isKeyError(lastError)) {
+    const busyMsg = "Hệ thống AI đang tạm thời nhận lượng truy cập cao, bạn vui lòng thử lại sau ít giây nhé!";
+    saveChatMessage({
+      userId, sessionId, message: busyMsg, sender: "bot",
+      intent: "error", metaJson: { error: "key_exhausted_or_rate_limit" },
+    });
+    return { answer: busyMsg, toolsUsed: [], sessionId, intent: "error" };
+  }
+
+  // ── Context / token overflow ─────────────────────────────────────────────
+  if (errMsg.includes("context") || errMsg.includes("token")) {
+    const overflowMsg =
+      "Cuộc trò chuyện quá dài rồi! Bạn thử bắt đầu cuộc hội thoại mới nhé (nhấn nút Làm mới).";
+    saveChatMessage({
+      userId, sessionId, message: overflowMsg, sender: "bot",
+      intent: "error", metaJson: { error: "context_overflow" },
+    });
+    return { answer: overflowMsg, toolsUsed: [], sessionId, intent: "error" };
+  }
+
+  throw new Error("Không thể kết nối AI: " + errMsg);
 }
 
 export async function clearSession(sessionId) {

@@ -1,8 +1,10 @@
 /* ROOT SCOPE */
 .manager-user-page-wrapper {
-    padding: 40px;
+    padding: 24px 2rem 60px;
+    width: 100%;
+    max-width: 100%;
     font-family: 'Inter', sans-serif;
-    margin-top: 50px;
+    box-sizing: border-box;
 }
 
 /* CONTAINER CARD */
@@ -52,10 +54,16 @@
 }
 
 /* TABLE STYLES */
-.manager-user-page-wrapper .mu-user-body { padding: 30px; }
+.manager-user-page-wrapper .mu-user-body { 
+    padding: 30px; 
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
 
 .manager-user-page-wrapper .mu-custom-table {
-    width: 100%; border-collapse: collapse;
+    width: 100%; 
+    min-width: 600px;
+    border-collapse: collapse;
 }
 
 .manager-user-page-wrapper .mu-custom-table th {
@@ -235,3 +243,33 @@
 .mu-btn-cancel:hover {
   background: rgba(0, 0, 0, 0.04);
 }
+
+/* ══════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .manager-user-page-wrapper {
+    padding: 16px 12px;
+    margin-top: 10px;
+  }
+
+  .manager-user-page-wrapper .mu-user-header {
+    padding: 18px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .manager-user-page-wrapper .mu-search-wrapper {
+    width: 100%;
+  }
+
+  .manager-user-page-wrapper .mu-user-body {
+    padding: 16px 12px;
+  }
+
+  .manager-user-page-wrapper .mu-modal-content {
+    width: 92vw;
+    max-height: 90vh;
+  }
+}

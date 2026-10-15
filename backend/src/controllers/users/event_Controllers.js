@@ -9,6 +9,7 @@ async searchEvents(req, res) {
 
       let query = `
         SELECT e.event_id, e.event_name, e.banner_url, e.event_start, e.event_end, e.event_location, e.event_artist,
+              c.category_id, c.category_name,
               (SELECT MIN(zone_price) FROM zones WHERE event_id = e.event_id) as min_price
         FROM events e
         LEFT JOIN categories c ON e.category_id = c.category_id
@@ -76,25 +77,42 @@ async searchEvents(req, res) {
   
   async getAllEvents(req, res) {
     try {
-      const query = `
+      const { category_id, category_name } = req.query;
+
+      let query = `
           SELECT 
-            event_id,
-            event_name,
-            banner_url,
-            event_start,
-            event_location,
+            e.event_id,
+            e.event_name,
+            e.banner_url,
+            e.event_start,
+            e.event_location,
+            e.category_id,
+            c.category_name,
             (
               SELECT MIN(zone_price) 
               FROM zones 
-              WHERE event_id = events.event_id
+              WHERE event_id = e.event_id
             ) as min_price,
-            event_status,
-            event_end
-        FROM events
-        WHERE event_status = true
-        ORDER BY created_at DESC
+            e.event_status,
+            e.event_end
+        FROM events e
+        LEFT JOIN categories c ON e.category_id = c.category_id
+        WHERE e.event_status = true
       `;
-      const { rows } = await pool.query(query);
+      const params = [];
+      let paramIndex = 1;
+
+      if (category_id) {
+        query += ` AND e.category_id = $${paramIndex++}`;
+        params.push(category_id);
+      } else if (category_name) {
+        query += ` AND c.category_name ILIKE $${paramIndex++}`;
+        params.push(category_name);
+      }
+
+      query += ` ORDER BY e.created_at DESC`;
+
+      const { rows } = await pool.query(query, params);
 
       return res.json({
         success: true,
@@ -103,6 +121,62 @@ async searchEvents(req, res) {
     } catch (err) {
       console.error("Lỗi lấy danh sách sự kiện:", err);
       return res.status(500).json({ message: "Lỗi server" });
+    }
+  },
+
+  async getEventsByCategory(req, res) {
+    try {
+      // 1. Lấy tất cả danh mục kèm số lượng sự kiện
+      const catQuery = `
+        SELECT 
+          c.category_id, 
+          c.category_name, 
+          COUNT(e.event_id) AS event_count
+        FROM categories c
+        LEFT JOIN events e ON c.category_id = e.category_id AND e.event_status = true
+        GROUP BY c.category_id, c.category_name
+        ORDER BY c.category_id ASC
+      `;
+      const catRes = await pool.query(catQuery);
+
+      // 2. Lấy danh sách sự kiện kèm giá vé thấp nhất
+      const evQuery = `
+        SELECT 
+          e.event_id,
+          e.event_name,
+          e.banner_url,
+          e.event_start,
+          e.event_end,
+          e.event_location,
+          e.category_id,
+          c.category_name,
+          (
+            SELECT MIN(zone_price) 
+            FROM zones 
+            WHERE event_id = e.event_id
+          ) AS min_price
+        FROM events e
+        JOIN categories c ON e.category_id = c.category_id
+        WHERE e.event_status = true
+        ORDER BY e.created_at DESC
+      `;
+      const evRes = await pool.query(evQuery);
+
+      // 3. Nhóm sự kiện theo từng danh mục
+      const categoriesWithEvents = catRes.rows.map((cat) => ({
+        category_id: cat.category_id,
+        category_name: cat.category_name,
+        event_count: Number(cat.event_count || 0),
+        events: evRes.rows.filter((ev) => ev.category_id === cat.category_id),
+      }));
+
+      return res.json({
+        success: true,
+        data: categoriesWithEvents,
+      });
+    } catch (err) {
+      console.error("Lỗi lấy sự kiện theo danh mục:", err);
+      return res.status(500).json({ success: false, message: "Lỗi server" });
     }
   },
   
@@ -149,6 +223,7 @@ async searchEvents(req, res) {
           e.event_start,
           e.event_end,
           e.banner_url,
+          MIN(z.zone_price)                                             AS min_price,
           SUM(z.zone_quantity)                                          AS total_quantity,
           SUM(z.sold_quantity)                                          AS total_sold,
           ROUND(

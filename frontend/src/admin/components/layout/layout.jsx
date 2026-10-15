@@ -90,7 +90,7 @@ export default function LayoutAdmin() {
     if (!isLoggedIn) return <Navigate to="/admin/login" replace />;
 
     return (
-        <div style={{display: 'flex', flexDirection: 'column'}}>
+        <div className="admin-layout-wrapper">
 
             <Navbar />
 
@@ -113,9 +113,9 @@ export default function LayoutAdmin() {
                 </div>
             )}
 
-            <div>
+            <main className="admin-main-content">
                 <Outlet />
-            </div>
+            </main>
 
         </div>
     );

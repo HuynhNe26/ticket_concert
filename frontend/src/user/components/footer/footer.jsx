@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   BrainCircuit,
@@ -43,6 +43,7 @@ const feedbackGuide = [
 ];
 
 export default function Footer() {
+  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
   const supportEmail = "ticketconcert-cskh@gmail.com";
 
@@ -102,7 +103,17 @@ export default function Footer() {
 
           <nav className="tc-footer-links" aria-label="Liên kết nhanh">
             {quickLinks.map((link) => (
-              <Link key={link.to} to={link.to} className="tc-footer-link">
+              <Link 
+                key={link.to} 
+                to={link.to} 
+                className="tc-footer-link"
+                onClick={(e) => {
+                  if (link.to === "/my-tickets" && !localStorage.getItem("token")) {
+                    e.preventDefault();
+                    navigate("/");
+                  }
+                }}
+              >
                 {link.label}
               </Link>
             ))}

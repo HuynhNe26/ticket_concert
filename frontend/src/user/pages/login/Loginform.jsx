@@ -41,7 +41,7 @@ export default function LoginForm({ onSuccess, onGoogleLogin, onForgotPassword }
 
       onSuccess(data);
     } catch (err) {
-      setMsg("Lỗi mạng: " + err.message);
+      setMsg("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng!");
     } finally {
       setLoading(false);
     }

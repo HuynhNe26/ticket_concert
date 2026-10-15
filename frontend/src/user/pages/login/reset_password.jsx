@@ -3,6 +3,14 @@ import "./reset_password.css";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
+function toFriendlyError(err, fallback = "Đã có lỗi xảy ra. Vui lòng thử lại sau!") {
+  const msg = typeof err === "string" ? err : (err?.message || fallback);
+  if (/failed to fetch|fetch failed|network\s?error|err_connection|load failed/i.test(msg)) {
+    return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng!";
+  }
+  return msg;
+}
+
 // ── SVG Icons ──────────────────────────────────────────────
 const MailIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -102,7 +110,7 @@ function OtpModal({ email, onClose, onSuccess }) {
       if (!res.ok) throw new Error(data.message || "Mã OTP không đúng.");
       onSuccess();
     } catch (err) {
-      setError(err.message);
+      setError(toFriendlyError(err, "Mã OTP không đúng."));
       triggerShake();
       setDigits(["", "", "", "", "", ""]);
       setTimeout(() => inputRefs.current[0]?.focus(), 50);
@@ -217,7 +225,7 @@ function NewPasswordForm({ email, onDone }) {
       if (!res.ok) throw new Error(data.message || "Cập nhật thất bại. Thử lại sau.");
       onDone();
     } catch (err) {
-      setError(err.message);
+      setError(toFriendlyError(err, "Cập nhật thất bại. Thử lại sau."));
     } finally {
       setLoading(false);
     }
@@ -313,7 +321,7 @@ export default function ResetPassword() {
       if (!res.ok) throw new Error(data.message || "Không thể gửi email. Thử lại sau.");
       setShowOtp(true);
     } catch (err) {
-      setError(err.message);
+      setError(toFriendlyError(err, "Không thể gửi email. Thử lại sau."));
     } finally {
       setLoading(false);
     }

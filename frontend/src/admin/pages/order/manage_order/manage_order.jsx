@@ -84,8 +84,8 @@ function EventCard({ event, isActive, onClick }) {
 
 // ── Main component ────────────────────────────
 export default function ManageOrder() {
-  const [month,    setMonth]    = useState("");
-  const [year,     setYear]     = useState(String(new Date().getFullYear()));
+  const [month,    setMonth]    = useState(new Date().getMonth() + 1);
+  const [year,     setYear]     = useState(new Date().getFullYear());
   const [events,   setEvents]   = useState([]);
   const [loading,  setLoading]  = useState(false);
   const [activeId, setActiveId] = useState(null);

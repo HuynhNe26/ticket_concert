@@ -1,8 +1,8 @@
 .manage-categories-container {
-    padding: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
-    margin-top: 80px;
+    padding: 24px 2rem 60px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .categories-header {

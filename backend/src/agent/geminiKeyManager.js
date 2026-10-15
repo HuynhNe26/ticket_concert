@@ -43,14 +43,32 @@ class GeminiKeyManager {
     this.keys = [];
     this.currentIndex = 0;
     this._initialized = false;
+    /** @type {Function[]} */
+    this.listeners = [];
+  }
+
+  // ─── SỰ KIỆN ĐỔI KEY ────────────────────────────────────────────────────────
+  onKeyChange(callback) {
+    if (typeof callback === "function") {
+      this.listeners.push(callback);
+    }
+  }
+
+  _notifyListeners(newKey) {
+    for (const fn of this.listeners) {
+      try {
+        fn(newKey);
+      } catch (err) {
+        console.error("[KeyManager] Lỗi callback onKeyChange:", err.message);
+      }
+    }
   }
 
   // ─── KHỞI TẠO ──────────────────────────────────────────────────────────────
 
   /**
    * Đọc tất cả key từ biến môi trường.
-   * Tên biến: GEMINI_API_KEY, GEMINI_API_KEY_2, GEMINI_API_KEY_3, ...
-   * hoặc GEMINI_API_KEY_1 đến GEMINI_API_KEY_N
+   * Tên biến: GEMINI_API_KEY, GEMINI_API_KEY_1, GEMINI_API_KEY_2, ...
    */
   init() {
     if (this._initialized) return;
@@ -60,7 +78,7 @@ class GeminiKeyManager {
     if (rawKeys.length === 0) {
       throw new Error(
         "[KeyManager] Không tìm thấy GEMINI_API_KEY nào trong .env!\n" +
-        "Thêm: GEMINI_API_KEY=key1, GEMINI_API_KEY_2=key2, ..."
+        "Thêm: GEMINI_API_KEY=key1, GEMINI_API_KEY_1=key2, ..."
       );
     }
 
@@ -86,7 +104,7 @@ class GeminiKeyManager {
 
   /**
    * Đọc key từ .env theo thứ tự ưu tiên:
-   * GEMINI_API_KEY → GEMINI_API_KEY_2 → GEMINI_API_KEY_3 → ...
+   * GEMINI_API_KEY → GEMINI_API_KEY_1 → GEMINI_API_KEY_2 → ...
    * Bỏ qua key trùng lặp hoặc rỗng.
    */
   _loadKeysFromEnv() {
@@ -97,8 +115,8 @@ class GeminiKeyManager {
       keys.add(process.env.GEMINI_API_KEY.trim());
     }
 
-    // Key từ _2 đến _20 (có thể mở rộng thêm)
-    for (let i = 2; i <= 20; i++) {
+    // Key từ _1 đến _30 (không bỏ sót GEMINI_API_KEY_1)
+    for (let i = 1; i <= 30; i++) {
       const val = process.env[`GEMINI_API_KEY_${i}`]?.trim();
       if (val) keys.add(val);
     }
@@ -138,12 +156,26 @@ class GeminiKeyManager {
     return this.keys[this.currentIndex].key;
   }
 
+  /**
+   * Chủ động đổi sang key tiếp theo.
+   * @returns {string} Key mới
+   */
+  rotateKey() {
+    this._ensureInit();
+    const nextIdx = (this.currentIndex + 1) % this.keys.length;
+    this.currentIndex = nextIdx;
+    const newKey = this.keys[nextIdx].key;
+    console.log(`[KeyManager] 🔄 Chủ động chuyển sang ${this.keys[nextIdx].label}`);
+    this._notifyListeners(newKey);
+    return newKey;
+  }
+
   // ─── BÁO LỖI KEY ──────────────────────────────────────────────────────────
 
   /**
    * Gọi khi một request thất bại. Tự động đổi sang key tiếp theo.
    * @param {Error|string} error - Lỗi nhận được từ API
-   * @returns {string|null} Key mới để thử lại, hoặc null nếu hết key
+   * @returns {string|null} Key mới để thử lại, hoặc fallback key nếu tất cả đang cooldown
    */
   reportError(error) {
     this._ensureInit();
@@ -164,16 +196,29 @@ class GeminiKeyManager {
       `Cooldown ${cooldownMs / 1000}s | Fail #${current.failCount}`
     );
 
-    // Tìm key tiếp theo
+    // Tìm key tiếp theo khả dụng
     const nextIdx = this._findNextAvailableIndex();
     if (nextIdx === -1) {
+      // Khi tất cả đều đang cooldown, fallback sang key sắp hết cooldown nhất
+      const soonestIdx = this._findSoonestAvailableIndex();
+      if (soonestIdx !== -1) {
+        this.currentIndex = soonestIdx;
+        const fallbackKey = this.keys[soonestIdx].key;
+        console.warn(
+          `[KeyManager] ⚠️ Tất cả key đều đang cooldown. Thử dùng ${this.keys[soonestIdx].label} (cooldown còn ${this._remainingCooldown(this.keys[soonestIdx])}s)`
+        );
+        this._notifyListeners(fallbackKey);
+        return fallbackKey;
+      }
       console.error("[KeyManager] ❌ Không còn key nào khả dụng!");
       return null;
     }
 
     this.currentIndex = nextIdx;
+    const newKey = this.keys[nextIdx].key;
     console.log(`[KeyManager] 🔄 Chuyển sang ${this.keys[nextIdx].label}`);
-    return this.keys[nextIdx].key;
+    this._notifyListeners(newKey);
+    return newKey;
   }
 
   /**

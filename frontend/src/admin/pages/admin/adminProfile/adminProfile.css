@@ -1,19 +1,21 @@
 .admin-profile-container {
-    min-height: 100vh;
-    padding: 40px 20px;
+    min-height: calc(100vh - var(--navbar-height, 70px));
+    padding: 32px 20px 60px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
+    box-sizing: border-box;
 }
 
 .profile-card {
     background: white;
     border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
     width: 100%;
-    max-width: 900px;
+    max-width: 1000px;
     overflow: hidden;
-    animation: slideIn 0.5s ease;
+    animation: slideIn 0.4s ease;
 }
 
 @keyframes slideIn {

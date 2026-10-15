@@ -2,9 +2,8 @@ import { pool } from "../../config/database.js";
 
 export const EventSocket = (io) => {
     io.on("connection", (socket) => {
-        console.log("Admin connect event:", socket.id);
-
         socket.on("join_admin", () => {
+            console.log("Admin join dashboard (event):", socket.id);
             socket.join("admin_dashboard");
         });
 
@@ -44,9 +43,37 @@ export const EventSocket = (io) => {
             }
         });
 
-        socket.on("requestAllEvents", async ({ offset = 0, limit = 5 } = {}) => {
+        socket.on("requestAllEvents", async ({ offset = 0, limit = 5, search = "", status = "all", category = "all", year = "" } = {}) => {
             try {
-                const { rows } = await pool.query(`
+                let whereClause = "WHERE 1=1";
+                const params = [];
+                let paramIndex = 1;
+
+                if (search && search.trim() !== "") {
+                    whereClause += ` AND (e.event_name ILIKE $${paramIndex} OR e.event_location ILIKE $${paramIndex})`;
+                    params.push(`%${search.trim()}%`);
+                    paramIndex++;
+                }
+
+                if (status && status !== "all") {
+                    whereClause += ` AND e.event_status = $${paramIndex}`;
+                    params.push(status === "true" || status === true);
+                    paramIndex++;
+                }
+
+                if (category && category !== "all") {
+                    whereClause += ` AND (c.category_name ILIKE $${paramIndex} OR e.category_id::text = $${paramIndex})`;
+                    params.push(category);
+                    paramIndex++;
+                }
+
+                if (year) {
+                    whereClause += ` AND EXTRACT(YEAR FROM e.event_start) = $${paramIndex}`;
+                    params.push(Number(year));
+                    paramIndex++;
+                }
+
+                const query = `
                     SELECT 
                         e.event_id,
                         e.event_name,
@@ -54,18 +81,23 @@ export const EventSocket = (io) => {
                         e.event_start,
                         e.event_end,
                         e.event_location,
+                        e.category_id,
+                        c.category_name,
                         SUM(z.zone_quantity) AS totalTickets,
                         SUM(z.sold_quantity) AS ticketsSold,
                         SUM(z.sold_quantity::bigint * z.zone_price::bigint) AS revenue,
-                        c.category_name,
-                        COUNT(*) OVER() AS total_count   -- tổng số để biết còn hay không
+                        COUNT(*) OVER() AS total_count
                     FROM events e
                     JOIN zones z ON e.event_id = z.event_id
                     JOIN categories c ON e.category_id = c.category_id
-                    GROUP BY e.event_id, c.category_name
+                    ${whereClause}
+                    GROUP BY e.event_id, c.category_name, e.category_id
                     ORDER BY e.event_start DESC
-                    LIMIT $1 OFFSET $2
-                `, [limit, offset]);
+                    LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+                `;
+                params.push(limit, offset);
+
+                const { rows } = await pool.query(query, params);
 
                 socket.emit("allEvents", {
                     events: rows,

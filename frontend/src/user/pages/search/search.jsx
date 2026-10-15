@@ -101,6 +101,8 @@ export default function SearchPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryFromUrl = searchParams.get("q") || "";
+  const genresParam = searchParams.get("genres") || searchParams.get("genre") || "";
+  const initialGenres = genresParam ? genresParam.split(",").map(g => g.trim()).filter(Boolean) : [];
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -119,12 +121,22 @@ export default function SearchPage() {
   // Filter state
   const [showFilter, setShowFilter] = useState(false);
   const [location, setLocation] = useState("Toàn quốc");
-  const [genres, setGenres] = useState([]);
+  const [genres, setGenres] = useState(initialGenres);
   const [tempLocation, setTempLocation] = useState("Toàn quốc");
-  const [tempGenres, setTempGenres] = useState([]);
+  const [tempGenres, setTempGenres] = useState(initialGenres);
 
   const dateRef = useRef();
   const filterRef = useRef();
+
+  // Đồng bộ genres khi URL searchParams thay đổi
+  useEffect(() => {
+    const gp = searchParams.get("genres") || searchParams.get("genre") || "";
+    if (gp) {
+      const parsed = gp.split(",").map(g => g.trim()).filter(Boolean);
+      setGenres(parsed);
+      setTempGenres(parsed);
+    }
+  }, [searchParams]);
 
   // Load danh mục từ database
   useEffect(() => {

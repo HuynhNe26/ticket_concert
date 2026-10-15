@@ -1,5 +1,6 @@
 import { useState  } from "react";
 import { useNavigate } from "react-router-dom";
+import BirthDatePicker from "../../../components/date_picker/BirthDatePicker";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -110,10 +111,12 @@ export default function CompleteProfile({ onDone }) {
             <div className="field-row">
               <div className="field">
                 <label className="field-label">Ngày sinh</label>
-                <input
-                  type="date"
+                <BirthDatePicker
+                  id="complete-birthofday"
                   value={birthOfDay}
-                  onChange={(e) => setBirthOfDay(e.target.value)}
+                  onChange={(val) => setBirthOfDay(val)}
+                  placeholder="dd/mm/yyyy"
+                  required
                 />
               </div>
               <div className="field">

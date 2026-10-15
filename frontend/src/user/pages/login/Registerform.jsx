@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
+import BirthDatePicker from "../../components/date_picker/BirthDatePicker";
 
 const API_BASE = process.env.REACT_APP_API_URL;
 
@@ -26,6 +27,10 @@ export default function RegisterForm({ onSuccess, onGoogleLogin }) {
     }
     if (!phone.match(/^0\d{9}$/)) {
       setMsg({ text: "Số điện thoại không hợp lệ (10 chữ số, bắt đầu bằng 0).", type: "error" });
+      return;
+    }
+    if (!birthOfDay) {
+      setMsg({ text: "Vui lòng chọn ngày sinh.", type: "error" });
       return;
     }
 
@@ -55,7 +60,10 @@ export default function RegisterForm({ onSuccess, onGoogleLogin }) {
 
       setRegistered(true);
     } catch (err) {
-      setMsg({ text: "Lỗi mạng: " + err.message, type: "error" });
+      setMsg({ 
+        text: "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại kết nối mạng!", 
+        type: "error" 
+      });
     } finally {
       setLoading(false);
     }
@@ -127,10 +135,11 @@ export default function RegisterForm({ onSuccess, onGoogleLogin }) {
       <div className="field-row">
         <div className="field">
           <label className="field-label" style={{ color: "white" }}>Ngày sinh</label>
-          <input
-            type="date"
+          <BirthDatePicker
+            id="register-birthofday"
             value={birthOfDay}
-            onChange={(e) => setBirthOfDay(e.target.value)}
+            onChange={(val) => setBirthOfDay(val)}
+            placeholder="dd/mm/yyyy"
             required
           />
         </div>

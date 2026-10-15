@@ -1,4 +1,4 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import HomeUser from "../user/pages/home/home";
 import LayoutUser from "../user/components/layout/layout";
 import EventDetail from "../user/pages/event/event";
@@ -9,7 +9,16 @@ import CheckoutResult from "../user/pages/checkout/CheckoutResult";
 import CompleteProfile from "../user/pages/login/CompleteProfile/CompleteProfile";
 import MyTicket from "../user/pages/my-ticket/my-ticket";
 import MyAccount from "../user/pages/my-account/my-account";
-import VerifyEmailPage from "../user/pages/login/VerifyEmailPage ";
+import VerifyEmailPage from "../user/pages/login/VerifyEmailPage";
+
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 export function UserRoutes() {
 
   return (
@@ -22,7 +31,11 @@ export function UserRoutes() {
         <Route path='/my-cart' element={<CartPage />} />
         <Route path='/result' element={<CheckoutResult />} />
         <Route path='/complete-profile' element={<CompleteProfile />} />
-        <Route path='/my-tickets' element={<MyTicket />} />
+        <Route path='/my-tickets' element={
+          <ProtectedRoute>
+            <MyTicket />
+          </ProtectedRoute>
+        } />
         <Route path='profile' element={<MyAccount />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
       </Route>

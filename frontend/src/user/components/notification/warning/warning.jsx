@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import './warning.css';
 
 /**
@@ -37,7 +38,7 @@ export default function Warning({
 
   if (!show) return null;
 
-  return (
+  return createPortal(
     <div className={`warning-notification ${visible ? 'visible' : ''}`}>
       <div className="warning-icon">
         <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
@@ -62,6 +63,7 @@ export default function Warning({
       >
         ×
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }

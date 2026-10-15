@@ -2,9 +2,8 @@ import { pool } from "../../config/database.js";
 
 export const OrderSocket = (io) => {
     io.on("connection", (socket) => {
-        console.log("Admin connect order:", socket.id);
-
         socket.on("join_admin", () => {
+            console.log("Admin join dashboard (order):", socket.id);
             socket.join("admin_dashboard");
         });
 

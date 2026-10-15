@@ -99,14 +99,8 @@ export default function HomeAdmin() {
           
           const now = new Date();
           const activeCount = dataTotal.data.filter(event => {
-            const startDate = new Date(event.event_start);
-            const endDate = new Date(event.event_end);
-            
-            return (
-              event.event_status === true && 
-              now >= startDate && 
-              now <= endDate
-            );
+            const endDate = event.event_end ? new Date(event.event_end) : null;
+            return event.event_status === true && (!endDate || now <= endDate);
           }).length;
 
           setActiveEventsCount(activeCount);

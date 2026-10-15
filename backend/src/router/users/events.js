@@ -10,6 +10,7 @@ router.get("/top-trending", EventControllers.getEventTopTrending);
 router.get("/event-weeks", EventControllers.getEventWeek);
 router.get("/event-month", EventControllers.getEventMonth);
 router.post("/favorite", authMiddleware, EventControllers.addFavoriteKeyword);
+router.get("/by-category", EventControllers.getEventsByCategory);
 router.get("/:id", EventControllers.getEventById);
 
 export default router;

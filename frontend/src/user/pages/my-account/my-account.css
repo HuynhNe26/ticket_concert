@@ -361,3 +361,53 @@
 .ma-dob-select:focus {
   box-shadow: 0 0 0 2px #22a861;
 }
+
+/* ══════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .ma-container-1 {
+    padding: 0 12px;
+  }
+  .ma-header-1 {
+    margin-bottom: 24px;
+  }
+  .ma-title-1 {
+    font-size: 20px;
+  }
+  .ma-avatar-wrapper-1 {
+    width: 80px;
+    height: 80px;
+  }
+  .ma-avatar-1 {
+    width: 80px;
+    height: 80px;
+  }
+  .ma-avatar-initial-1 {
+    font-size: 32px;
+  }
+  .ma-form {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .ma-dob-row {
+    gap: 6px;
+  }
+  .ma-dob-select, .ma-select {
+    padding: 11px 24px 11px 10px;
+    font-size: 13px;
+    height: 44px;
+  }
+  .ma-gender-row {
+    gap: 16px;
+  }
+  .ma-radio-label {
+    font-size: 13px;
+  }
+  .ma-submit-btn {
+    padding: 13px;
+    font-size: 14.5px;
+  }
+}

@@ -31,6 +31,32 @@ export async function addToCart(req, res) {
       });
     }
 
+    const eventResult = await client.query(
+      `
+      SELECT event_status, event_end
+      FROM events
+      WHERE event_id = $1
+      `,
+      [eventId]
+    );
+
+    if (!eventResult.rows.length) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ success: false, message: "Sự kiện không tồn tại" });
+    }
+
+    const { event_status, event_end } = eventResult.rows[0];
+
+    if (event_status === false) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ success: false, message: "Sự kiện chưa mở bán vé" });
+    }
+
+    if (event_end && new Date(event_end) < new Date()) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ success: false, message: "Sự kiện đã kết thúc" });
+    }
+
     const zoneResult = await client.query(
       `
       SELECT zone_quantity, sold_quantity

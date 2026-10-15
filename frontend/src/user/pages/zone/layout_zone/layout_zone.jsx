@@ -73,11 +73,30 @@ export default function LayoutZone({ layout, zones, eventId }) {
         ctx.strokeStyle = zone.available === 0 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.3)';
         ctx.lineWidth = 2;
         ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 14px Inter';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(zone.name, zone.x + zone.width / 2, zone.y + zone.height / 2);
+
+        if (zone.id === 'FOH') {
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 15px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('FOH', zone.x + zone.width / 2, zone.y + zone.height / 2 - 10);
+
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+          ctx.font = '500 11px Inter, sans-serif';
+          ctx.fillText('Kỹ thuật (Không bán vé)', zone.x + zone.width / 2, zone.y + zone.height / 2 + 12);
+        } else if (zone.id === 'STAGE') {
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 16px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(zone.name, zone.x + zone.width / 2, zone.y + zone.height / 2);
+        } else {
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 14px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(zone.name, zone.x + zone.width / 2, zone.y + zone.height / 2);
+        }
 
       } else if (zone.shape === 'polygon' && zone.points?.length > 0) {
         ctx.beginPath();
@@ -93,7 +112,7 @@ export default function LayoutZone({ layout, zones, eventId }) {
         const centerX = zone.points.reduce((sum, p) => sum + p[0], 0) / zone.points.length;
         const centerY = zone.points.reduce((sum, p) => sum + p[1], 0) / zone.points.length;
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 14px Inter';
+        ctx.font = 'bold 14px Inter, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(zone.name, centerX, centerY);
@@ -108,6 +127,49 @@ export default function LayoutZone({ layout, zones, eventId }) {
   if (!layout) {
     return <div className="layout-loading"><p>Chưa cập nhật!</p></div>;
   }
+
+  const handleCanvasMouseMove = (e) => {
+    if (!layout || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
+
+    const mergedZones = (layout.zones || []).map(layoutZone => {
+      const apiZone = zones.find(z => z.zone_code === layoutZone.id);
+      return apiZone ? { ...layoutZone, ...apiZone } : layoutZone;
+    });
+
+    let hoveredZone = null;
+    for (const zone of mergedZones) {
+      let inside = false;
+      if (zone.shape === 'rect') {
+        inside = x >= zone.x && x <= zone.x + zone.width && y >= zone.y && y <= zone.y + zone.height;
+      } else if (zone.shape === 'polygon') {
+        for (let i = 0, j = zone.points.length - 1; i < zone.points.length; j = i++) {
+          const xi = zone.points[i][0], yi = zone.points[i][1];
+          const xj = zone.points[j][0], yj = zone.points[j][1];
+          const intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+          if (intersect) inside = !inside;
+        }
+      }
+      if (inside) {
+        hoveredZone = zone;
+        break;
+      }
+    }
+
+    if (!hoveredZone) {
+      canvas.style.cursor = 'default';
+    } else if (hoveredZone.id === 'FOH' || hoveredZone.id === 'STAGE' || (hoveredZone.available !== undefined && hoveredZone.available <= 0)) {
+      canvas.style.cursor = 'not-allowed';
+    } else {
+      canvas.style.cursor = 'pointer';
+    }
+  };
 
   const handleCanvasClick = (e) => {
     if (!layout || !canvasRef.current) return;
@@ -138,11 +200,25 @@ export default function LayoutZone({ layout, zones, eventId }) {
         }
       }
 
-      if (inside && zone.zone_quantity - zone.sold_quantity > 0) {
-        setSelectedZone(zone);
-        setQuantity(1);
-        setShowOverlay(true);
-        break;
+      if (inside) {
+        if (zone.id === 'FOH' || zone.type === 'Quản lý') {
+          showWarning('Khu vực FOH (Kỹ thuật) là bàn điều khiển âm thanh & ánh sáng, không mở bán vé.');
+          break;
+        }
+        if (zone.id === 'STAGE' || zone.type === 'Sân khấu') {
+          showWarning('Khu vực Sân khấu không mở bán vé.');
+          break;
+        }
+        if (zone.available !== undefined && zone.available <= 0) {
+          showWarning(`Khu vực ${zone.name} hiện đã hết vé.`);
+          break;
+        }
+        if (zone.zone_quantity - zone.sold_quantity > 0) {
+          setSelectedZone(zone);
+          setQuantity(1);
+          setShowOverlay(true);
+          break;
+        }
       }
     }
   };
@@ -192,7 +268,12 @@ export default function LayoutZone({ layout, zones, eventId }) {
       <Success show={success.show} message={success.message} onClose={() => setSuccess({ show: false, message: '' })} />
       <ErrorNotif show={error.show} message={error.message}   onClose={() => setError({ show: false, message: '' })} />
 
-      <canvas ref={canvasRef} onClick={handleCanvasClick} className="layout-canvas" />
+      <canvas
+        ref={canvasRef}
+        onClick={handleCanvasClick}
+        onMouseMove={handleCanvasMouseMove}
+        className="layout-canvas"
+      />
 
       {showOverlay && selectedZone && (
         <div className="zone-overlay">
