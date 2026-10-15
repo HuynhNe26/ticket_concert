@@ -7,8 +7,7 @@ const router = express.Router();
 router.get("/for-you", optionalAuth, async (req, res) => {
   try {
     const userId = req.user?.userId ? req.user?.userId : null; 
-    console.log(userId)
-    const limit = Math.min(parseInt(req.query.limit) || 5, 5);
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 6, 1), 20);
 
     const result = await getHybridRecommendations(userId, limit);
 

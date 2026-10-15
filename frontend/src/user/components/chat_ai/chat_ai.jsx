@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Bot, Send, X } from "lucide-react";
 import "./chat_ai.css";
 import LoginPage from "../../../user/pages/login/Loginpage";
 
@@ -24,6 +25,65 @@ function LoginRequiredCard({ onLogin }) {
   );
 }
 
+// ─── Formatted Message Component ──────────────────────────────────────────────
+function FormattedMessage({ text }) {
+  if (!text) return null;
+  const lines = text.split("\n");
+
+  const parseInline = (str) => {
+    const parts = [];
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    let lastIndex = 0;
+    let match;
+    let keyIdx = 0;
+
+    while ((match = boldRegex.exec(str)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(str.substring(lastIndex, match.index));
+      }
+      parts.push(
+        <strong key={`b-${keyIdx++}`} className="chat-msg-strong">
+          {match[1]}
+        </strong>
+      );
+      lastIndex = boldRegex.lastIndex;
+    }
+    if (lastIndex < str.length) {
+      parts.push(str.substring(lastIndex));
+    }
+    return parts.length > 0 ? parts : str;
+  };
+
+  return (
+    <div className="chat-msg-content">
+      {lines.map((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) {
+          return <div key={idx} className="chat-msg-spacer" />;
+        }
+
+        // Bullet item: starts with * or - or •
+        const isBullet = /^[*\-•]\s+/.test(trimmed);
+        if (isBullet) {
+          const bulletText = trimmed.replace(/^[*\-•]\s+/, "");
+          return (
+            <div key={idx} className="chat-msg-bullet">
+              <span className="chat-bullet-dot">•</span>
+              <span className="chat-bullet-text">{parseInline(bulletText)}</span>
+            </div>
+          );
+        }
+
+        return (
+          <p key={idx} className="chat-msg-paragraph">
+            {parseInline(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Message Bubble ───────────────────────────────────────────────────────────
 function MessageBubble({ msg, onOpenLogin }) {
   const content = msg.content || "";
@@ -32,38 +92,100 @@ function MessageBubble({ msg, onOpenLogin }) {
     const text = content.replace("[LOGIN_REQUIRED]", "").trim();
     return (
       <>
-        {text && <div className="msg-bubble">{text}</div>}
+        {text && (
+          <div className="msg-bubble">
+            <FormattedMessage text={text} />
+          </div>
+        )}
         <LoginRequiredCard onLogin={onOpenLogin} />
       </>
     );
   }
 
-  return <div className="msg-bubble">{content}</div>;
+  return (
+    <div className="msg-bubble">
+      {msg.type === "bot" ? (
+        <FormattedMessage text={content} />
+      ) : (
+        <span>{content}</span>
+      )}
+    </div>
+  );
 }
+
+const QUICK_SUGGESTIONS = [
+  { icon: "🔥", label: "Sự kiện nổi bật", query: "Sự kiện nổi bật" },
+  { icon: "🎟️", label: "Vé dưới 1 triệu", query: "Vé dưới 1 triệu" },
+  { icon: "📅", label: "Lịch diễn tháng này", query: "Lịch diễn tháng này" },
+  { icon: "📍", label: "Concert tại TP.HCM", query: "Concert tại TP.HCM" },
+];
 
 // ─── Main ChatAI ─────────────────────────────────────────────────────────────
 export default function ChatAI() {
-  const [isOpen, setIsOpen]         = useState(false);
-  const [showDot, setShowDot]       = useState(true);
-  const [isTyping, setIsTyping]     = useState(false);
-  const [inputValue, setInputValue] = useState("");
+  const [isOpen, setIsOpen]                 = useState(false);
+  const [showDot, setShowDot]               = useState(true);
+  const [isTyping, setIsTyping]             = useState(false);
+  const [inputValue, setInputValue]         = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+
   const [messages, setMessages] = useState([
     {
       id: 1,
       type: "bot",
-      content: "Xin chào! 👋 Mình hỗ trợ về vé sự kiện.",
+      content: "Xin chào! 👋 Mình là trợ lý AI của Ticket Concert. Bạn muốn tìm kiếm sự kiện hay xem thông tin vé nào?",
       time: new Date(),
     },
   ]);
 
   const messagesEndRef = useRef(null);
+  const latestMsgRef   = useRef(null);
   const inputRef       = useRef(null);
+  const touchStartY    = useRef(0);
   const [sessionId]    = useState(() => crypto.randomUUID());
 
   useEffect(() => {
+    if (messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.type === "bot" && lastMsg.id !== 1 && latestMsgRef.current) {
+        latestMsgRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  // Lock body scroll and track virtual keyboard on mobile
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const prevOverflow = document.body.style.overflow;
+    if (window.innerWidth <= 640) {
+      document.body.style.overflow = "hidden";
+    }
+
+    const handleViewportResize = () => {
+      if (window.innerWidth <= 640 && window.visualViewport) {
+        const offset = window.innerHeight - window.visualViewport.height;
+        setKeyboardOffset(offset > 120 ? offset : 0);
+      } else {
+        setKeyboardOffset(0);
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", handleViewportResize);
+      window.visualViewport.addEventListener("scroll", handleViewportResize);
+    }
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", handleViewportResize);
+        window.visualViewport.removeEventListener("scroll", handleViewportResize);
+      }
+    };
+  }, [isOpen]);
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -80,6 +202,9 @@ export default function ChatAI() {
       { id: Date.now(), type: "user", content, time: new Date() },
     ]);
     setInputValue("");
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+    }
     setIsTyping(true);
 
     try {
@@ -112,7 +237,7 @@ export default function ChatAI() {
         {
           id: Date.now() + 1,
           type: "bot",
-          content: "Xin lỗi, có lỗi xảy ra. Vui lòng thử lại!",
+          content: "Xin lỗi, kết nối bị gián đoạn. Vui lòng thử lại sau!",
           time: new Date(),
         },
       ]);
@@ -126,49 +251,89 @@ export default function ChatAI() {
     }
   };
 
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchMove = (e) => {
+    const diff = e.touches[0].clientY - touchStartY.current;
+    if (diff > 80) {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <>
-      <div className="chat-root">
+      {/* Backdrop overlay for mobile */}
+      {isOpen && (
+        <div
+          className="chat-backdrop"
+          onClick={() => setIsOpen(false)}
+          aria-label="Đóng chat"
+        />
+      )}
+
+      <div className={`chat-root ${isOpen ? "is-open" : ""}`}>
         {/* Chat Window */}
         {isOpen && (
-          <div className="chat-window">
+          <div
+            className="chat-window"
+            style={{
+              bottom: keyboardOffset ? `${keyboardOffset}px` : undefined,
+            }}
+          >
+            {/* Sheet Handle for swipe-down to dismiss */}
+            <div
+              className="chat-sheet-handle-wrap"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onClick={() => setIsOpen(false)}
+            >
+              <div className="chat-sheet-handle" aria-hidden="true" />
+            </div>
 
             {/* Header */}
-            <div className="chat-header">
+            <div
+              className="chat-header"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+            >
               <div className="chat-header-avatar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="rgba(34,197,94,0.85)" />
-                  <path d="M8 12h8M12 8v8" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                </svg>
+                <Bot size={20} strokeWidth={2.2} className="chat-header-bot-icon" />
               </div>
               <div className="chat-header-info">
                 <div className="chat-header-name">Trợ lý Sự kiện AI</div>
-                <div className="chat-header-status">Đang hoạt động</div>
+                <div className="chat-header-status">
+                  <span className="chat-status-dot" />
+                  <span>Sẵn sàng hỗ trợ 24/7</span>
+                </div>
               </div>
-              <button className="chat-header-close" onClick={() => setIsOpen(false)}>
-                ✕
+              <button
+                className="chat-header-close"
+                onClick={() => setIsOpen(false)}
+                aria-label="Đóng chat"
+              >
+                <X size={18} />
               </button>
             </div>
 
             {/* Messages */}
             <div className="chat-messages">
-              {messages.map((msg) => (
-                <div key={msg.id} className={`msg-row ${msg.type}`}>
-
+              {messages.map((msg, idx) => (
+                <div
+                  key={msg.id}
+                  ref={idx === messages.length - 1 ? latestMsgRef : null}
+                  className={`msg-row ${msg.type}`}
+                >
                   {/* Avatar */}
                   <div className={`msg-avatar ${msg.type}`}>
                     {msg.type === "bot" ? (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(34,197,94,0.9)">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
-                      </svg>
-                    ) : "👤"}
+                      <Bot size={16} strokeWidth={2.2} className="msg-bot-icon" />
+                    ) : (
+                      "👤"
+                    )}
                   </div>
 
-                  {/*
-                    KEY CHANGE: bọc bubble + time trong .msg-col
-                    .msg-col dùng flex-col + align-items để bubble
-                    tự co theo nội dung, không bị ép full-width
-                  */}
                   <div className="msg-col">
                     {msg.type === "bot" ? (
                       <MessageBubble
@@ -180,17 +345,34 @@ export default function ChatAI() {
                     )}
                     <div className="msg-time">{formatTime(msg.time)}</div>
                   </div>
-
                 </div>
               ))}
+
+              {/* Quick suggestions when conversation starts */}
+              {messages.length <= 1 && (
+                <div className="chat-suggestions">
+                  <div className="chat-suggestions-label">Gợi ý nhanh cho bạn:</div>
+                  <div className="chat-chips-scroll">
+                    {QUICK_SUGGESTIONS.map((item) => (
+                      <button
+                        key={item.label}
+                        type="button"
+                        className="chat-chip"
+                        onClick={() => sendMessage(item.query)}
+                      >
+                        <span className="chat-chip-icon">{item.icon}</span>
+                        <span>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Typing indicator */}
               {isTyping && (
                 <div className="msg-row bot">
                   <div className="msg-avatar bot">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(34,197,94,0.9)">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
-                    </svg>
+                    <Bot size={16} strokeWidth={2.2} className="msg-bot-icon" />
                   </div>
                   <div className="typing-bubble">
                     <div className="typing-dot" />
@@ -223,15 +405,13 @@ export default function ChatAI() {
                   className="chat-send-btn"
                   onClick={() => sendMessage()}
                   disabled={!inputValue.trim() || isTyping}
+                  aria-label="Gửi tin nhắn"
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                    <path d="M2 21l21-9L2 3v7l15 2-15 2v7z" fill="white" />
-                  </svg>
+                  <Send size={15} />
                 </button>
               </div>
               <div className="chat-hint">Enter gửi · Shift+Enter xuống dòng</div>
             </div>
-
           </div>
         )}
 
@@ -239,25 +419,14 @@ export default function ChatAI() {
         <button
           className={`chat-fab ${isOpen ? "open" : ""}`}
           onClick={isOpen ? () => setIsOpen(false) : handleOpen}
-          aria-label="Mở chat hỗ trợ"
+          aria-label={isOpen ? "Đóng chat hỗ trợ" : "Mở chat hỗ trợ"}
         >
           {showDot && !isOpen && <div className="chat-fab-dot" />}
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            {isOpen ? (
-              <path
-                d="M18 6L6 18M6 6l12 12"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            ) : (
-              <path
-                d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2v10z"
-                fill="currentColor"
-                opacity="0.95"
-              />
-            )}
-          </svg>
+          {isOpen ? (
+            <X size={22} />
+          ) : (
+            <Bot size={24} strokeWidth={2.2} className="chat-fab-icon" />
+          )}
         </button>
       </div>
 
@@ -275,7 +444,7 @@ export default function ChatAI() {
               className="chat-modal-close"
               onClick={() => setShowLoginModal(false)}
             >
-              ✕
+              <X size={18} />
             </button>
             <LoginPage
               isModal={true}

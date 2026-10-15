@@ -1,114 +1,118 @@
 body, html {
   margin: 0;
   padding: 0;
-  height: 100%;
-  font-family: 'Be Vietnam Pro', 'Barlow', sans-serif;
+  min-height: 100%;
+  font-family: 'Be Vietnam Pro', 'Barlow', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 #root {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  width: 100%;
 }
 
 .layout-container {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
+  width: 100%;
+  overflow-x: clip;
 }
 
-/* 3-col trick: side gutters auto, center capped at 1400px */
-header,
-main,
-footer {
-  display: grid;
-  grid-template-columns: 1fr minmax(0, 1400px) 1fr;
-}
-
-header {
-  grid-row: 1;
-  background-color: #ffffff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  position: sticky;        /* header bám trên cùng khi scroll */
+.layout-container header {
+  position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
+  width: 100%;
 }
 
-header > * {
+/* 3-col centered grid: side gutters auto, center capped at 1360px */
+.layout-container main,
+.layout-container footer {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 1360px) 1fr;
+  width: 100%;
+}
+
+.layout-container main {
+  flex: 1 0 auto;
+  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.12), transparent 28%),
+    linear-gradient(155deg, #181920 0%, #20242c 48%, #1a1e24 100%);
+  position: relative;
+}
+
+.layout-container main > * {
   grid-column: 2;
-  padding: 0.875rem 2rem;
+  padding: 1.75rem 1.25rem;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
-main {
-  grid-row: 2;
-  background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.24), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(74, 222, 128, 0.2), transparent 28%),
-    linear-gradient(155deg, #494a4a 0%, #6e8794 48%, #788e9d 100%);
-}
-
-main > * {
-  grid-column: 2;
-  padding: 2rem 1.5rem;
-}
-
-footer {
-  grid-row: 3;
-  background-color: #000000;
+.layout-container footer {
+  background-color: #0b0c10;
   color: #ffffff;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-footer > * {
+.layout-container footer > * {
   grid-column: 2;
-  padding: 1.5rem 2rem;
+  padding: 2rem 1.5rem 1.5rem;
+  min-width: 0;
 }
 
 /* ── Tablet (≤ 1024px) ── */
 @media (max-width: 1024px) {
-  header,
-  main,
-  footer {
-    grid-template-columns: 16px 1fr 16px;
+  .layout-container main,
+  .layout-container footer {
+    grid-template-columns: 16px minmax(0, 1fr) 16px;
   }
 
-  header > * {
-    padding: 0.875rem 0;
+  .layout-container main > * {
+    padding: 1.25rem 0;
+    min-width: 0;
   }
 
-  main > * {
+  .layout-container footer > * {
     padding: 1.5rem 0;
   }
+}
 
-  footer > * {
+/* ── Mobile (≤ 768px) ── */
+@media (max-width: 768px) {
+  .layout-container main,
+  .layout-container footer {
+    grid-template-columns: 12px minmax(0, 1fr) 12px;
+  }
+
+  .layout-container main > * {
+    padding: 1rem 0;
+    min-width: 0;
+  }
+
+  .layout-container footer > * {
     padding: 1.25rem 0;
   }
 }
 
-/* ── Mobile (≤ 640px) ── */
-@media (max-width: 780px) {
-  header,
-  main,
-  footer {
-    grid-template-columns: 12px 1fr 12px;
+/* ── Very small screens (≤ 380px) ── */
+@media (max-width: 380px) {
+  .layout-container main,
+  .layout-container footer {
+    grid-template-columns: 8px minmax(0, 1fr) 8px;
   }
 
-  header {
-    padding: 50px;
-  }
-
-  main > * {
-    padding: 1rem 0;
-  }
-
-  footer > * {
-    padding: 1rem 0;
-  }
-}
-
-/* ── Very small (≤ 360px) ── */
-@media (max-width: 360px) {
-  header,
-  main,
-  footer {
-    grid-template-columns: 8px 1fr 8px;
+  .layout-container main > * {
+    padding: 0.75rem 0;
+    min-width: 0;
   }
 }

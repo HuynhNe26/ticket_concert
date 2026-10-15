@@ -369,3 +369,27 @@ button[disabled] {
   cursor: not-allowed;
   transform: none;
 }
+
+/* ══════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+══════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 24px 18px;
+    border-radius: 18px;
+  }
+
+  .brand img {
+    width: 105px;
+  }
+
+  .toggle-option {
+    padding: 7px 18px;
+    font-size: 13px;
+  }
+
+  .profile-popup {
+    width: 90vw;
+    padding: 20px 16px;
+  }
+}

@@ -14,5 +14,6 @@ router.get("/:id", AdminControllers.getAdminById);
 router.delete("/:id", AdminControllers.deleteAdmin); 
 router.put("/update/:id", AdminControllers.updateAdmin); 
 router.put("/update-profile", adminAuth, AdminControllers.updateProfile); 
+router.put("/change-password", adminAuth, AdminControllers.changePassword); 
 
 export default router;

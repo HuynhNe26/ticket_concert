@@ -100,10 +100,8 @@ OrderSocket(io)
 await connectDB();
 
 cron.schedule("* * * * *", async () => {
-  console.log("Cron đang chạy:", new Date());
   try {
-
-    await pool.query(`
+    const resEvents = await pool.query(`
       UPDATE events
       SET event_status = true
       WHERE event_start <= NOW()
@@ -111,22 +109,21 @@ cron.schedule("* * * * *", async () => {
         AND event_status = false
     `);
 
-    await pool.query(`
+    const resVouchers = await pool.query(`
       UPDATE vouchers
-      SET voucher_status = true
-      WHERE voucher_start <= NOW()
-        AND voucher_end >= NOW()
-        AND voucher_status = false
+      SET voucher_status = CASE
+        WHEN voucher_start <= NOW() AND voucher_end >= NOW() THEN true
+        ELSE false
+      END
+      WHERE (voucher_start <= NOW() AND voucher_end >= NOW() AND voucher_status = false)
+         OR (voucher_end < NOW() AND voucher_status = true)
     `);
 
-    await pool.query(`
-      UPDATE vouchers
-      SET voucher_status = false
-      WHERE voucher_end < NOW()
-        AND voucher_status = true
-    `);
+    if (resEvents.rowCount > 0 || resVouchers.rowCount > 0) {
+      console.log(`[Cron] Đã cập nhật ${resEvents.rowCount} sự kiện và ${resVouchers.rowCount} voucher.`);
+    }
   } catch (err) {
-    console.error("Lỗi cập nhật event_status:", err);
+    console.error("[Cron] Lỗi cập nhật định kỳ:", err.message);
   }
 });
 

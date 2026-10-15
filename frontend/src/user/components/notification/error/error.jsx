@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import './error.css';
 
 /**
@@ -10,6 +11,15 @@ import './error.css';
  * @param {function} props.onClose - Callback khi đóng notification
  * @param {boolean} props.show - Hiển thị hay không
  */
+function formatFriendlyMessage(msg) {
+  if (!msg) return "Đã có lỗi xảy ra. Vui lòng thử lại sau!";
+  const str = typeof msg === "string" ? msg : (msg.message || JSON.stringify(msg));
+  if (/failed to fetch|fetch failed|network\s?error|err_connection|load failed|networkrequestfailed/i.test(str)) {
+    return "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng!";
+  }
+  return str;
+}
+
 export default function Error({ 
   message = "Đã có lỗi xảy ra!", 
   duration = 4000, 
@@ -37,7 +47,9 @@ export default function Error({
 
   if (!show) return null;
 
-  return (
+  const displayMessage = formatFriendlyMessage(message);
+
+  return createPortal(
     <div className={`error-notification ${visible ? 'visible' : ''}`}>
       <div className="error-icon">
         <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg" style={{ background: "transparent" }}>
@@ -48,7 +60,7 @@ export default function Error({
       </div>
       <div className="error-content">
         <h4 className="error-title">Lỗi</h4>
-        <p className="error-message">{message}</p>
+        <p className="error-message">{displayMessage}</p>
       </div>
       <button 
         className="error-close" 
@@ -62,6 +74,7 @@ export default function Error({
       >
         ×
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }

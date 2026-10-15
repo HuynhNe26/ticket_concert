@@ -13,11 +13,14 @@ export default function Header() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [isClosingMobileSearch, setIsClosingMobileSearch] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
 
-  // Search history dropdown
+  // Search history dropdown & live search
   const [showHistory, setShowHistory] = useState(false);
   const [historySearch, setHistorySearch] = useState([]);
+  const [liveResults, setLiveResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const searchWrapperRef = useRef(null);
   const inputRef = useRef(null);
   const mobileInputRef = useRef(null);
@@ -45,6 +48,35 @@ export default function Header() {
     setKeyword(params.get("q") || "");
   }, [location.search]);
 
+  // Live search debounce when keyword changes
+  useEffect(() => {
+    if (!keyword.trim()) {
+      setLiveResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/events/search?q=${encodeURIComponent(keyword.trim())}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setLiveResults(data.data.slice(0, 6));
+        } else {
+          setLiveResults([]);
+        }
+      } catch (err) {
+        console.error("Live search error:", err);
+        setLiveResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 220);
+
+    return () => clearTimeout(timer);
+  }, [keyword]);
+
   // Close user menu on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -59,6 +91,35 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Lock body scroll on mobile when search overlay is open
+  useEffect(() => {
+    if (showMobileSearch) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [showMobileSearch]);
+
+  const handleOpenMobileSearch = () => {
+    setIsClosingMobileSearch(false);
+    setShowMobileSearch(true);
+    setTimeout(() => {
+      mobileInputRef.current?.focus();
+    }, 180);
+  };
+
+  const handleCloseMobileSearch = () => {
+    if (isClosingMobileSearch) return;
+    setIsClosingMobileSearch(true);
+    setTimeout(() => {
+      setShowMobileSearch(false);
+      setIsClosingMobileSearch(false);
+      setShowHistory(false);
+    }, 240);
+  };
 
   // Load history from localStorage
   const loadHistory = () => {
@@ -94,8 +155,9 @@ export default function Header() {
     navigate(`/search?q=${encodeURIComponent(item)}`);
   };
 
-  const saveAndSearch = (kw) => {
-    if (!kw.trim()) return;
+  const saveToHistory = (kw) => {
+    if (!kw || !kw.trim()) return;
+    const cleanKw = kw.trim();
     if (!token) {
       let history = [];
       try {
@@ -105,13 +167,157 @@ export default function Header() {
       } catch {
         history = [];
       }
-      history = history.filter((item) => item !== kw);
-      history.unshift(kw);
+      history = history.filter((item) => item !== cleanKw);
+      history.unshift(cleanKw);
       history = history.slice(0, 4);
       localStorage.setItem("historySearch", JSON.stringify(history));
     }
+  };
+
+  const saveAndSearch = (kw) => {
+    if (!kw || !kw.trim()) return;
+    saveToHistory(kw);
     setShowHistory(false);
-    navigate(`/search?q=${encodeURIComponent(kw)}`);
+    navigate(`/search?q=${encodeURIComponent(kw.trim())}`);
+  };
+
+  const handleSelectEvent = (event) => {
+    saveToHistory(event.event_name);
+    setShowMobileSearch(false);
+    setShowHistory(false);
+    navigate(`/event/${event.event_id}`);
+  };
+
+  const formatPrice = (price) => {
+    if (!price) return "Đang cập nhật";
+    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(price);
+  };
+
+  const formatShortDate = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d)) return "";
+    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+  };
+
+  const renderSuggestionsOrHistory = (isMobile = false) => {
+    const hasKeyword = keyword.trim().length > 0;
+
+    if (hasKeyword) {
+      return (
+        <div className={isMobile ? "tb-mobile-history tb-suggestions-container" : "tb-history-dropdown tb-suggestions-container"}>
+          <div className="tb-history-header">
+            <span className="tb-history-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              {isSearching ? "Đang tìm kiếm..." : `Gợi ý sự kiện cho "${keyword}"`}
+            </span>
+            {liveResults.length > 0 && (
+              <span className="tb-suggestion-count">{liveResults.length} sự kiện</span>
+            )}
+          </div>
+
+          {isSearching ? (
+            <div className="tb-suggestion-loading">
+              <span className="tb-search-spinner" />
+              <span>Đang tìm sự kiện phù hợp...</span>
+            </div>
+          ) : liveResults.length > 0 ? (
+            <div className="tb-suggestion-list">
+              {liveResults.map((event) => (
+                <div
+                  key={event.event_id}
+                  className="tb-suggestion-item"
+                  onClick={() => handleSelectEvent(event)}
+                >
+                  <img
+                    src={event.banner_url || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80&fit=crop"}
+                    alt={event.event_name}
+                    className="tb-suggestion-thumb"
+                    onError={(e) => { e.target.src = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=300&q=80&fit=crop"; }}
+                  />
+                  <div className="tb-suggestion-info">
+                    <div className="tb-suggestion-title">{event.event_name}</div>
+                    <div className="tb-suggestion-meta">
+                      {event.event_start && <span>📅 {formatShortDate(event.event_start)}</span>}
+                      {event.event_location && <span className="tb-suggestion-loc">📍 {event.event_location.split(',')[0]}</span>}
+                      {event.min_price ? (
+                        <span className="tb-suggestion-price">Từ {formatPrice(event.min_price)}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                  <span className="tb-suggestion-arrow">›</span>
+                </div>
+              ))}
+              <div
+                className="tb-suggestion-footer"
+                onClick={() => {
+                  saveAndSearch(keyword);
+                  if (isMobile) setShowMobileSearch(false);
+                }}
+              >
+                <span>Xem tất cả kết quả cho <strong>"{keyword}"</strong></span>
+                <span className="tb-suggestion-arrow">→</span>
+              </div>
+            </div>
+          ) : (
+            <div className="tb-suggestion-empty">
+              <span>Không tìm thấy sự kiện nào khớp với "{keyword}"</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (showHistory && historySearch.length > 0) {
+      return (
+        <div className={isMobile ? "tb-mobile-history" : "tb-history-dropdown"}>
+          <div className="tb-history-header">
+            <span className="tb-history-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              Tìm kiếm gần đây
+            </span>
+            <button className="tb-history-clear-all" onClick={handleClearAllHistory}>
+              Xóa tất cả
+            </button>
+          </div>
+          <ul className="tb-history-list">
+            {historySearch.map((item, idx) => (
+              <li
+                key={idx}
+                className="tb-history-item"
+                onClick={() => {
+                  handleHistoryClick(item);
+                  if (isMobile) setShowMobileSearch(false);
+                }}
+              >
+                <svg className="tb-history-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+                <span className="tb-history-text">{item}</span>
+                <button
+                  className="tb-history-delete"
+                  onClick={(e) => handleDeleteHistory(e, item)}
+                  title="Xóa"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
+
+    return null;
   };
 
   const handleSearch = () => saveAndSearch(keyword);
@@ -161,7 +367,6 @@ export default function Header() {
           <Link to="/" className="tb-logo">
             <img
               src="https://res.cloudinary.com/dzfqqipsx/image/upload/v1776499227/xmcn7vabeqm6lgnvl0pm.png"
-              style={{ width: "auto", height: "60px" }}
               alt="Logo"
             />
           </Link>
@@ -182,6 +387,9 @@ export default function Header() {
                 onChange={(e) => setKeyword(e.target.value)}
                 onFocus={handleInputFocus}
                 onKeyDown={handleKeyDown}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck="false"
               />
               {keyword && (
                 <button
@@ -199,47 +407,8 @@ export default function Header() {
               </button>
             </div>
 
-            {/* History Dropdown */}
-            {showHistory && historySearch.length > 0 && (
-              <div className="tb-history-dropdown">
-                <div className="tb-history-header">
-                  <span className="tb-history-title">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                    Tìm kiếm gần đây
-                  </span>
-                  <button className="tb-history-clear-all" onClick={handleClearAllHistory}>
-                    Xóa tất cả
-                  </button>
-                </div>
-                <ul className="tb-history-list">
-                  {historySearch.map((item, idx) => (
-                    <li
-                      key={idx}
-                      className="tb-history-item"
-                      onClick={() => handleHistoryClick(item)}
-                    >
-                      <svg className="tb-history-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.35-4.35" />
-                      </svg>
-                      <span className="tb-history-text">{item}</span>
-                      <button
-                        className="tb-history-delete"
-                        onClick={(e) => handleDeleteHistory(e, item)}
-                        title="Xóa"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                          <path d="M18 6 6 18M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {/* History or Live Suggestions Dropdown */}
+            {(showHistory || keyword.trim().length > 0) && renderSuggestionsOrHistory(false)}
           </div>
 
           {/* Right section */}
@@ -247,7 +416,7 @@ export default function Header() {
             {/* Mobile search icon */}
             <button
               className="tb-icon-btn tb-mobile-search-btn"
-              onClick={() => setShowMobileSearch(true)}
+              onClick={handleOpenMobileSearch}
               aria-label="Tìm kiếm"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -257,13 +426,26 @@ export default function Header() {
             </button>
 
             {/* Vé của tôi */}
-            <Link to="/my-tickets" className="tb-nav-link" title="Vé của tôi">
+            <button
+              type="button"
+              className="tb-nav-link"
+              title="Vé của tôi"
+              onClick={() => {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                  navigate("/");
+                  setShowLoginModal(true);
+                } else {
+                  navigate("/my-tickets");
+                }
+              }}
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2Z" />
                 <path d="M13 5v2M13 17v2M13 11v2" />
               </svg>
               <span className="tb-nav-label">Vé của tôi</span>
-            </Link>
+            </button>
 
             {/* Auth area */}
             {user ? (
@@ -313,16 +495,22 @@ export default function Header() {
               </div>
             ) : (
               <button className="tb-login-btn" onClick={() => setShowLoginModal(true)}>
-                <span className="tb-login-label">Đăng nhập | Đăng ký</span>
+                <span className="tb-login-label">Đăng nhập<span className="tb-login-extra"> | Đăng ký</span></span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Mobile search overlay */}
+        {/* Mobile search overlay with slide down animation */}
         {showMobileSearch && (
-          <div className="tb-mobile-search-overlay" onClick={() => { setShowMobileSearch(false); setShowHistory(false); }}>
-            <div className="tb-mobile-search-container" onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`tb-mobile-search-overlay ${isClosingMobileSearch ? "closing" : ""}`}
+            onClick={handleCloseMobileSearch}
+          >
+            <div
+              className={`tb-mobile-search-container ${isClosingMobileSearch ? "closing" : ""}`}
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="tb-mobile-search-bar">
                 <svg className="tb-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="11" cy="11" r="8" />
@@ -337,54 +525,36 @@ export default function Header() {
                   onChange={(e) => setKeyword(e.target.value)}
                   onFocus={() => { loadHistory(); setShowHistory(true); }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") { saveAndSearch(keyword); setShowMobileSearch(false); }
-                    if (e.key === "Escape") { setShowMobileSearch(false); setShowHistory(false); }
+                    if (e.key === "Enter") { saveAndSearch(keyword); handleCloseMobileSearch(); }
+                    if (e.key === "Escape") { handleCloseMobileSearch(); }
                   }}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck="false"
                   autoFocus
                 />
-                <button className="tb-mobile-close" onClick={() => { setShowMobileSearch(false); setShowHistory(false); }}>✕</button>
+                {keyword && (
+                  <button
+                    className="tb-clear-btn tb-mobile-clear-btn"
+                    onClick={() => { setKeyword(""); mobileInputRef.current?.focus(); }}
+                    title="Xóa"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  className="tb-mobile-close"
+                  onClick={handleCloseMobileSearch}
+                  aria-label="Đóng tìm kiếm"
+                >
+                  ✕
+                </button>
               </div>
 
-              {/* Mobile history */}
-              {showHistory && historySearch.length > 0 && (
-                <div className="tb-mobile-history">
-                  <div className="tb-history-header">
-                    <span className="tb-history-title">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                      Tìm kiếm gần đây
-                    </span>
-                    <button className="tb-history-clear-all" onClick={handleClearAllHistory}>
-                      Xóa tất cả
-                    </button>
-                  </div>
-                  <ul className="tb-history-list">
-                    {historySearch.map((item, idx) => (
-                      <li
-                        key={idx}
-                        className="tb-history-item"
-                        onClick={() => { handleHistoryClick(item); setShowMobileSearch(false); }}
-                      >
-                        <svg className="tb-history-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="11" cy="11" r="8" />
-                          <path d="m21 21-4.35-4.35" />
-                        </svg>
-                        <span className="tb-history-text">{item}</span>
-                        <button
-                          className="tb-history-delete"
-                          onClick={(e) => handleDeleteHistory(e, item)}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <path d="M18 6 6 18M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {/* Mobile history or live suggestions */}
+              {(showHistory || keyword.trim().length > 0) && renderSuggestionsOrHistory(true)}
             </div>
           </div>
         )}

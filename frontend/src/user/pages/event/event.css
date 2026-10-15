@@ -1,561 +1,499 @@
 .event-detail-page {
     min-height: 100vh;
-    padding: 60px 20px;
+    padding: 30px 0 60px;
     color: white;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+    width: 100%;
 }
 
 .event-detail-page .event-container {
     max-width: 1300px;
     margin: 0 auto;
+    width: 100%;
 }
 
-/* Thân chiếc vé */
+/* Thân chiếc vé (Ticket Stub Main) */
 .event-detail-page .event-ticket-main {
+    position: relative;
     display: flex;
-    background-color: rgba(56, 56, 61, 1);
+    background-color: #22232a;
     border-radius: 20px;
     overflow: hidden;
-    height:450px;
-    margin-bottom: 50px;
-    z-index: 0;
+    min-height: 400px;
+    margin-bottom: 36px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .event-detail-page .event-ticket-left {
-    flex: 4;
-    padding: 30px;
+    flex: 1 1 440px;
+    max-width: 480px;
+    padding: 28px 32px;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    background: linear-gradient(135deg, #262832 0%, #1c1d25 100%);
+    position: relative;
+    z-index: 2;
 }
 
 .event-detail-page .event-ticket-title {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 800;
-    line-height: 1.2;
-    margin-bottom: 10px;
-    text-transform: uppercase;
+    line-height: 1.25;
+    margin: 0 0 16px;
+    color: #ffffff;
+    letter-spacing: -0.3px;
 }
 
 .event-detail-page .event-ticket-meta {
-    color: #00c058;
+    color: #22c55e;
     font-weight: 600;
     font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .event-detail-page .event-meta-item {
-    margin-bottom: 10px;
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    line-height: 1.4;
+}
+
+.event-detail-page .event-meta-item span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .event-detail-page .event-price-section {
-    margin-top: auto;
-    margin-bottom: 10px;
+    margin-top: 24px;
+    margin-bottom: 14px;
     display: flex;
     align-items: baseline;
     gap: 10px;
 }
 
-.event-detail-page .event-price-label { color: white; font-size: 18px; font-weight: 700; }
-.event-detail-page .event-price-value { 
-    color: rgba(0, 193, 122, 1); 
-    font-size: 24px; 
-    font-weight: 800; 
+.event-detail-page .event-price-label {
+    color: #a1a1aa;
+    font-size: 15px;
+    font-weight: 600;
 }
 
-/* Trạng thái hết vé */
-.event-ticket-footer {
-    margin-top: auto;
+.event-detail-page .event-price-value {
+    color: #22c55e;
+    font-size: 26px;
+    font-weight: 800;
 }
 
 .event-line {
-    border-top: 1px solid white;
-    margin-bottom: 15px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.14);
+    margin-bottom: 16px;
 }
 
 .event-detail-page .event-price-value.sold-out {
-    color: rgba(118, 118, 122, 1);
+    color: #71717a;
 }
 
-.event-detail-page .event-btn-buy {
+/* Nút mua vé */
+.event-btn-buy {
     width: 100%;
-    padding: 10px;
-    background-color: #00c058;
+    padding: 13px 20px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 15px;
+    font-weight: 700;
     line-height: 1.2;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+    text-align: center;
 }
 
-.event-detail-page .event-btn-buy:hover {
-    background-color: #00a04a;
+.event-btn-buy:hover:not(:disabled) {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.4);
 }
 
-.event-detail-page .event-btn-buy:disabled {
+.event-btn-buy:disabled {
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
-/* Phần răng cưa */
+.event-btn-buy.sold-out {
+    background: #3f3f46;
+    color: #a1a1aa;
+}
+
+.event-btn-buy.coming-soon {
+    background: #52525b;
+    color: #d4d4d8;
+}
+
+.event-btn-buy.ended {
+    background: #27272a;
+    color: #71717a;
+}
+
+/* Divider răng cưa giữa 2 nửa vé */
+.event-stub-line {
+    width: 0;
+    border-left: 2px dashed rgba(255, 255, 255, 0.18);
+    position: relative;
+    z-index: 5;
+    flex-shrink: 0;
+}
+
 .event-ticket-divider {
-    position: absolute;
-    width: 40px;
-    left: 566px;
-    background-color: #1a1a1a;
-    display: flex;
-    justify-content: center;
-    z-index: 100;
-}
-
-.event-detail-page .event-stub-line {
-    position: absolute;
-    height: 409px;
-    top: 158px;
-    left: 585px;
+    position: relative;
+    width: 0;
     z-index: 10;
-    border-left: 4px dashed #333;
 }
 
 .event-stub-dot {
     position: absolute;
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(155deg, #556267 0%, #556267 48%, #556267 100%);
+    width: 32px;
+    height: 32px;
+    background: #181920;
     border-radius: 50%;
-    left: 0;
-    z-index: 100;
+    left: -16px;
+    z-index: 10;
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
-.event-detail-page .event-stub-dot.top { top: -20px; }
-.event-detail-page .event-stub-dot.bottom { 
-    bottom: -470px; 
-    background: linear-gradient(155deg, #667e88 0%, #667e88 48%, #667e88 100%);
+.event-detail-page .event-stub-dot.top {
+    top: -16px;
+}
+
+.event-detail-page .event-stub-dot.bottom {
+    bottom: -16px;
 }
 
 /* Ảnh banner bên phải */
 .event-detail-page .event-ticket-right {
-    flex: 8;
+    flex: 1 1 540px;
     position: relative;
+    overflow: hidden;
+    background: #1a1a1e;
 }
 
 .event-detail-page .event-ticket-banner {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: 0;
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+.event-detail-page .event-ticket-right:hover .event-ticket-banner {
+    transform: scale(1.02);
 }
 
 /* --- LAYOUT 2 CỘT: VÉ + MÔ TẢ --- */
 .event-detail-page .event-content-wrapper {
     display: grid;
-    grid-template-columns: 500px 1fr;
-    gap: 30px;
+    grid-template-columns: minmax(320px, 440px) 1fr;
+    gap: 28px;
     align-items: start;
 }
 
 /* --- PHẦN DANH SÁCH VÉ (BÊN TRÁI) --- */
 .event-detail-page .event-tickets-section {
-    background-color: #1a1a1a;
-    border-radius: 15px;
-    padding: 30px;
+    background-color: #1a1d24;
+    border-radius: 16px;
+    padding: 24px;
     position: sticky;
-    top: 20px;
-    max-height: 600px; /* Chiều cao mặc định khi mô tả thu gọn */
+    top: 86px;
+    max-height: calc(100vh - 110px);
     overflow-y: auto;
-    transition: max-height 0.3s ease;
-}
-
-/* Khi mô tả được mở rộng, khung vé cũng cao hơn */
-.event-detail-page .event-tickets-section.expanded {
-    max-height: calc(100vh - 60px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .event-detail-page .section-header {
-    color: #00c058;
-    font-size: 22px;
-    margin: 0 0 25px 0;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #333;
+    color: #22c55e;
+    font-size: 18px;
+    margin: 0 0 18px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .event-detail-page .tickets-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-}
-
-/* Thanh cuộn cho danh sách vé */
-.event-detail-page .event-tickets-section::-webkit-scrollbar {
-    width: 6px;
-}
-
-.event-detail-page .event-tickets-section::-webkit-scrollbar-track {
-    background: #1a1a1a;
-    border-radius: 10px;
-}
-
-.event-detail-page .event-tickets-section::-webkit-scrollbar-thumb {
-    background: #333;
-    border-radius: 10px;
-}
-
-.event-detail-page .event-tickets-section::-webkit-scrollbar-thumb:hover {
-    background: #00c058;
+    gap: 12px;
 }
 
 .event-detail-page .ticket-item {
-    background: #252525;
-    border: 1px solid #333;
+    background: #252832;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    padding: 10px;
+    padding: 14px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: all 0.3s ease;
+    gap: 14px;
+    transition: all 0.2s ease;
 }
 
 .event-detail-page .ticket-item:hover:not(.sold-out) {
+    border-color: rgba(34, 197, 94, 0.4);
+    background: #2b2e3a;
     cursor: pointer;
 }
 
 .event-detail-page .ticket-item.sold-out {
-    opacity: 0.5;
-    filter: grayscale(0.7);
+    opacity: 0.55;
+    filter: grayscale(0.6);
 }
 
 .event-detail-page .ticket-info {
     flex: 1;
+    min-width: 0;
+}
+
+.ticket-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .event-detail-page .ticket-name {
-    color: #fff;
+    color: #ffffff;
     font-weight: 700;
     font-size: 15px;
-    margin-left: 10px;
-}
-
-.event-detail-page .ticket-desc {
-    color: #888;
-    font-size: 13px;
-    line-height: 1.4;
-}
-
-.event-detail-page .ticket-status {
-    display: inline-block;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 6px;
-}
-
-.event-detail-page .ticket-status.available {
-    background: rgba(0, 192, 88, 0.15);
-    color: #00c058;
-}
-
-.event-detail-page .ticket-status.sold-out-badge {
-    background: rgba(153, 153, 153, 0.2);
-    color: #999;
-}
-
-.event-detail-page .ticket-price-box {
-    text-align: right;
-    margin-left: 20px;
-}
-
-.event-detail-page .ticket-price {
-    color: #00c058;
-    font-size: 16px;
-    font-weight: 800;
-    display: block;
+    margin: 0;
 }
 
 .arrow {
-    margin-bottom: 10px;
-    transition: all 0.3s ease;
+    color: #22c55e;
+    font-size: 13px;
+    transition: transform 0.2s ease;
 }
 
 .arrow.open {
     transform: rotate(90deg);
 }
 
+.event-detail-page .ticket-desc {
+    color: #a1a1aa;
+    font-size: 12.5px;
+    line-height: 1.45;
+    margin-top: 6px;
+}
+
+.event-detail-page .ticket-status {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-top: 6px;
+}
+
+.event-detail-page .ticket-status.available {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+.event-detail-page .ticket-status.sold-out-badge {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.event-detail-page .ticket-price-box {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.event-detail-page .ticket-price {
+    color: #22c55e;
+    font-size: 15px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
 .event-detail-page .no-tickets {
-    color: #888;
+    color: #71717a;
     text-align: center;
-    padding: 40px 20px;
+    padding: 30px 16px;
     font-style: italic;
+    font-size: 14px;
 }
 
 /* --- PHẦN MÔ TẢ (BÊN PHẢI) --- */
 .event-detail-page .event-desc-section {
-    background-color: #1a1a1a;
-    border-radius: 15px;
-    padding: 40px;
+    background-color: #1a1d24;
+    border-radius: 16px;
+    padding: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .event-detail-page .event-desc-header {
-    color: #00c058;
-    font-size: 22px;
-    margin: 0 0 25px 0;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #333;
+    color: #22c55e;
+    font-size: 18px;
+    margin: 0 0 18px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
 }
 
 .event-detail-page .event-desc-content {
-    line-height: 1.8;
-    color: #ccc;
-    font-size: 16px;
-    position: relative;
+    line-height: 1.7;
+    color: #d4d4d8;
+    font-size: 15px;
 }
 
 .event-detail-page .event-desc-content p {
-    margin: 0;
+    margin: 0 0 12px;
 }
 
-/* Nút thu gọn/mở rộng */
 .event-detail-page .btn-toggle-desc {
-    background: rgba(0, 192, 88, 0.1);
-    border: 1px solid #00c058;
-    color: #00c058;
-    padding: 12px 30px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid #22c55e;
+    color: #22c55e;
+    padding: 10px 24px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 20px;
-    transition: all 0.3s ease;
+    margin-top: 18px;
+    transition: all 0.2s ease;
     display: block;
     width: 100%;
 }
 
 .event-detail-page .btn-toggle-desc:hover {
-    background: rgba(0, 192, 88, 0.2);
-    transform: translateY(-2px);
+    background: rgba(34, 197, 94, 0.2);
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
-    .event-detail-page .event-content-wrapper {
-        grid-template-columns: 350px 1fr;
-        gap: 25px;
-    }
-}
+/* ══════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+══════════════════════════════════════════ */
 
-@media (max-width: 968px) {
+/* ── Tablet (≤ 1024px) ── */
+@media (max-width: 1024px) {
     .event-detail-page .event-content-wrapper {
         grid-template-columns: 1fr;
-        gap: 30px;
+        gap: 24px;
     }
 
     .event-detail-page .event-tickets-section {
         position: static;
+        max-height: none;
     }
 
-    .event-detail-page .event-ticket-main {
-        flex-direction: column;
+    .event-detail-page .event-ticket-left {
+        flex: 1 1 360px;
+        padding: 24px;
     }
 
-    .event-detail-page .event-ticket-divider {
-        display: none;
-    }
-
-    .event-detail-page .event-ticket-left,
-    .event-detail-page .event-ticket-right {
-        flex: 1;
-    }
-}
-
-@media (max-width: 640px) {
-    .event-detail-page .ticket-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-
-    .event-detail-page .ticket-price-box {
-        margin-left: 0;
-        width: 100%;
-        text-align: left;
-    }
-}
-
-.event-btn-buy {
-  background: #ff4d4f;
-  color: white;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-
-/* hết vé - xám đậm */
-.event-btn-buy.sold-out {
-  background: #6b6b6b;
-  cursor: not-allowed;
-}
-
-/* sắp mở bán - xám nhạt */
-.event-btn-buy.coming-soon {
-  background: #cfcfcf;
-  color: #555;
-  cursor: not-allowed;
-}
-
-/* đã kết thúc */
-.event-btn-buy.ended {
-  background: #4a4a4a;
-  color: #d9d9d9;
-  cursor: not-allowed;
-}
-
-/* hover giữ nguyên màu xám */
-.event-btn-buy.sold-out:hover,
-.event-btn-buy.coming-soon:hover,
-.event-btn-buy.ended:hover {
-  background: #4a4a4a;
-  transform: none;
-}
-
-.ticket-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.arrow {
-    color: #00c058;
-    font-size: 12px;
-}
-
-.ticket-desc {
-    margin-top: 10px;
-    color: #aaa;
-    height: auto;
-    line-height: 1.5;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.ticket-status {
-    margin-left: auto;
-    font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-weight: 600;
-}
-
-/* còn vé */
-.ticket-status.available {
-    background: rgba(0, 192, 88, 0.15);
-    color: #00c058;
-    margin-top: 10px;
-}
-
-/* hết vé */
-.ticket-status.sold-out {
-    background: rgba(255, 77, 79, 0.15);
-    color: #ff4d4f;
-    margin-top: 10px;
-}
-
-/* sắp mở */
-.ticket-status.over {
-    background: rgba(255, 193, 7, 0.15);
-    color: #ffc107;
-    margin-top: 10px;
-}
-
-/* --- Bổ sung responsive cho màn hình nhỏ hơn 480px --- */
-@media (max-width: 480px) {
-
-    /* Giảm padding tổng thể để vừa màn hình */
-    .event-detail-page {
-        padding: 20px 0px;
-    }
-
-    /* Giảm kích thước tiêu đề vé */
     .event-detail-page .event-ticket-title {
-        font-size: 18px;
+        font-size: 20px;
+    }
+}
+
+/* ── Mobile (≤ 768px) ── */
+@media (max-width: 768px) {
+    .event-detail-page {
+        padding: 16px 0 40px;
     }
 
-    /* Layout vé chính: xếp theo cột */
+    /* Đổi vé stub sang dạng cột dọc: Banner lên trên, thông tin vé bên dưới */
     .event-detail-page .event-ticket-main {
-        height: auto; /* tự động chiều cao theo nội dung */
-        flex-direction: column;
+        flex-direction: column-reverse;
+        min-height: auto;
+        border-radius: 16px;
+        margin-bottom: 24px;
     }
 
-    /* Phần răng cưa và dot ẩn trên mobile */
-    .event-detail-page .event-ticket-divider,
-    .event-detail-page .event-stub-line,
-    .event-detail-page .event-stub-dot   {
-        display: none;
-    }
-
-    /* Ảnh banner bên phải thu nhỏ */
     .event-detail-page .event-ticket-right {
         width: 100%;
         height: auto;
-        margin-top: 15px;
+        aspect-ratio: 16/9;
+        flex: none;
     }
 
-    /* Chỉnh font meta và giá nhỏ hơn */
-    .event-detail-page .event-ticket-meta {
-        font-size: 12px;
+    .event-detail-page .event-ticket-left {
+        max-width: 100%;
+        padding: 20px 16px;
+        flex: none;
     }
 
-    .event-detail-page .event-price-label {
-        font-size: 16px;
+    .event-detail-page .event-ticket-title {
+        font-size: 18px;
+        margin-bottom: 12px;
     }
 
     .event-detail-page .event-price-value {
-        font-size: 20px;
+        font-size: 22px;
     }
 
-    /* Layout danh sách vé & mô tả xếp cột trên mobile */
+    /* Ẩn các răng cưa dọc trên mobile */
+    .event-stub-line,
+    .event-ticket-divider,
+    .event-stub-dot {
+        display: none !important;
+    }
+
     .event-detail-page .event-content-wrapper {
-        grid-template-columns: 1fr;
         gap: 20px;
     }
 
-    /* Ticket item nhỏ gọn hơn */
+    .event-detail-page .event-tickets-section,
+    .event-detail-page .event-desc-section {
+        padding: 18px 16px;
+        border-radius: 14px;
+    }
+
     .event-detail-page .ticket-item {
-        padding: 8px;
+        padding: 12px 14px;
+        flex-direction: row;
+        align-items: center;
     }
 
     .event-detail-page .ticket-name {
         font-size: 14px;
     }
 
-    .event-detail-page .ticket-desc {
-        font-size: 12px;
-    }
-
     .event-detail-page .ticket-price {
         font-size: 14px;
     }
 
-    /* Button mua vé full width nhỏ hơn */
     .event-btn-buy {
-        font-size: 14px;
-    }
-
-    /* Nút thu gọn mô tả */
-    .event-detail-page .btn-toggle-desc {
-        padding: 10px 20px;
-        font-size: 13px;
+        padding: 12px;
+        font-size: 14.5px;
     }
 }
 
+/* ── Small Mobile (≤ 420px) ── */
+@media (max-width: 420px) {
+    .event-detail-page .ticket-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .event-detail-page .ticket-price-box {
+        text-align: left;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px dashed rgba(255, 255, 255, 0.08);
+        padding-top: 8px;
+        margin-top: 4px;
+    }
+}

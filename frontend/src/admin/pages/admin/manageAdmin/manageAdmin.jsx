@@ -78,6 +78,14 @@ export default function ManageAdmin() {
         return map[role?.toLowerCase()] ?? "role-default"
     }
 
+    const getRoleName = (role) => {
+        const r = role?.toLowerCase();
+        if (r === "superadmin") return "Quản trị viên cấp cao";
+        if (r === "admin") return "Quản trị viên";
+        if (r === "moderator") return "Kiểm duyệt viên";
+        return "Nhân viên soát vé";
+    }
+
     const handleViewDetail = (adminData) => { setSelectedAdmin(adminData); setShowModal(true) }
     const handleCloseModal = () => { setShowModal(false); setSelectedAdmin(null) }
 
@@ -87,7 +95,7 @@ export default function ManageAdmin() {
         try {
             const res  = await fetch(API.resetPass(id), { method: 'PUT', headers: { 'Content-type': 'application/json' } })
             const data = await res.json()
-            if (data.success) { showToast("Đặt lại mật khẩu thành công!"); handleCloseModal() }
+            if (data.success) { showToast(data.message || "Đặt lại mật khẩu thành công!"); handleCloseModal() }
             else showToast(data.message || "Đặt lại mật khẩu thất bại", "error")
         } catch { showToast("Lỗi kết nối máy chủ", "error") }
         finally  { setLoading(false) }
@@ -262,7 +270,7 @@ export default function ManageAdmin() {
                                     <td className="ma-td-muted">{item.phonenumber ?? "N/A"}</td>
                                     <td>
                                         <span className={`ma-role-badge ${getRoleColor(item.role)}`}>
-                                            {item.role == "superadmin" ? "Quản trị viên cấp cao" : "Nhân viên soát vé"}
+                                            {getRoleName(item.role)}
                                         </span>
                                     </td>
                                     <td>
@@ -302,7 +310,7 @@ export default function ManageAdmin() {
                                 <div className="ma-modal__avatar">{getInitial(selectedAdmin.fullname)}</div>
                                 <div className="ma-modal__avatar-info">
                                     <p className="ma-modal__name">{selectedAdmin.fullname ?? "N/A"}</p>
-                                    <span className={`ma-role-badge ${getRoleColor(selectedAdmin.role)}`}>{selectedAdmin.role ?? "N/A"}</span>
+                                    <span className={`ma-role-badge ${getRoleColor(selectedAdmin.role)}`}>{getRoleName(selectedAdmin.role)}</span>
                                 </div>
                             </div>
                             <div className="ma-detail-grid">

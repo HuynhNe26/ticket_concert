@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import './success.css';
 
 /**
@@ -37,7 +38,7 @@ export default function Success({
 
   if (!show) return null;
 
-  return (
+  return createPortal(
     <div className={`success-notification ${visible ? 'visible' : ''}`}>
       <div className="success-icon">
         <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
@@ -61,6 +62,7 @@ export default function Success({
       >
         ×
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }

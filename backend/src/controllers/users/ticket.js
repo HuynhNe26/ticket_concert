@@ -25,7 +25,9 @@ export const TicketControllers = {
                 pd.ticket_quantity,
                 pd.ticket_status,
 
+                e.event_id,
                 e.event_name,
+                e.event_start,
                 e.event_end,
                 e.event_location,
                 e.banner_url,

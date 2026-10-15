@@ -1,83 +1,105 @@
 /* --- CONTAINER CHÍNH --- */
 .booking-page-wrapper {
-    grid-column: 1 / -1;
-    margin-left: calc(-50vw + 50%);
-}
-.zone-container {
-    display: flex;
-    width: 100%;        /* full màn hình */
-    max-width: none;    /* bỏ giới hạn */
-    margin: 0;
-    gap: 40px;
-    /* nếu muốn có khoảng cách 2 bên */
+    width: 100%;
+    max-width: 1360px;
+    margin: 0 auto;
+    padding-bottom: 40px;
 }
 
-/* --- PHẦN BÊN TRÁI: LAYOUT (KHÔNG KHUNG) --- */
+.zone-container {
+    display: flex;
+    width: 100%;
+    gap: 32px;
+    align-items: flex-start;
+}
+
+/* --- PHẦN BÊN TRÁI: LAYOUT SƠ ĐỒ SÂN KHẤU --- */
 .zone-layout {
-    flex: 1 0 65%;
-    /* Xóa bỏ các thuộc tính tạo khung */
+    flex: 1 1 64%;
+    min-width: 0;
     background: transparent; 
     border: none; 
     padding: 0;
-    
-    /* Giữ lại vị trí cố định khi cuộn */
-    height: 700px;
     position: sticky;
-    top: 120px;
+    top: 86px;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* --- PHẦN BÊN PHẢI: TICKET (CÓ KHUNG DANH SÁCH) --- */
+/* --- PHẦN BÊN PHẢI: DANH SÁCH VÉ --- */
 .zone-ticket {
-    flex: 3;
-    /* Tạo khung nổi bật cho danh sách vé */
-    background: #1a1a1a; 
-    border: 1px solid #333;
-    border-radius: 20px;
-    padding: 25px;
-    margin-top: 15px;
-    
-    /* Cấu hình cuộn riêng cho danh sách */
-    height: calc(100vh - 170px);
+    flex: 1 1 36%;
+    min-width: 320px;
+    background: #1c1d25; 
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 24px;
+    height: calc(100vh - 120px);
     overflow-y: auto;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
 }
 
-/* Tùy chỉnh thanh cuộn bên trong khung vé cho mượt */
+/* Thanh cuộn mượt */
 .zone-ticket::-webkit-scrollbar {
     width: 5px;
 }
 .zone-ticket::-webkit-scrollbar-track {
-    background: #1a1a1a;
+    background: transparent;
 }
 .zone-ticket::-webkit-scrollbar-thumb {
     background: #333;
     border-radius: 10px;
 }
 .zone-ticket::-webkit-scrollbar-thumb:hover {
-    background: #444;
+    background: #22c55e;
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 1200px) {
-    .zone-layout { flex: 0 0 60%; }
+/* --- RESPONSIVE BREAKPOINTS --- */
+@media (max-width: 1100px) {
+    .zone-container {
+        gap: 20px;
+    }
+    .zone-layout {
+        flex: 1 1 58%;
+    }
+    .zone-ticket {
+        flex: 1 1 42%;
+        min-width: 290px;
+        padding: 18px;
+    }
 }
 
 @media (max-width: 1024px) {
     .zone-container { 
         flex-direction: column; 
-        gap: 20px;
+        gap: 24px;
     }
+
     .zone-layout { 
         position: static; 
-        height: auto; 
-        flex: 1;
-        padding: 20px 0;
+        width: 100%;
+        flex: none;
+        padding: 10px 0;
     }
+
     .zone-ticket { 
+        position: static;
+        width: 100%;
+        flex: none;
         height: auto; 
-        flex: 1;
-        max-height: 600px; /* Giới hạn chiều cao trên mobile */
+        max-height: none;
+        box-sizing: border-box;
+    }
+}
+
+@media (max-width: 768px) {
+    .booking-page-wrapper {
+        padding-bottom: 24px;
+    }
+
+    .zone-ticket {
+        padding: 16px;
+        border-radius: 14px;
     }
 }

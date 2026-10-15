@@ -10,8 +10,8 @@ export default function LayoutUser() {
             <Header />
             <main>
                 <Outlet />
-                <ChatAI />
             </main>
+            <ChatAI />
             <Footer />
         </div>
     )

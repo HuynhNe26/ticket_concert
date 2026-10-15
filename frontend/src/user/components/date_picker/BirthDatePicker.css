@@ -1,0 +1,249 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   BIRTH DATE PICKER — CALENDAR DROPDOWN
+   ═══════════════════════════════════════════════════════════════════════════════ */
+.bdp-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* ── TRIGGER INPUT BOX ── */
+.bdp-input-trigger {
+  width: 100%;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+}
+
+.bdp-input-trigger:hover {
+  border-color: rgba(0, 255, 212, 0.35);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.bdp-input-trigger.active {
+  outline: none;
+  border-color: #00FFD4;
+  box-shadow: 0 0 0 3px rgba(0, 255, 212, 0.1);
+  background: rgba(0, 255, 212, 0.04);
+}
+
+.bdp-input-trigger.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bdp-trigger-icon {
+  color: #00FFD4;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.bdp-trigger-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.bdp-input-trigger.has-value .bdp-trigger-text {
+  color: #ffffff;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+.bdp-clear-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #94a3b8;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.bdp-clear-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* ── CALENDAR DROPDOWN POPOVER ── */
+.bdp-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 280px;
+  max-width: calc(100vw - 32px);
+  z-index: 1000;
+  background: #161a29;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(0, 255, 212, 0.15);
+  animation: bdpSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+@keyframes bdpSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Header: Month / Year Navigation ── */
+.bdp-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 6px;
+}
+
+.bdp-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.bdp-nav-btn:hover {
+  background: rgba(0, 255, 212, 0.18);
+  color: #00FFD4;
+  border-color: rgba(0, 255, 212, 0.35);
+}
+
+.bdp-header-selects {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
+}
+
+select.bdp-header-select,
+.form select.bdp-header-select {
+  width: auto !important;
+  height: 32px !important;
+  padding: 0 8px !important;
+  margin: 0 !important;
+  margin-bottom: 0 !important;
+  background-color: #1f2538 !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 30px !important;
+  cursor: pointer !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+  transition: border-color 0.2s ease !important;
+}
+
+select.bdp-header-select:hover,
+.form select.bdp-header-select:hover {
+  border-color: rgba(0, 255, 212, 0.45) !important;
+}
+
+select.bdp-header-select:focus,
+.form select.bdp-header-select:focus {
+  border-color: #00FFD4 !important;
+  box-shadow: 0 0 0 2px rgba(0, 255, 212, 0.15) !important;
+}
+
+select.bdp-header-select option,
+.form select.bdp-header-select option {
+  background: #161a29 !important;
+  color: #ffffff !important;
+  padding: 6px 10px;
+}
+
+/* ── Weekday Headers ── */
+.bdp-weekdays-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.bdp-weekday-cell {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  text-transform: uppercase;
+  padding: 2px 0;
+}
+
+/* ── Days Grid ── */
+.bdp-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.bdp-day-cell {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.bdp-day-cell:hover:not(.selected):not(.empty) {
+  background: rgba(0, 255, 212, 0.15);
+  color: #00FFD4;
+  transform: scale(1.05);
+}
+
+.bdp-day-cell.selected {
+  background: linear-gradient(135deg, #00FFD4, #059669);
+  color: #0a0f1e;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(0, 255, 212, 0.4);
+}
+
+.bdp-day-cell.empty {
+  cursor: default;
+}

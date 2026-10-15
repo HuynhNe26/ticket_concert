@@ -115,3 +115,23 @@
   color: rgba(255,255,255,0.45);
   font-size: 14px;
 }
+
+@media (max-width: 480px) {
+  .result-wrapper {
+    padding: 16px;
+  }
+
+  .result-card {
+    padding: 32px 20px;
+    border-radius: 16px;
+  }
+
+  .result-title {
+    font-size: 20px;
+  }
+
+  .result-desc {
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+}

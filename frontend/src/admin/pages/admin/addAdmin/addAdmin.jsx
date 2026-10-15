@@ -12,6 +12,7 @@ export default function AddAdmin() {
         fullName: "",
         birthOfDay: "",
         email: "",
+        password: "",
         phoneNumber: "",
         gender: "",
         address: "",
@@ -78,6 +79,10 @@ export default function AddAdmin() {
         if (!formData.role) {
             newErrors.role = "Vui lòng chọn vai trò"
         }
+
+        if (formData.password && formData.password.length < 6) {
+            newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự"
+        }
         
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
@@ -102,12 +107,13 @@ export default function AddAdmin() {
             const data = await response.json();
 
             if (data.success) {
-                showSuccess("Tạo tài khoản thành công!")
+                showSuccess(data.message || "Tạo tài khoản quản trị viên thành công!")
 
                 setFormData({
                     fullName: "",
                     birthOfDay: "",
                     email: "",
+                    password: "",
                     phoneNumber: "",
                     gender: "",
                     address: "",
@@ -115,11 +121,12 @@ export default function AddAdmin() {
                     role: ""
                 });
             } else {
-                showError("Tạo tài khoản thành công!")
+                showError(data.message || "Tạo tài khoản thất bại!")
                 setErrors({ api: data.message });
             }
 
         } catch (err) {
+            showError("Không thể kết nối đến máy chủ!")
             setErrors({ api: "Không thể kết nối server" });
         } finally {
             setLoading(false);
@@ -131,6 +138,7 @@ export default function AddAdmin() {
             fullName: "",
             birthOfDay: "",
             email: "",
+            password: "",
             phoneNumber: "",
             gender: "",
             address: "",
@@ -230,6 +238,20 @@ export default function AddAdmin() {
                                 <option value="other">Khác</option>
                             </select>
                             {errors.gender && <span className="error-message">{errors.gender}</span>}
+                        </div>
+
+                        <div className="form-group">
+                            <label className="password">Mật Khẩu <span className="optional" style={{fontSize: "12px", color: "rgba(255,255,255,0.45)", fontWeight: "normal"}}>(Mặc định: Admin@123456)</span></label>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                className={errors.password ? "error" : ""}
+                                placeholder="Tối thiểu 6 ký tự"
+                            />
+                            {errors.password && <span className="error-message">{errors.password}</span>}
                         </div>
                     </div>
 

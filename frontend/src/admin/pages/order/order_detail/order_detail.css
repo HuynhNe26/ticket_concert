@@ -1,9 +1,9 @@
 .order-detail-page {
-  padding: 24px 40px;
+  padding: 24px 2rem 60px;
   font-family: 'Segoe UI', sans-serif;
+  width: 100%;
   max-width: 100%;
-  height:100%;
-  margin: 150px auto;
+  box-sizing: border-box;
 }
 
 /* Loading / Error */

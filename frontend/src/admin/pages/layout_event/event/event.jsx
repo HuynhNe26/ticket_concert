@@ -59,6 +59,8 @@ export default function ManageEvent() {
 
     const [events, setEvents] = useState([]);
     const [hotEvents, setHotEvents] = useState([]);
+    const [hotPage, setHotPage] = useState(1);
+    const HOT_EVENTS_PER_PAGE = 8;
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [offset, setOffset] = useState(0);
@@ -68,6 +70,18 @@ export default function ManageEvent() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [yearFilter, setYearFilter] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [categories, setCategories] = useState([]);
+
+    // Fetch categories for filtering
+    useEffect(() => {
+        fetch(`${API_BASE}/api/categories/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) setCategories(data.data);
+            })
+            .catch(err => console.error("Error loading categories:", err));
+    }, []);
 
     // Notification stack
     const [notifications, setNotifications] = useState([]);
@@ -94,7 +108,14 @@ export default function ManageEvent() {
         socket.on('connect', () => {
             socket.emit('join_admin');
             socket.emit('requestHotEvents');
-            socket.emit('requestAllEvents', { offset: 0, limit: LIMIT });
+            socket.emit('requestAllEvents', {
+                offset: 0,
+                limit: LIMIT,
+                search: searchTerm,
+                status: filterStatus,
+                category: categoryFilter,
+                year: yearFilter
+            });
         });
 
         socket.on('hotEvents', (data) => {
@@ -124,7 +145,7 @@ export default function ManageEvent() {
             socket.off('allEvents');
             socket.disconnect();
         };
-    }, [searchTerm, filterStatus, yearFilter]);
+    }, [searchTerm, filterStatus, yearFilter, categoryFilter]);
 
     const calculateStats = (data) => {
         const totalTicketsSold = data.reduce((sum, e) => sum + Number(e.ticketssold || 0), 0);
@@ -136,7 +157,14 @@ export default function ManageEvent() {
         const nextOffset = offset + LIMIT;
         setOffset(nextOffset);
         setLoadingMore(true);
-        socketRef.current?.emit('requestAllEvents', { offset: nextOffset, limit: LIMIT });
+        socketRef.current?.emit('requestAllEvents', {
+            offset: nextOffset,
+            limit: LIMIT,
+            search: searchTerm,
+            status: filterStatus,
+            category: categoryFilter,
+            year: yearFilter
+        });
     };
 
     const handleEditEvent = (eventId) => navigate(`/admin/events/edit/${eventId}`);
@@ -171,26 +199,24 @@ export default function ManageEvent() {
                 body: JSON.stringify({ isActive: newStatus }),
             });
             if (!res.ok) throw new Error('Cập nhật thất bại');
+            setEvents(prev => prev.map(e => e.event_id === eventId ? { ...e, event_status: newStatus } : e));
             addNotif('success', 'Cập nhật trạng thái thành công!');
         } catch (err) {
             addNotif('error', err.message);
         }
     };
 
-    const getStatusBadge = (eventStart, eventEnd) => {
+    const getStatusBadge = (eventStatus, eventEnd, eventStart) => {
         const now = new Date();
-        const startDate = eventStart ? new Date(eventStart) : null;
         const endDate = eventEnd ? new Date(eventEnd) : null;
-        console.log(endDate)
-
-        const isEnded = endDate < now;
-        const isUpcoming = startDate > now;
+        const isEnded = endDate && endDate < now;
+        const isComingSoon = eventStatus === false;
 
         const cfg = isEnded
             ? { label: 'Đã kết thúc', bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' }
-            : isUpcoming
+            : isComingSoon
                 ? { label: 'Sắp mở bán', bg: '#eff6ff', color: '#1d4ed8', dot: '#3b82f6' }
-                : { label: 'Đang bán',    bg: '#f0fdf4', color: '#15803d', dot: '#22c55e' };
+                : { label: 'Đang mở bán', bg: '#f0fdf4', color: '#15803d', dot: '#22c55e' };
 
         return (
             <span style={{
@@ -202,10 +228,10 @@ export default function ManageEvent() {
                 <span style={{
                     width: '6px', height: '6px', borderRadius: '50%',
                     background: cfg.dot,
-                    ...(!isEnded && !isUpcoming ? { animation: 'pulseDot 1.5s ease-in-out infinite' } : {})
+                    ...(!isEnded && !isComingSoon ? { animation: 'pulseDot 1.5s ease-in-out infinite' } : {})
                 }} />
                 {cfg.label}
-                {isUpcoming && startDate && (
+                {isComingSoon && eventStart && (
                     <span style={{ fontSize: '11px', opacity: 0.75, fontWeight: '400' }}>
                         · {formatDate(eventStart)}
                     </span>
@@ -228,7 +254,11 @@ export default function ManageEvent() {
             event.event_location?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = filterStatus === 'all' || String(event.event_status) === filterStatus;
         const matchesYear = !yearFilter || (event.event_start && new Date(event.event_start).getFullYear() === Number(yearFilter));
-        return matchesSearch && matchesStatus && matchesYear;
+        const matchesCategory =
+            categoryFilter === 'all' ||
+            String(event.category_id) === String(categoryFilter) ||
+            event.category_name?.toLowerCase() === categoryFilter.toLowerCase();
+        return matchesSearch && matchesStatus && matchesYear && matchesCategory;
     });
 
     const statsCards = [
@@ -240,7 +270,14 @@ export default function ManageEvent() {
 
     // ── Render ───────────────────────────────────────────────────────────────────
     return (
-        <div style={{ minHeight: '100vh', background: '#f8fafc', padding: '24px', marginTop: '50px' }}>
+        <div style={{
+            minHeight: '100vh',
+            background: '#f8fafc',
+            width: '100%',
+            maxWidth: '100%',
+            padding: '24px 2rem 60px',
+            boxSizing: 'border-box'
+        }}>
             <style>{`
                 @keyframes slideIn {
                     from { opacity: 0; transform: translateX(24px); }
@@ -253,6 +290,47 @@ export default function ManageEvent() {
                 @keyframes pulseDot {
                     0%, 100% { transform: scale(1); opacity: 1; }
                     50%       { transform: scale(1.5); opacity: 0.6; }
+                }
+                .hot-page-btn {
+                    min-width: 34px;
+                    height: 34px;
+                    padding: 0 10px;
+                    border-radius: 8px;
+                    border: 1px solid rgba(255,255,255,0.25);
+                    background: rgba(255,255,255,0.18);
+                    color: #ffffff;
+                    font-size: 13px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 4px;
+                    user-select: none;
+                }
+                .hot-page-btn:hover:not(:disabled) {
+                    background: rgba(255,255,255,0.32);
+                    transform: translateY(-1px);
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                }
+                .hot-page-btn:disabled {
+                    opacity: 0.4;
+                    cursor: not-allowed;
+                }
+                .hot-page-btn.active {
+                    background: #ffffff;
+                    color: #ea580c;
+                    border-color: #ffffff;
+                    font-weight: 800;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                }
+                .hot-card-item {
+                    transition: transform 0.2s ease, box-shadow 0.2s ease;
+                }
+                .hot-card-item:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
                 }
             `}</style>
 
@@ -270,45 +348,142 @@ export default function ManageEvent() {
             </div>
 
             {/* Hot Events */}
-            {hotEvents.length > 0 && (
-                <div style={{
-                    background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
-                    borderRadius: '16px', padding: '20px', marginBottom: '24px',
-                    color: 'white', boxShadow: '0 4px 20px rgba(249,115,22,0.3)'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                        <Flame size={24} />
-                        <h2 style={{ fontSize: '18px', fontWeight: '700' }}>Sự kiện đang mở bán</h2>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-                        {hotEvents.map((event, index) => (
-                            <div key={event.event_id} style={{
-                                background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)',
-                                borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.2)'
-                            }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                                    <div style={{ fontSize: '15px', fontWeight: '600', flex: 1, marginRight: '8px' }}>{event.event_name}</div>
-                                    <div style={{ fontSize: '13px', fontWeight: '500', opacity: 0.85, marginRight: '8px' }}>{event.category_name}</div>
-                                    <div style={{ background: 'rgba(255,255,255,0.3)', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', flexShrink: 0 }}>
-                                        #{index + 1}
-                                    </div>
-                                </div>
-                                <div style={{ fontSize: '13px', opacity: '0.9', marginBottom: '12px' }}>
-                                    <TrendingUp size={14} style={{ display: 'inline', marginRight: '6px' }} />
-                                    Đã bán {event.ticketssold} / {event.totaltickets} vé
-                                </div>
-                                <div style={{ background: 'rgba(255,255,255,0.2)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
-                                    <div style={{
-                                        background: 'white', height: '100%',
-                                        width: `${Math.min((Number(event.ticketssold || 0) / Number(event.totaltickets || 1)) * 100, 100)}%`,
-                                        transition: 'width 0.3s ease'
-                                    }} />
-                                </div>
+            {(() => {
+                const totalHotPages = Math.ceil(hotEvents.length / HOT_EVENTS_PER_PAGE);
+                const currentHotPage = Math.min(Math.max(hotPage, 1), totalHotPages || 1);
+                const startHotIdx = (currentHotPage - 1) * HOT_EVENTS_PER_PAGE;
+                const paginatedHotEvents = hotEvents.slice(startHotIdx, startHotIdx + HOT_EVENTS_PER_PAGE);
+
+                return hotEvents.length > 0 && (
+                    <div style={{
+                        background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                        borderRadius: '16px', padding: '20px', marginBottom: '24px',
+                        color: 'white', boxShadow: '0 4px 20px rgba(249,115,22,0.3)'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <Flame size={24} />
+                                <h2 style={{ fontSize: '18px', fontWeight: '700' }}>Sự kiện đang mở bán</h2>
+                                <span style={{
+                                    background: 'rgba(255,255,255,0.25)',
+                                    padding: '3px 10px',
+                                    borderRadius: '20px',
+                                    fontSize: '12px',
+                                    fontWeight: '600'
+                                }}>
+                                    {hotEvents.length} sự kiện
+                                </span>
                             </div>
-                        ))}
+                            {totalHotPages > 1 && (
+                                <span style={{
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                    opacity: 0.95,
+                                    background: 'rgba(0,0,0,0.15)',
+                                    padding: '4px 12px',
+                                    borderRadius: '20px'
+                                }}>
+                                    Trang {currentHotPage} / {totalHotPages} (8 sự kiện/trang)
+                                </span>
+                            )}
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                            {paginatedHotEvents.map((event, index) => {
+                                const globalRank = startHotIdx + index + 1;
+                                return (
+                                    <div key={event.event_id} className="hot-card-item" style={{
+                                        background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)',
+                                        borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.2)'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                                            <div style={{ fontSize: '15px', fontWeight: '600', flex: 1, marginRight: '8px' }}>{event.event_name}</div>
+                                            <div style={{ fontSize: '13px', fontWeight: '500', opacity: 0.85, marginRight: '8px' }}>{event.category_name}</div>
+                                            <div style={{ background: 'rgba(255,255,255,0.3)', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', flexShrink: 0 }}>
+                                                #{globalRank}
+                                            </div>
+                                        </div>
+                                        <div style={{ fontSize: '13px', opacity: '0.9', marginBottom: '12px' }}>
+                                            <TrendingUp size={14} style={{ display: 'inline', marginRight: '6px' }} />
+                                            Đã bán {event.ticketssold} / {event.totaltickets} vé
+                                        </div>
+                                        <div style={{ background: 'rgba(255,255,255,0.2)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
+                                            <div style={{
+                                                background: 'white', height: '100%',
+                                                width: `${Math.min((Number(event.ticketssold || 0) / Number(event.totaltickets || 1)) * 100, 100)}%`,
+                                                transition: 'width 0.3s ease'
+                                            }} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Pagination Bar */}
+                        {totalHotPages > 1 && (
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginTop: '20px',
+                                paddingTop: '16px',
+                                borderTop: '1px solid rgba(255,255,255,0.2)',
+                                flexWrap: 'wrap'
+                            }}>
+                                <button
+                                    type="button"
+                                    className="hot-page-btn"
+                                    disabled={currentHotPage === 1}
+                                    onClick={() => setHotPage(1)}
+                                    title="Trang đầu"
+                                >
+                                    «
+                                </button>
+                                <button
+                                    type="button"
+                                    className="hot-page-btn"
+                                    disabled={currentHotPage === 1}
+                                    onClick={() => setHotPage(p => Math.max(1, p - 1))}
+                                    title="Trang trước"
+                                >
+                                    ‹ Trước
+                                </button>
+
+                                {Array.from({ length: totalHotPages }, (_, i) => i + 1).map((p) => (
+                                    <button
+                                        key={p}
+                                        type="button"
+                                        className={`hot-page-btn ${p === currentHotPage ? 'active' : ''}`}
+                                        onClick={() => setHotPage(p)}
+                                    >
+                                        {p}
+                                    </button>
+                                ))}
+
+                                <button
+                                    type="button"
+                                    className="hot-page-btn"
+                                    disabled={currentHotPage === totalHotPages}
+                                    onClick={() => setHotPage(p => Math.min(totalHotPages, p + 1))}
+                                    title="Trang sau"
+                                >
+                                    Sau ›
+                                </button>
+                                <button
+                                    type="button"
+                                    className="hot-page-btn"
+                                    disabled={currentHotPage === totalHotPages}
+                                    onClick={() => setHotPage(totalHotPages)}
+                                    title="Trang cuối"
+                                >
+                                    »
+                                </button>
+                            </div>
+                        )}
                     </div>
-                </div>
-            )}
+                );
+            })()}
 
             {/* Stats Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
@@ -345,18 +520,27 @@ export default function ManageEvent() {
                             onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                         />
                     </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <Filter size={38} color="#64748b" />
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <Filter size={24} color="#64748b" />
                         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-                            style={{ padding: '10px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none', cursor: 'pointer' }}>
-                            <option value="all">Tất cả</option>
+                            style={{ padding: '10px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none', cursor: 'pointer', background: 'white' }}>
+                            <option value="all">Tất cả trạng thái</option>
                             <option value="true">Đang bán</option>
                             <option value="false">Sắp mở bán</option>
+                        </select>
+                        <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
+                            style={{ padding: '10px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', outline: 'none', cursor: 'pointer', background: 'white' }}>
+                            <option value="all">Tất cả thể loại</option>
+                            {categories.map((c) => (
+                                <option key={c.category_id} value={c.category_name}>
+                                    {c.category_name}
+                                </option>
+                            ))}
                         </select>
                         <input
                             type="number" placeholder="Năm (vd: 2025)" value={yearFilter}
                             onChange={(e) => setYearFilter(e.target.value)} min="2020" max="2100"
-                            style={{ padding: '10px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', width: '140px', outline: 'none' }}
+                            style={{ padding: '10px 16px', border: '2px solid #e2e8f0', borderRadius: '10px', fontSize: '14px', width: '140px', outline: 'none', background: 'white' }}
                             onFocus={(e) => e.target.style.borderColor = '#667eea'}
                             onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                         />
@@ -409,7 +593,25 @@ export default function ManageEvent() {
                                                         <MapPin size={14} /> {event.event_location || 'Chưa có'}
                                                     </span>
                                                 </div>
-                                                {getStatusBadge(event.event_start, event.event_end)}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                    {getStatusBadge(event.event_status, event.event_end, event.event_start)}
+                                                    {event.category_name && (
+                                                        <span style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            padding: '3px 10px',
+                                                            borderRadius: '20px',
+                                                            fontSize: '12px',
+                                                            fontWeight: '600',
+                                                            background: '#f1f5f9',
+                                                            color: '#475569',
+                                                            border: '1px solid #cbd5e1'
+                                                        }}>
+                                                            🏷️ {event.category_name}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                             <EventToggle
                                                 initialStatus={event.event_status}

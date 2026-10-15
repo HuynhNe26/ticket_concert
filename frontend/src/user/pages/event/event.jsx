@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import LoadingUser from "../../components/loading/loading";
+import Warning from "../../components/notification/warning/warning.jsx";
 import "./event.css";
 
 const API_BASE = process.env.REACT_APP_API_URL;
@@ -27,11 +28,16 @@ function saveRecentEvent(eventId) {
 export default function EventDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [event, setEvent] = useState([]);
     const [zones, setZones] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isDescExpanded, setIsDescExpanded] = useState(false);
     const [openZoneId, setOpenZoneId] = useState(null);
+    const [warning, setWarning] = useState({
+        show: !!location.state?.warning,
+        message: location.state?.warning || ""
+    });
 
     const toggleZone = (id) => {
         setOpenZoneId(openZoneId === id ? null : id);
@@ -42,16 +48,16 @@ export default function EventDetail() {
             try {
                 const resEvent = await fetch(`${API_BASE}/api/events/${id}`);
                 const dataEvent = await resEvent.json();
-            
+
                 const resZones = await fetch(`${API_BASE}/api/zone/${id}`);
                 const dataZones = await resZones.json();
-                
+
                 if (dataEvent.success) {
                     setEvent(dataEvent.data);
                     // ✅ Lưu event_id vào localStorage khi xem chi tiết
                     saveRecentEvent(id);
                 }
-                
+
                 if (dataZones.success) {
                     setZones(dataZones.data);
                 }
@@ -70,42 +76,50 @@ export default function EventDetail() {
     // Kiểm tra xem còn vé không
     const checkTicketAvailability = () => {
         if (zones.length === 0) return true;
-        
+
         const totalAvailable = zones.reduce((sum, zone) => {
             return sum + (zone.zone_quantity - zone.sold_quantity);
         }, 0);
-        
+
         return totalAvailable > 0;
     };
 
     const isTicketAvailable = checkTicketAvailability();
 
-    const formatCurrency = (amount) => 
+    const formatCurrency = (amount) =>
         new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
 
     const descriptionLines = event.event_description ? event.event_description.split('\n') : [];
     const isLongDescription = descriptionLines.length > 10;
-    const displayDescription = isDescExpanded || !isLongDescription 
-        ? event.event_description 
+    const displayDescription = isDescExpanded || !isLongDescription
+        ? event.event_description
         : descriptionLines.slice(0, 3).join('\n');
 
-    let buttonText = "Hết vé"; 
-    
-    if (!isTicketAvailable) {
-        buttonText = "Hết vé";
-    } else if (event.event_status === false) {
+    const now = new Date();
+    const eventEnd = new Date(event.event_end);
+    const isEnded = event.event_end ? eventEnd < now : false;
+    const isComingSoon = event.event_status === false;
+
+    let buttonText = "Chọn khu vực";
+    if (isEnded) {
+        buttonText = "Đã kết thúc";
+    } else if (isComingSoon) {
         buttonText = "Sắp mở bán";
+    } else if (!isTicketAvailable) {
+        buttonText = "Hết vé";
     }
 
-    const now = new Date();
-    const eventStart = new Date(event.event_start)
-    const eventEnd = new Date(event.event_end);
-    const isEnded = eventEnd < now;
-    
+    const isButtonDisabled = isEnded || isComingSoon || !isTicketAvailable;
+
     return (
         <div className="event-detail-page">
+            <Warning
+                show={warning.show}
+                message={warning.message}
+                onClose={() => setWarning({ show: false, message: "" })}
+            />
             <div className="event-container">
-                
+
                 <div className="event-ticket-main">
                     <div className="event-ticket-left">
                         <h1 className="event-ticket-title">{event.event_name}</h1>
@@ -115,49 +129,43 @@ export default function EventDetail() {
                             </div>
                             <div className="event-meta-item">
                                 <span>📍 {(event.event_location).split(",")[0]}</span> <br />
-                                    <span
+                                <span
                                     style={{
                                         display: 'block',
                                         marginLeft: '23px',
                                         color: 'rgb(196,196,207)',
                                         marginTop: '10px'
                                     }}
-                                    >
+                                >
                                     {event.event_location}
-                                    </span>
+                                </span>
                             </div>
                         </div>
-                        
+
                         <div className="event-ticket-footer">
                             <div className="event-line"></div>
                             <div className="event-price-section">
                                 <span className="event-price-label">Giá từ</span>
                                 <span className="event-price-value">
-                                    {isTicketAvailable 
+                                    {isTicketAvailable
                                         ? `${formatCurrency(event.min_price || 0)} ›`
                                         : 'Hết vé'
                                     }
                                 </span>
                             </div>
                             <button
-                        className={`event-btn-buy
+                                className={`event-btn-buy
                             ${isEnded ? "ended" : ""}
-                            ${!isEnded && !isTicketAvailable ? "sold-out" : ""}
-                            ${!isEnded && isTicketAvailable && !event.event_status ? "coming-soon" : ""}
+                            ${!isEnded && isComingSoon ? "coming-soon" : ""}
+                            ${!isEnded && !isComingSoon && !isTicketAvailable ? "sold-out" : ""}
                         `}
-                        onClick={() =>
-                            !isEnded && isTicketAvailable && event.event_status && navigate("booking")
-                        }
-                        disabled={isEnded || !isTicketAvailable || eventStart > now}
-                        >
-                        {isEnded
-                            ? "Đã kết thúc"
-                            : !isTicketAvailable
-                            ? "Hết vé"
-                            : eventStart > now
-                            ? "Sắp mở bán"
-                            : "Chọn khu vực"}
-                        </button>
+                                onClick={() =>
+                                    !isButtonDisabled && navigate("booking")
+                                }
+                                disabled={isButtonDisabled}
+                            >
+                                {buttonText}
+                            </button>
                         </div>
                     </div>
                     <div className="event-stub-line"></div>
@@ -183,34 +191,34 @@ export default function EventDetail() {
                                     const isSoldOut = available <= 0;
                                     const isAlmostOver = available <= 20;
 
-                                        let statusClass = "available";
-                                        let statusText = "Còn vé";
+                                    let statusClass = "available";
+                                    let statusText = "Còn vé";
 
 
-                                        if (isSoldOut) {
-                                            statusClass = "sold-out";
-                                            statusText = "Hết vé";
-                                        } else if (isAlmostOver) {
-                                            statusClass = "over";
-                                            statusText = "Sắp hết vé";
-                                        }
-                                    
+                                    if (isSoldOut) {
+                                        statusClass = "sold-out";
+                                        statusText = "Hết vé";
+                                    } else if (isAlmostOver) {
+                                        statusClass = "over";
+                                        statusText = "Sắp hết vé";
+                                    }
+
                                     return (
-                                        <div 
-                                        key={zone.zone_id} 
-                                        className={`ticket-item`}
-                                        onClick={() => toggleZone(zone.zone_id)}
+                                        <div
+                                            key={zone.zone_id}
+                                            className={`ticket-item`}
+                                            onClick={() => toggleZone(zone.zone_id)}
                                         >
                                             <div className="ticket-info">
                                                 <div className="ticket-header">
-                                                    <div className="ticket-header-left" style={{flex: 1}}>
+                                                    <div className="ticket-header-left" style={{ flex: 1 }}>
                                                         <span className={`arrow ${openZoneId === zone.zone_id ? "open" : ""}`}>
                                                             ▶
                                                         </span>
                                                         <span className="ticket-name">{zone.zone_name}</span>
                                                     </div>
 
-                                                    <div className="ticket-header-right" style={{display: 'flex', flexDirection: 'column', marginLeft: '180px'}}>
+                                                    <div className="ticket-header-right" style={{ display: 'flex', flexDirection: 'column', marginLeft: '180px' }}>
                                                         <span className="ticket-price">
                                                             {formatCurrency(zone.zone_price)}
                                                         </span>
@@ -222,7 +230,7 @@ export default function EventDetail() {
                                                 </div>
 
                                                 {openZoneId === zone.zone_id && (
-                                                    <div className="ticket-desc" style={{ whiteSpace: 'pre-line', marginTop: '15px'}}>
+                                                    <div className="ticket-desc" style={{ whiteSpace: 'pre-line', marginTop: '15px' }}>
                                                         {zone.zone_description}
                                                     </div>
                                                 )}
@@ -241,9 +249,9 @@ export default function EventDetail() {
                         <h2 className="event-desc-header">Giới thiệu</h2>
                         <div className="event-desc-content">
                             <p style={{ whiteSpace: 'pre-line' }}>{displayDescription}</p>
-                            
+
                             {isLongDescription && (
-                                <button 
+                                <button
                                     className="btn-toggle-desc"
                                     onClick={() => setIsDescExpanded(!isDescExpanded)}
                                 >

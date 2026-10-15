@@ -1,93 +1,127 @@
 .ticket-list-container {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 14px;
+    width: 100%;
 }
 
 .ticket-list-title {
-    color: #ffffff;
-    font-size: 18px;
-    margin-bottom: 10px;
+    color: #22c55e;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* Thông tin vé */
-.ticket-item-name {
-    color: #fff;
-    font-weight: 700;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.ticket-code-tag {
-    background: #444;
-    color: #ccc;
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-
-.ticket-item-price {
-    color: #00c058;
-    font-size: 13px;
-    font-weight: 800;
-    margin: 5px 0;
-}
-
-.ticket-item-desc {
-    color: #888;
-    font-size: 12px;
-}
-
-/* Thao tác */
-.ticket-item-action {
-    text-align: right;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.ticket-remaining {
-    font-size: 12px;
-    color: #aaa;
-}
-
-.btn-select-ticket {
-    background: #00c058;
-    color: white;
-    border: none;
-    padding: 10px 25px;
-    border-radius: 8px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.btn-select-ticket:hover:not(:disabled) {
-    background: #00ff73;
-    box-shadow: 0 0 15px rgba(0, 192, 88, 0.3);
-}
-
-.btn-select-ticket:disabled {
-    background: #444;
-    cursor: not-allowed;
-}
-.ticket-left {
-    display: flex;             
-    justify-content: space-between;
-    align-items: center;       
-    width: 100%;          
-}
-
-.ticket-item-name, 
-.ticket-item-price {
-    margin: 0;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding-bottom: 10px;
 }
 
 .ticket-box {
     display: flex;
-    margin-top: 20px;
+    flex-direction: column;
+    gap: 10px;
+    background: #252834;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.ticket-box:hover {
+    border-color: rgba(34,197,94,0.3);
+    background: #2b2e3c;
+}
+
+.ticket-left {
+    display: flex;             
+    justify-content: space-between;
+    align-items: center;       
+    width: 100%;
+    gap: 10px;
+}
+
+.ticket-item-name {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    flex-wrap: wrap;
+}
+
+.ticket-code-tag {
+    background: rgba(255,255,255,0.12);
+    color: #e4e4e7;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+}
+
+.ticket-item-price {
+    color: #22c55e;
+    font-size: 15px;
+    font-weight: 800;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.ticket-item-desc {
+    color: #a1a1aa;
+    font-size: 12px;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* Thao tác */
+.ticket-item-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255,255,255,0.07);
+}
+
+.ticket-remaining {
+    font-size: 12px;
+    color: #a1a1aa;
+}
+
+.btn-select-ticket {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(22,163,74,0.25);
+}
+
+.btn-select-ticket:hover:not(:disabled) {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34,197,94,0.35);
+}
+
+.btn-select-ticket:disabled {
+    background: #3f3f46;
+    color: #71717a;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+
+@media (max-width: 480px) {
+    .ticket-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
 }
